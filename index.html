@@ -128,11 +128,15 @@
       <div class="max-w-6xl mx-auto px-4 sm:px-6 pb-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
           <div>
-            <div class="flex flex-wrap items-center gap-2.5">
+            <div class="flex flex-wrap items-center gap-2">
               <h1 class="text-xl sm:text-2xl font-bold tracking-tight leading-snug" style="color: var(--theme-text);">Homework List</h1>
               <button onclick="switchTab('profile')" id="header-user-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/55 hover:bg-white/80 text-[#14213D] text-xs font-bold transition shadow-2xs">
                 <span>🎨</span>
                 <span>ธีมสีพาสเทล</span>
+              </button>
+              <button onclick="switchTab('profile')" id="header-cloud-status" title="คลิกเพื่อจัดการรหัสซิงก์ข้ามอุปกรณ์" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 hover:bg-white text-[#14213D] text-xs font-bold transition shadow-2xs border border-black/10">
+                <span>⏳</span>
+                <span>กำลังเชื่อมต่อคลาวด์...</span>
               </button>
             </div>
             <p id="header-date-text" class="text-xs sm:text-sm font-semibold mt-0.5 opacity-85" style="color: var(--theme-subtext);">กำลังโหลดวันที่...</p>
@@ -544,12 +548,49 @@
       </section>
 
       <!-- ========================================================= -->
-      <!-- VIEW 6: ตั้งค่าธีมสี Pastel / แจ้งเตือน / ย้ายเครื่อง      -->
+      <!-- VIEW 6: ตั้งค่าธีมสี Pastel / ซิงก์คลาวด์ / แจ้งเตือน     -->
       <!-- ========================================================= -->
       <section id="view-profile" class="tab-view hidden space-y-6">
         <div>
-          <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ตั้งค่าสีธีมระบบ & การแจ้งเตือน</h2>
-          <p class="text-xs sm:text-sm text-muted">เลือกชุดสีพาสเทล 10 โทนสำหรับระบบ ตั้งเวลาแจ้งเตือนมือถือ และย้ายข้อมูลข้ามเครื่อง</p>
+          <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ตั้งค่าซิงก์คลาวด์ สีธีมระบบ & การแจ้งเตือน</h2>
+          <p class="text-xs sm:text-sm text-muted">เชื่อมต่อรหัสซิงก์ส่วนตัวเพื่ออัปเดตข้อมูลเรียลไทม์ระหว่าง PC มือถือ และแท็บเล็ต</p>
+        </div>
+
+        <!-- Cloud Realtime Sync Card (PC <-> Mobile <-> Tablet) -->
+        <div class="bg-white rounded-[14px] border-2 border-teal-600/40 p-5 shadow-xs space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-cardBorder pb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">☁️</span>
+              <h3 class="text-base font-bold text-[#14213D]">ซิงก์ข้อมูลคลาวด์อัตโนมัติ (PC ↔ มือถือ ↔ แท็บเล็ต)</h3>
+            </div>
+            <span id="profile-cloud-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E]">กำลังเชื่อมต่อ...</span>
+          </div>
+
+          <p class="text-xs sm:text-sm text-muted leading-relaxed">
+            ข้อมูลการบ้าน ตารางเรียน และประวัติทั้งหมดของรหัสนี้จะอัปเดตตรงกันแบบเรียลไทม์อัตโนมัติ เพียงนำ <strong>รหัสซิงก์ส่วนตัว (Sync ID)</strong> ไปกรอกในหน้าตั้งค่าของอุปกรณ์อื่น (PC, มือถือ, แท็บเล็ต)
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-end">
+            <div class="bg-pageBg rounded-xl border border-cardBorder p-3.5 space-y-2">
+              <div class="text-xs font-bold text-muted">รหัสซิงก์ส่วนตัวของเครื่องนี้ (Sync ID):</div>
+              <div class="flex items-center gap-2">
+                <code id="display-sync-id" class="flex-1 px-3 py-2 rounded-lg bg-white border border-cardBorder font-mono font-bold text-sm text-[#14213D] select-all">กำลังโหลด...</code>
+                <button type="button" onclick="window.cloudSync && window.cloudSync.copySyncId()" class="shrink-0 px-3.5 py-2 rounded-lg bg-[#0F766E] hover:bg-teal-800 text-white text-xs font-bold transition active:scale-95">
+                  📋 คัดลอก
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-pageBg rounded-xl border border-cardBorder p-3.5 space-y-2">
+              <label for="inp-custom-sync-id" class="block text-xs font-bold text-muted">เชื่อมต่อรหัสจากเครื่องอื่น / ตั้งรหัสเอง (อย่างน้อย 6 ตัว):</label>
+              <div class="flex items-center gap-2">
+                <input type="text" id="inp-custom-sync-id" placeholder="เช่น champ-2569" class="flex-1 min-w-0 h-9 px-3 rounded-lg bg-white border border-cardBorder font-mono text-xs sm:text-sm text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
+                <button type="button" onclick="applyCustomSyncId()" class="theme-btn-primary shrink-0 px-4 py-2 rounded-lg text-xs font-bold border border-black/10 transition active:scale-95">
+                  เชื่อมต่อ
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -561,7 +602,7 @@
             </div>
 
             <p class="text-xs text-muted leading-relaxed">
-              แตะเลือกสีพาสเทลที่ต้องการ ระบบจะเปลี่ยนสีแถบด้านบน ปุ่มหลัก และตารางเรียนทันทีโดยอัตโนมัติ (บันทึกในเครื่องอัตโนมัติ)
+              แตะเลือกสีพาสเทลที่ต้องการ ระบบจะเปลี่ยนสีแถบด้านบน ปุ่มหลัก และตารางเรียนทันทีโดยอัตโนมัติ (ซิงก์สีธีมข้ามเครื่องด้วย)
             </p>
 
             <!-- 10 Pastel Swatch Grid -->
@@ -620,34 +661,31 @@
           </div>
         </div>
 
-        <!-- Data Storage Warning & Manual Device Transfer (Sync Code + .json File) -->
+        <!-- Offline Device Transfer & JSON Backup -->
         <div class="bg-[#FFFBEB] rounded-[14px] border border-[#FCD34D] p-5 shadow-xs space-y-4">
           <div class="flex items-start gap-2.5">
-            <span class="text-xl leading-none mt-0.5">⚠️</span>
+            <span class="text-xl leading-none mt-0.5">💾</span>
             <div class="space-y-1">
-              <h3 class="text-sm sm:text-base font-bold text-[#92400E]">ข้อควรระวังในการเก็บข้อมูล & การย้ายเครื่อง (มือถือ ↔ แท็บเล็ต)</h3>
+              <h3 class="text-sm sm:text-base font-bold text-[#92400E]">สำรองข้อมูลออฟไลน์ & ย้ายเครื่องแบบไม่ใช้อินเทอร์เน็ต</h3>
               <p class="text-xs sm:text-sm text-[#92400E]/95 leading-relaxed">
-                ข้อมูลธีมสี รายวิชา ตารางเรียน และการบ้านทั้งหมดถูกบันทึกไว้ใน <strong>หน่วยความจำเบราว์เซอร์ของเครื่องนี้เท่านั้น</strong> หากล้างแคช (Clear Cache) ลบแอป หรือเปลี่ยนเครื่อง ข้อมูลจะไม่ตามไปด้วยอัตโนมัติ สามารถย้ายข้อมูลได้ 2 วิธีด้านล่างนี้:
+                นอกจากระบบซิงก์คลาวด์อัตโนมัติด้านบน คุณยังสามารถสำรองข้อมูลเป็นรหัสข้อความหรือไฟล์ <code class="font-bold">.json</code> เก็บไว้ในเครื่องได้ตลอดเวลา:
               </p>
             </div>
           </div>
 
-          <!-- Method 1: Quick Sync Code (Best for Mobile <-> Tablet via LINE / Quick Share) -->
+          <!-- Method 1: Quick Sync Code -->
           <div class="bg-white rounded-xl border border-amber-200 p-3.5 space-y-2.5">
-            <div class="text-xs sm:text-sm font-bold text-[#14213D]">📱 วิธีที่ 1: ย้ายด้วยรหัสข้อความ (แนะนำสำหรับ มือถือ ↔ แท็บเล็ต)</div>
-            <p class="text-[11px] sm:text-xs text-muted leading-relaxed">
-              กดแชร์หรือคัดลอกรหัสส่งเข้า LINE (Keep Memo) / Quick Share แล้วนำไปวางในอีกเครื่องโดยไม่ต้องหาไฟล์
-            </p>
+            <div class="text-xs sm:text-sm font-bold text-[#14213D]">📱 วิธีที่ 1: ย้ายด้วยรหัสข้อความออฟไลน์ (HWSYNC)</div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button type="button" onclick="shareFullSyncCode()" class="theme-btn-primary flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold shadow-xs border border-black/10 active:scale-95">
-                <span>📤 แชร์รหัสย้ายเครื่อง</span>
+                <span>📤 แชร์รหัสสำรองข้อมูล</span>
               </button>
               <button type="button" onclick="copyFullSyncCode()" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-[#14213D] text-xs font-bold transition active:scale-95">
-                <span>📋 คัดลอกรหัสย้ายเครื่อง</span>
+                <span>📋 คัดลอกรหัสสำรองข้อมูล</span>
               </button>
             </div>
             <div class="flex gap-2 pt-0.5">
-              <input type="text" id="full-sync-code-input" placeholder="วางรหัสย้ายเครื่อง (HWSYNC:...) ที่นี่..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-pageBg border border-cardBorder text-xs text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
+              <input type="text" id="full-sync-code-input" placeholder="วางรหัสสำรอง (HWSYNC:...) ที่นี่..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-pageBg border border-cardBorder text-xs text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
               <button type="button" onclick="importFullSyncCode()" class="shrink-0 px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs font-bold transition active:scale-95">
                 นำเข้า
               </button>
@@ -706,7 +744,7 @@
         </button>
         <button data-tab="profile" onclick="switchTab('profile')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
           <span class="text-base leading-tight">🎨</span>
-          <span class="mt-0.5">ธีมสี</span>
+          <span class="mt-0.5">ซิงก์/ธีม</span>
         </button>
       </div>
     </nav>
@@ -1037,6 +1075,7 @@
     function persistCurrentUser() {
       if (!currentUser) return;
       safeSetStorage(STORAGE_PROFILE, JSON.stringify(currentUser));
+      if (window.cloudSync) window.cloudSync.push();
     }
 
     function migrateLegacyUserDataIfNeeded() {
@@ -1349,13 +1388,22 @@
       try { courses = JSON.parse(localStorage.getItem(getUserDataKey('courses')) || '[]'); } catch { courses = []; }
       try { activeItems = JSON.parse(localStorage.getItem(getUserDataKey('active')) || '[]'); } catch { activeItems = []; }
       try { historyItems = JSON.parse(localStorage.getItem(getUserDataKey('history')) || '[]'); } catch { historyItems = []; }
-      saveData();
+      saveData(true);
     }
 
-    function saveData() {
+    function saveData(skipCloudPush = false) {
       safeSetStorage(getUserDataKey('courses'), JSON.stringify(courses));
       safeSetStorage(getUserDataKey('active'), JSON.stringify(activeItems));
       safeSetStorage(getUserDataKey('history'), JSON.stringify(historyItems));
+      if (!skipCloudPush && window.cloudSync) {
+        window.cloudSync.push();
+      }
+    }
+
+    function applyCustomSyncId() {
+      const inp = document.getElementById('inp-custom-sync-id');
+      if (!inp || !window.cloudSync) return;
+      window.cloudSync.switchSyncId(inp.value);
     }
 
     // =========================================================================
@@ -2474,6 +2522,7 @@
       notifPrefs.autoPopup = document.getElementById('chk-notif-auto').checked;
       notifPrefs.sound = document.getElementById('chk-notif-sound').checked;
       safeSetStorage(STORAGE_NOTIF_PREF, JSON.stringify(notifPrefs));
+      if (window.cloudSync) window.cloudSync.push();
       updateNotifStatusUI();
       showToast('บันทึกการตั้งค่าแจ้งเตือนแล้ว');
     }
@@ -2777,7 +2826,7 @@
       };
     }
 
-    function applyStructuredBackupObject(parsed) {
+    function applyStructuredBackupObject(parsed, skipCloudPush = false) {
       const srcProfile = parsed.profile || parsed.userRecord;
       if (srcProfile) {
         if (!currentUser) currentUser = getDefaultProfile();
@@ -2786,13 +2835,13 @@
         }
         currentUser.morningTime = srcProfile.morningTime || currentUser.morningTime;
         currentUser.nightTime = srcProfile.nightTime || currentUser.nightTime;
-        persistCurrentUser();
+        safeSetStorage(STORAGE_PROFILE, JSON.stringify(currentUser));
       }
 
       courses = Array.isArray(parsed.courses) ? parsed.courses : [];
       activeItems = Array.isArray(parsed.active) ? parsed.active : [];
       historyItems = Array.isArray(parsed.history) ? parsed.history : [];
-      saveData();
+      saveData(true);
 
       if (parsed.notifPrefs) {
         notifPrefs = {
@@ -2805,6 +2854,10 @@
       syncProfileUI();
       syncSubjectDropdown();
       renderAll();
+
+      if (!skipCloudPush && window.cloudSync) {
+        window.cloudSync.push();
+      }
     }
 
     function generateFullSyncCodeString() {
@@ -2933,6 +2986,7 @@
               syncProfileUI();
               syncSubjectDropdown();
               renderAll();
+              if (window.cloudSync) window.cloudSync.push();
             }
             showToast('กู้คืนและย้ายข้อมูลเข้าเครื่องนี้สำเร็จเรียบร้อย!');
           });
@@ -2956,7 +3010,7 @@
       }
 
       migrateLegacyUserDataIfNeeded();
-      persistCurrentUser();
+      safeSetStorage(STORAGE_PROFILE, JSON.stringify(currentUser));
       syncProfileUI();
       loadData();
       loadNotifPrefs();
@@ -2978,6 +3032,10 @@
       }
 
       scheduleNextMidnightTimer();
+
+      if (window.cloudSync) {
+        window.cloudSync.init();
+      }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -3000,6 +3058,188 @@
         }
       }
     });
+  </script>
+
+  <!-- ======================================================================= -->
+  <!-- 12. Firebase Realtime Database Cloud Sync Module (PC / Mobile / Tablet) -->
+  <!-- ======================================================================= -->
+  <script type="module">
+    import { initializeApp } from "[https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js](https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js)";
+    import { getDatabase, ref, set, get, onValue, off } from "[https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js](https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js)";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZWRzAYC6urDjUkuM2nEdoLlOInZFGzpQ",
+      authDomain: "homework-list-sync.firebaseapp.com",
+      databaseURL: "[https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app](https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app)",
+      projectId: "homework-list-sync",
+      storageBucket: "homework-list-sync.firebasestorage.app",
+      messagingSenderId: "413595618223",
+      appId: "1:413595618223:web:e2400a1336efd9a2d67d5a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let syncId = localStorage.getItem("hw_firebase_sync_id");
+    if (!syncId || syncId.length < 6) {
+      syncId = "hw-" + Math.random().toString(36).substring(2, 8);
+      localStorage.setItem("hw_firebase_sync_id", syncId);
+    }
+
+    let isApplyingRemote = false;
+    let activeRef = null;
+    let lastLocalPushTs = 0;
+
+    function updateCloudBadge(state, label) {
+      const headerPill = document.getElementById("header-cloud-status");
+      const profileBadge = document.getElementById("profile-cloud-badge");
+      const syncDisplay = document.getElementById("display-sync-id");
+
+      if (syncDisplay) syncDisplay.textContent = syncId;
+
+      if (headerPill) {
+        if (state === "synced") {
+          headerPill.innerHTML = `<span>☁️</span><span>ซิงก์แล้ว (${syncId})</span>`;
+          headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-teal-800 text-xs font-bold transition shadow-2xs border border-teal-600/30";
+        } else if (state === "syncing") {
+          headerPill.innerHTML = `<span>⏳</span><span>กำลังซิงก์...</span>`;
+          headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 text-[#92400E] text-xs font-bold transition shadow-2xs border border-amber-400/40";
+        } else {
+          headerPill.innerHTML = `<span>⚠️</span><span>${label || "ออฟไลน์"}</span>`;
+          headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 text-[#8B1230] text-xs font-bold transition shadow-2xs border border-red-400/40";
+        }
+      }
+
+      if (profileBadge) {
+        if (state === "synced") {
+          profileBadge.textContent = "เชื่อมต่อคลาวด์แล้ว ✓";
+          profileBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#DCFCE7] text-[#166534]";
+        } else if (state === "syncing") {
+          profileBadge.textContent = "กำลังซิงก์ข้อมูล...";
+          profileBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E]";
+        } else {
+          profileBadge.textContent = label || "ออฟไลน์ / ตรวจสอบ Rules";
+          profileBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FBE4E8] text-[#8B1230]";
+        }
+      }
+    }
+
+    async function pushToCloud() {
+      if (isApplyingRemote || !syncId || syncId.length < 6) return;
+      updateCloudBadge("syncing");
+      try {
+        const cleanPayload = JSON.parse(JSON.stringify(buildFullBackupPayload()));
+        lastLocalPushTs = Date.now();
+        await set(ref(db, `users/${syncId}`), {
+          payload: cleanPayload,
+          updatedAt: lastLocalPushTs
+        });
+        updateCloudBadge("synced");
+      } catch (err) {
+        console.error("Firebase push error:", err);
+        updateCloudBadge("error", "ซิงก์ไม่สำเร็จ");
+      }
+    }
+
+    function attachRealtimeListener() {
+      if (activeRef) {
+        off(activeRef);
+      }
+      activeRef = ref(db, `users/${syncId}`);
+      onValue(activeRef, (snapshot) => {
+        const record = snapshot.val();
+        if (!record || !record.payload) return;
+        if (record.updatedAt && Math.abs(record.updatedAt - lastLocalPushTs) < 800) {
+          updateCloudBadge("synced");
+          return;
+        }
+        isApplyingRemote = true;
+        try {
+          applyStructuredBackupObject(record.payload, true);
+          updateCloudBadge("synced");
+        } finally {
+          setTimeout(() => { isApplyingRemote = false; }, 150);
+        }
+      }, (err) => {
+        console.error("Firebase listener error:", err);
+        updateCloudBadge("error", "ติดสิทธิ์ Rules");
+      });
+    }
+
+    async function initCloudSync() {
+      updateCloudBadge("syncing");
+      try {
+        const userRef = ref(db, `users/${syncId}`);
+        const snap = await get(userRef);
+        if (snap.exists() && snap.val() && snap.val().payload) {
+          isApplyingRemote = true;
+          try {
+            applyStructuredBackupObject(snap.val().payload, true);
+          } finally {
+            setTimeout(() => { isApplyingRemote = false; }, 150);
+          }
+          updateCloudBadge("synced");
+        } else {
+          await pushToCloud();
+        }
+        attachRealtimeListener();
+      } catch (err) {
+        console.error("Firebase init error:", err);
+        updateCloudBadge("error", "ออฟไลน์");
+      }
+    }
+
+    async function switchSyncId(newIdRaw) {
+      const cleanId = String(newIdRaw || "").trim();
+      if (cleanId.length < 6) {
+        showToast("รหัสซิงก์ต้องมีความยาวอย่างน้อย 6 ตัวอักษรครับ");
+        return;
+      }
+      if (!/^[a-zA-Z0-9_-]+$/.test(cleanId)) {
+        showToast("ใช้ได้เฉพาะตัวอักษรภาษาอังกฤษ ตัวเลข ขีดกลาง (-) และขีดล่าง (_)");
+        return;
+      }
+
+      syncId = cleanId;
+      localStorage.setItem("hw_firebase_sync_id", syncId);
+      const inp = document.getElementById("inp-custom-sync-id");
+      if (inp) inp.value = "";
+
+      updateCloudBadge("syncing");
+      try {
+        const snap = await get(ref(db, `users/${syncId}`));
+        if (snap.exists() && snap.val() && snap.val().payload) {
+          isApplyingRemote = true;
+          try {
+            applyStructuredBackupObject(snap.val().payload, true);
+          } finally {
+            setTimeout(() => { isApplyingRemote = false; }, 150);
+          }
+          updateCloudBadge("synced");
+          showToast(`เชื่อมต่อรหัส "${syncId}" และดึงข้อมูลเรียบร้อยแล้ว!`);
+        } else {
+          await pushToCloud();
+          showToast(`สร้างและเชื่อมต่อรหัส "${syncId}" เรียบร้อยแล้ว!`);
+        }
+        attachRealtimeListener();
+      } catch (err) {
+        console.error("Switch sync ID error:", err);
+        updateCloudBadge("error", "เชื่อมต่อไม่สำเร็จ");
+        showToast("เชื่อมต่อไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตหรือ Rules");
+      }
+    }
+
+    window.cloudSync = {
+      init: initCloudSync,
+      push: pushToCloud,
+      switchSyncId: switchSyncId,
+      getSyncId: () => syncId,
+      copySyncId: () => copyTextToClipboardUniversal(syncId, `คัดลอกรหัสซิงก์ "${syncId}" แล้ว! นำไปวางในเครื่องอื่นได้เลย`)
+    };
+
+    if (document.readyState !== "loading") {
+      initCloudSync();
+    }
   </script>
 </body>
 </html>
