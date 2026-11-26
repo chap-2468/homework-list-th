@@ -1,0 +1,2980 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#7B9ED9" id="meta-theme-color" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Homework List" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="manifest" href="./manifest.json" />
+  <title>Homework List — ระบบจัดการการบ้านและตารางเรียน</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Leelawadee UI"', '"Sarabun"', '"Noto Sans Thai"', 'sans-serif'],
+          },
+          colors: {
+            pageBg: '#F3F4F8',
+            navy: 'var(--theme-primary, #7B9ED9)',
+            navySub: 'var(--theme-secondary, #6286C4)',
+            cardBorder: '#E1E4EC',
+            muted: '#4A5470',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --theme-primary: #7B9ED9;
+      --theme-secondary: #6286C4;
+      --theme-text: #14213D;
+      --theme-subtext: #2B3A5E;
+      --theme-soft: #DCE7FA;
+    }
+    body {
+      font-family: 'Leelawadee UI', 'Sarabun', 'Noto Sans Thai', sans-serif;
+      background-color: #F3F4F8;
+      color: #14213D;
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: calc(8.75rem + env(safe-area-inset-bottom));
+    }
+    @media (min-width: 768px) {
+      body {
+        padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+      }
+    }
+    .safe-top-header {
+      padding-top: calc(1.25rem + env(safe-area-inset-top));
+    }
+    .safe-bottom-nav {
+      padding-bottom: calc(3.25rem + env(safe-area-inset-bottom));
+    }
+    .theme-surface {
+      background-color: var(--theme-primary);
+      color: var(--theme-text);
+    }
+    .theme-btn-primary {
+      background-color: var(--theme-primary);
+      color: var(--theme-text);
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+    .theme-btn-primary:hover {
+      background-color: var(--theme-secondary);
+    }
+    .theme-pill-active {
+      background-color: var(--theme-primary) !important;
+      color: var(--theme-text) !important;
+    }
+    .theme-mobile-active {
+      background-color: var(--theme-soft) !important;
+      color: #14213D !important;
+    }
+    .theme-soft-input {
+      background-color: color-mix(in srgb, var(--theme-soft) 55%, #FFFFFF);
+      border-color: color-mix(in srgb, var(--theme-primary) 35%, #E1E4EC);
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F3F4F8;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    .whitespace-pre-line-wrap {
+      white-space: pre-line;
+      word-break: break-word;
+    }
+    .timetable-table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      min-width: 1120px;
+      width: 100%;
+    }
+    .timetable-table th,
+    .timetable-table td {
+      border: 1px solid #E5E8F0;
+    }
+    .timetable-sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- ========================================================= -->
+  <!-- MAIN APPLICATION SHELL                                    -->
+  <!-- ========================================================= -->
+  <div id="main-app-shell" class="flex-1 flex flex-col">
+
+    <!-- Top Header (Pastel Blue Theme Default) -->
+    <header class="theme-surface shadow-sm safe-top-header transition-colors duration-200 border-b border-black/10">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 pb-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
+          <div>
+            <div class="flex flex-wrap items-center gap-2.5">
+              <h1 class="text-xl sm:text-2xl font-bold tracking-tight leading-snug" style="color: var(--theme-text);">Homework List</h1>
+              <button onclick="switchTab('profile')" id="header-user-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/55 hover:bg-white/80 text-[#14213D] text-xs font-bold transition shadow-2xs">
+                <span>🎨</span>
+                <span>ธีมสีพาสเทล</span>
+              </button>
+            </div>
+            <p id="header-date-text" class="text-xs sm:text-sm font-semibold mt-0.5 opacity-85" style="color: var(--theme-subtext);">กำลังโหลดวันที่...</p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btn-header-notif" onclick="openNotifSettingsModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/75 hover:bg-white text-[#14213D] border border-black/10 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95">
+              <span>🔔 แจ้งเตือน</span>
+            </button>
+            <button onclick="openInstallModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0F766E] hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95">
+              <span>📲 ติดตั้งแอป</span>
+            </button>
+            <button onclick="openTransferModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/75 hover:bg-white text-[#14213D] text-xs sm:text-sm font-bold border border-black/10 shadow-2xs transition active:scale-95">
+              <span>🔄 ซิงก์ (.txt)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Summary Metric Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
+          <div class="bg-white/95 text-[#14213D] rounded-[14px] p-3.5 sm:p-4 border border-black/10 shadow-xs flex items-center justify-between">
+            <div>
+              <div class="text-xs font-semibold text-muted">งานค้างทั้งหมด</div>
+              <div id="stat-total" class="text-2xl sm:text-3xl font-bold mt-0.5">0</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg" style="background: var(--theme-soft); color: #14213D;">📚</div>
+          </div>
+
+          <div class="bg-white/95 text-[#14213D] rounded-[14px] p-3.5 sm:p-4 border border-black/10 shadow-xs flex items-center justify-between">
+            <div>
+              <div class="text-xs font-semibold text-muted">งานด่วน (ใน 7 วัน)</div>
+              <div id="stat-urgent" class="text-2xl sm:text-3xl font-bold text-[#92400E] mt-0.5">0</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#92400E] flex items-center justify-center font-bold text-lg">⏳</div>
+          </div>
+
+          <div class="bg-white/95 text-[#14213D] rounded-[14px] p-3.5 sm:p-4 border border-black/10 shadow-xs flex items-center justify-between">
+            <div>
+              <div class="text-xs font-semibold text-muted">ส่งวันนี้ / พรุ่งนี้</div>
+              <div id="stat-today" class="text-2xl sm:text-3xl font-bold text-[#8B1230] mt-0.5">0</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-[#FBE4E8] text-[#8B1230] flex items-center justify-center font-bold text-lg">🔥</div>
+          </div>
+
+          <div class="bg-white/95 text-[#14213D] rounded-[14px] p-3.5 sm:p-4 border border-black/10 shadow-xs flex items-center justify-between">
+            <div>
+              <div class="text-xs font-semibold text-muted">ส่งเสร็จแล้ว</div>
+              <div id="stat-done" class="text-2xl sm:text-3xl font-bold text-teal-700 mt-0.5">0</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-lg">✅</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Desktop / Tablet Top Pill Navigation (6 Tabs including Theme/Settings) -->
+    <nav class="hidden md:block bg-white border-b border-cardBorder sticky top-0 z-20">
+      <div class="max-w-6xl mx-auto px-6 py-2.5 flex items-center justify-between gap-2 overflow-x-auto">
+        <div class="flex items-center gap-1.5">
+          <button data-tab="list" onclick="switchTab('list')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+            <span>📋 รายการงาน</span>
+            <span id="badge-list-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/80 text-[#14213D]">0</span>
+          </button>
+          <button data-tab="subjects" onclick="switchTab('subjects')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+            <span>🗂️ รายวิชา</span>
+            <span id="badge-subjects-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/80 text-[#14213D]">0</span>
+          </button>
+          <button data-tab="schedule" onclick="switchTab('schedule')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+            <span>📅 ตารางเรียน</span>
+          </button>
+          <button data-tab="courses" onclick="switchTab('courses')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+            <span>⚙️ จัดการวิชา</span>
+            <span id="badge-courses-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/80 text-[#14213D]">0</span>
+          </button>
+          <button data-tab="history" onclick="switchTab('history')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+            <span>🕒 ประวัติ</span>
+            <span id="badge-history-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/80 text-[#14213D]">0</span>
+          </button>
+          <button data-tab="profile" onclick="switchTab('profile')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+            <span>🎨 ธีม & ตั้งค่า</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-5">
+
+      <!-- ========================================================= -->
+      <!-- VIEW 1: รายการงาน (Tasks + Google Calendar Button)        -->
+      <!-- ========================================================= -->
+      <section id="view-list" class="tab-view space-y-6">
+        
+        <!-- Add / Edit Task Card -->
+        <div id="add-form-container" class="hidden md:block bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs">
+          <div class="flex items-center justify-between mb-3">
+            <h2 id="form-mode-title" class="text-base font-bold text-[#14213D] flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span>
+              <span>เพิ่มการบ้านใหม่</span>
+            </h2>
+            <button type="button" onclick="toggleMobileForm(false)" class="md:hidden text-xs font-semibold text-muted px-2.5 py-1 rounded-lg bg-pageBg">
+              ซ่อนฟอร์ม ✕
+            </button>
+          </div>
+
+          <form id="hw-form" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
+            <div class="md:col-span-3">
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-bold text-muted">วันส่ง</label>
+                <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-teal-700 cursor-pointer select-none">
+                  <input type="checkbox" id="inp-no-due" onchange="toggleNoDueDate()" class="w-3.5 h-3.5 accent-[#0F766E] rounded cursor-pointer" />
+                  <span>ยังไม่กำหนดวัน</span>
+                </label>
+              </div>
+              <input type="date" id="inp-due" required class="w-full h-11 px-3 rounded-xl theme-soft-input border text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy disabled:opacity-50 transition-colors" />
+            </div>
+
+            <div class="md:col-span-4">
+              <label class="block text-xs font-bold text-muted mb-1.5">วิชา (ตั้งวันส่งตามคาบถัดไปอัตโนมัติ)</label>
+              <select id="inp-subject" onchange="onSubjectChange()" required class="w-full h-11 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy">
+              </select>
+            </div>
+
+            <div class="md:col-span-5">
+              <label class="block text-xs font-bold text-muted mb-1.5">รายละเอียดการบ้าน (ขึ้นบรรทัดใหม่ได้)</label>
+              <textarea id="inp-task" rows="2" placeholder="กรอกรายละเอียดการบ้าน..." required class="w-full p-2.5 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] text-sm focus:outline-none focus:ring-2 focus:ring-navy resize-y"></textarea>
+            </div>
+
+            <div class="md:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
+              <div id="form-course-hint" class="text-xs font-medium text-muted flex flex-wrap items-center gap-2"></div>
+
+              <div class="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto justify-end">
+                <button type="button" id="btn-cancel-edit" onclick="cancelEdit()" class="hidden px-4 py-2.5 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] font-bold text-sm hover:bg-slate-200 transition">
+                  ยกเลิก
+                </button>
+                <button type="submit" id="btn-submit-hw" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white font-bold text-sm shadow-xs transition active:scale-95">
+                  + เพิ่มงาน
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Empty State -->
+        <div id="hw-empty-state" class="hidden bg-white rounded-[14px] border border-cardBorder p-10 text-center">
+          <div class="text-4xl mb-3">🎉</div>
+          <h3 class="text-lg font-bold text-[#14213D]">ไม่มีการบ้านค้างส่งแล้ว!</h3>
+          <p class="text-sm text-muted mt-1">กดปุ่ม "+ เพิ่มงาน" เพื่อจดรายการการบ้านใหม่ (หรือเพิ่มรายวิชาที่แท็บ <button onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button>)</p>
+        </div>
+
+        <!-- Urgent Section (<= 7 days) -->
+        <div id="section-urgent" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base sm:text-lg font-bold text-[#14213D] flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span>งานด่วน (ภายใน 7 วัน)</span>
+            </h3>
+            <span id="count-urgent-label" class="text-xs font-bold px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]">0 งาน</span>
+          </div>
+          <div id="list-urgent" class="space-y-3"></div>
+        </div>
+
+        <!-- Later Section (> 7 days) -->
+        <div id="section-later" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base sm:text-lg font-bold text-[#14213D] flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+              <span>งานถัดไป (มากกว่า 7 วัน)</span>
+            </h3>
+            <span id="count-later-label" class="text-xs font-bold px-2.5 py-1 rounded-full bg-[#EEF0F6] text-[#14213D]">0 งาน</span>
+          </div>
+          <div id="list-later" class="space-y-3"></div>
+        </div>
+
+        <!-- Pending / No-Deadline Section (รอส่ง) -->
+        <div id="section-pending" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base sm:text-lg font-bold text-[#14213D] flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+              <span>รอส่ง (ยังไม่กำหนดวันส่ง)</span>
+            </h3>
+            <span id="count-pending-label" class="text-xs font-bold px-2.5 py-1 rounded-full bg-[#E0E7FF] text-[#3730A3]">0 งาน</span>
+          </div>
+          <div id="list-pending" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 2: รายวิชา (By Subject)                              -->
+      <!-- ========================================================= -->
+      <section id="view-subjects" class="tab-view hidden space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">การบ้านแยกตามรายวิชา</h2>
+              <span id="subjects-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EEF0F6] text-[#14213D]">0 รายวิชา</span>
+            </div>
+            <p class="text-xs sm:text-sm text-muted mt-0.5">กดปุ่ม <span class="font-bold text-[#14213D]">+ เพิ่ม</span> ที่การ์ดวิชาเพื่อจดงานวิชานั้นทันที หรือไปที่แท็บ <button onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button></p>
+          </div>
+        </div>
+        <div id="subjects-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 3: ตารางเรียน + Export .ics Google Calendar          -->
+      <!-- ========================================================= -->
+      <section id="view-schedule" class="tab-view hidden space-y-6">
+        <div class="space-y-2.5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ตารางเรียนประจำสัปดาห์</h2>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="downloadFullCalendarICS()" class="theme-btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs border border-black/10 active:scale-95">
+                <span>📅 ส่งออกตารางเรียน & เดดไลน์ลง Google / Apple Calendar (.ics)</span>
+              </button>
+              <span class="md:hidden text-[11px] font-semibold text-muted">← เลื่อนซ้าย-ขวา →</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-[14px] border border-cardBorder overflow-hidden shadow-xs">
+            <div id="weekly-timetable-grid" class="overflow-x-auto"></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-[14px] border border-cardBorder overflow-hidden shadow-xs">
+          <div class="theme-surface px-5 py-3.5 flex items-center justify-between border-b border-black/10">
+            <h2 class="text-base sm:text-lg font-bold">ข้อมูลรายวิชา ห้องเรียน และช่องทางส่งงาน</h2>
+            <span id="schedule-count-badge" class="text-xs font-semibold opacity-85">0 รายวิชา</span>
+          </div>
+          <div id="course-info-table" class="divide-y divide-cardBorder"></div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 4: จัดการวิชา (Full Course Manager)                  -->
+      <!-- ========================================================= -->
+      <section id="view-courses" class="tab-view hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">จัดการรายวิชา (เพิ่ม / ลด / วางตารางเรียนทีเดียว)</h2>
+            <p class="text-xs sm:text-sm text-muted">เพิ่มรายวิชาทีละวิชา นำเข้าตารางเรียนจากรูปภาพผ่าน AI หรือแชร์ชุดวิชาให้เพื่อน</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="confirmClearAllCourses()" class="px-3.5 py-2 rounded-xl border border-[#8B1230] bg-white hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
+              🗑️ ล้างวิชาทั้งหมด
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <!-- Single Add/Edit Course -->
+          <div class="lg:col-span-5 bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3.5">
+            <div class="flex items-center justify-between">
+              <h3 id="course-form-title" class="text-base font-bold text-[#14213D] flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span>
+                <span>เพิ่มรายวิชาใหม่</span>
+              </h3>
+              <button type="button" id="btn-cancel-course-edit" onclick="cancelCourseEdit()" class="hidden text-xs font-bold text-muted hover:text-[#14213D]">ยกเลิกแก้ไข</button>
+            </div>
+
+            <form id="single-course-form" onsubmit="handleSaveCourse(event)" class="space-y-3">
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-xs font-bold text-muted mb-1">รหัสวิชา</label>
+                  <input type="text" id="c-inp-code" placeholder="กรอกรหัสวิชา" required class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-muted mb-1">วันที่เรียน</label>
+                  <select id="c-inp-dow" class="w-full h-10 px-3 rounded-xl theme-soft-input border text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy transition-colors">
+                    <option value="1">จันทร์</option>
+                    <option value="2">อังคาร</option>
+                    <option value="3">พุธ</option>
+                    <option value="4">พฤหัสบดี</option>
+                    <option value="5">ศุกร์</option>
+                    <option value="6">เสาร์</option>
+                    <option value="0">อาทิตย์</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-muted mb-1">ชื่อวิชา</label>
+                <input type="text" id="c-inp-name" placeholder="กรอกชื่อวิชา" required class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+              </div>
+
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-xs font-bold text-muted mb-1">เวลาเรียน</label>
+                  <input type="text" id="c-inp-time" placeholder="09:00-12:00" required class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-muted mb-1">ชุดสีป้ายวิชา</label>
+                  <select id="c-inp-theme" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy"></select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-muted mb-1">ห้องเรียน (แสดงในช่องตารางเรียน)</label>
+                <input type="text" id="c-inp-room" placeholder="ระบุห้องเรียน (ถ้าไม่มีจะใส่เป็น ห้อง N/A)" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-muted mb-1">ช่องทางส่งงาน (LINE / Teams)</label>
+                <input type="text" id="c-inp-info" placeholder="ระบุกลุ่ม LINE หรือ Teams (ไม่บังคับ)" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+              </div>
+
+              <button type="submit" id="btn-save-course" class="w-full py-2.5 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white font-bold text-sm transition active:scale-95">
+                + บันทึกรายวิชา
+              </button>
+            </form>
+          </div>
+
+          <!-- Bulk Paste & Preset Share -->
+          <div class="lg:col-span-7 space-y-4">
+            <div class="bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3">
+              <h3 class="text-base font-bold text-[#14213D] flex items-center gap-2">
+                <span class="text-lg">📋</span>
+                <span>วางตารางเรียนทีเดียว (Bulk Paste)</span>
+              </h3>
+
+              <div class="rounded-xl bg-pageBg border border-cardBorder p-3.5 space-y-2.5">
+                <div class="text-xs sm:text-sm font-bold text-[#14213D]">วิธีนำเข้าจากรูปตารางเรียนด้วย AI:</div>
+                <ol class="text-xs text-muted space-y-1 list-decimal list-inside leading-relaxed">
+                  <li>แคปภาพตารางเรียนของตัวเอง แล้วส่งแนบรูปให้ AI (เช่น Gemini, ChatGPT, Claude)</li>
+                  <li>คัดลอกคำสั่ง (Prompt) ด้านล่างนี้ส่งไปพร้อมรูปภาพเพื่อให้ AI แปลงเป็นข้อความตามรูปแบบที่ระบบรองรับ</li>
+                  <li>นำข้อความผลลัพธ์ที่ได้จาก AI มาวางลงในช่องด้านล่าง แล้วกดปุ่มนำเข้า</li>
+                </ol>
+                <div class="bg-white rounded-xl border border-cardBorder p-2.5 space-y-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-[11px] font-bold text-teal-700">คำสั่ง (Prompt) สำหรับส่งให้ AI พร้อมรูปตารางเรียน:</span>
+                    <button type="button" onclick="copyAiPrompt()" class="shrink-0 px-2.5 py-1 rounded-lg bg-[#0F766E] hover:bg-teal-800 text-white text-[11px] font-bold transition active:scale-95">
+                      📋 คัดลอก Prompt
+                    </button>
+                  </div>
+                  <pre id="ai-prompt-text" class="text-[11px] sm:text-xs text-[#14213D] bg-pageBg/70 rounded-lg p-2.5 whitespace-pre-wrap font-sans leading-relaxed select-all">แปลงตารางเรียนจากรูปภาพนี้ให้อยู่ในรูปแบบข้อความบรรทัดละ 1 คาบเรียน ตามรูปแบบนี้เท่านั้น ไม่ต้องมีคำอธิบายเพิ่ม:
+รหัสวิชา | ชื่อวิชา | วัน | เวลาเริ่ม-เวลาเลิก | ห้องเรียน
+
+เงื่อนไข:
+- วัน: จันทร์, อังคาร, พุธ, พฤหัสบดี, ศุกร์, เสาร์, อาทิตย์
+- ใช้เวลาแบบ 24 ชั่วโมง คั่นด้วยขีดกลาง (เช่น 09:00-12:00)
+- หากในรูปไม่ระบุห้องเรียน ให้ใส่คำว่า ห้อง N/A</pre>
+                </div>
+              </div>
+
+              <textarea id="bulk-paste-area" rows="4" placeholder="วางข้อความตารางเรียนที่ได้จาก AI ที่นี่..." class="w-full p-3 rounded-xl bg-pageBg border border-cardBorder text-xs sm:text-sm text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy"></textarea>
+              <div class="flex flex-wrap items-center justify-end gap-2">
+                <button type="button" onclick="parseAndImportBulkCourses(false)" class="px-4 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-[#14213D] text-xs sm:text-sm font-bold transition">
+                  + เพิ่มต่อจากวิชาเดิม
+                </button>
+                <button type="button" onclick="parseAndImportBulkCourses(true)" class="theme-btn-primary px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border border-black/10">
+                  แทนที่วิชาทั้งหมดด้วยชุดนี้
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3">
+              <h3 class="text-base font-bold text-[#14213D] flex items-center gap-2">
+                <span class="text-lg">🤝</span>
+                <span>แชร์ชุดวิชาให้เพื่อนร่วมเซค / รุ่นน้อง</span>
+              </h3>
+              <p class="text-xs text-muted">
+                จัดวิชาเสร็จ 1 คน แล้วกดคัดลอกโค้ดส่งเข้ากลุ่ม LINE ให้เพื่อนกดวาง เพื่อใช้ตารางเรียนและช่องทางส่งงานชุดเดียวกันทันที
+              </p>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <button type="button" onclick="copyCoursePresetCode()" class="shrink-0 px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold transition">
+                  📤 คัดลอกโค้ดชุดวิชาของฉัน
+                </button>
+                <div class="flex-1 flex gap-2">
+                  <input type="text" id="preset-code-input" placeholder="วางโค้ดชุดวิชาจากเพื่อนที่นี่..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-pageBg border border-cardBorder text-xs text-[#14213D] focus:outline-none" />
+                  <button type="button" onclick="importCoursePresetCode()" class="theme-btn-primary shrink-0 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border border-black/10">
+                    นำเข้า
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-[14px] border border-cardBorder overflow-hidden shadow-xs">
+          <div class="theme-surface px-5 py-3.5 flex items-center justify-between border-b border-black/10">
+            <h3 class="text-base font-bold">รายวิชาที่ใช้งานอยู่ตอนนี้</h3>
+            <span id="manage-course-total" class="text-xs font-semibold opacity-85">0 รายวิชา</span>
+          </div>
+          <div id="manage-courses-list" class="divide-y divide-cardBorder"></div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 5: ประวัติส่งงาน (Submission History)                  -->
+      <!-- ========================================================= -->
+      <section id="view-history" class="tab-view hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ประวัติการส่งงานย้อนหลัง</h2>
+            <p class="text-xs sm:text-sm text-muted">รายการที่กด "✓ เสร็จแล้ว" จะถูกบันทึกวันที่ส่งจริงไว้ที่นี่</p>
+          </div>
+          <button id="btn-clear-history" onclick="clearAllHistory()" class="hidden px-3.5 py-2 rounded-xl border border-[#8B1230] bg-white text-[#8B1230] text-xs sm:text-sm font-bold hover:bg-[#FBE4E8] transition">
+            ล้างประวัติทั้งหมด
+          </button>
+        </div>
+
+        <div id="history-empty-state" class="hidden bg-white rounded-[14px] border border-cardBorder p-10 text-center">
+          <div class="text-4xl mb-3">📂</div>
+          <h3 class="text-base font-bold text-[#14213D]">ยังไม่มีประวัติการส่งงานย้อนหลัง</h3>
+          <p class="text-xs sm:text-sm text-muted mt-1">เมื่อกดปุ่ม "✓ เสร็จแล้ว" ในหน้ารายการงาน ข้อมูลจะมาเก็บไว้ที่นี่</p>
+        </div>
+
+        <div id="list-history" class="space-y-3"></div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 6: ตั้งค่าธีมสี Pastel / แจ้งเตือน / ย้ายเครื่อง      -->
+      <!-- ========================================================= -->
+      <section id="view-profile" class="tab-view hidden space-y-6">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ตั้งค่าสีธีมระบบ & การแจ้งเตือน</h2>
+          <p class="text-xs sm:text-sm text-muted">เลือกชุดสีพาสเทล 10 โทนสำหรับระบบ ตั้งเวลาแจ้งเตือนมือถือ และย้ายข้อมูลข้ามเครื่อง</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <!-- Left: Pastel Theme Color Picker ONLY (10 Pastel Colors, Blue Default) -->
+          <div class="lg:col-span-6 bg-white rounded-[14px] border border-cardBorder p-5 shadow-xs space-y-4">
+            <div class="flex items-center justify-between border-b border-cardBorder pb-3">
+              <h3 class="text-base font-bold text-[#14213D]">🎨 ปรับสีธีมหลักของแอป (โทน Pastel)</h3>
+              <span id="current-theme-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold border border-black/10" style="background: var(--theme-soft); color: #14213D;">น้ำเงินพาสเทล</span>
+            </div>
+
+            <p class="text-xs text-muted leading-relaxed">
+              แตะเลือกสีพาสเทลที่ต้องการ ระบบจะเปลี่ยนสีแถบด้านบน ปุ่มหลัก และตารางเรียนทันทีโดยอัตโนมัติ (บันทึกในเครื่องอัตโนมัติ)
+            </p>
+
+            <!-- 10 Pastel Swatch Grid -->
+            <div id="theme-swatch-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Right: Mobile Notification Schedule & Google Calendar Sync -->
+          <div class="lg:col-span-6 space-y-4">
+            <!-- Mobile Notification Card -->
+            <div class="bg-white rounded-[14px] border border-cardBorder p-5 shadow-xs space-y-3.5">
+              <div class="flex items-center justify-between border-b border-cardBorder pb-3">
+                <h3 class="text-base font-bold text-[#14213D]">🔔 การแจ้งเตือนบนมือถือ (Service Worker)</h3>
+                <span id="prof-sw-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-[#14213D]">ตรวจสอบ SW...</span>
+              </div>
+
+              <p class="text-xs text-muted leading-relaxed">
+                เชื่อมต่อผ่าน Service Worker ของอุปกรณ์โดยตรง เพื่อรองรับการเด้งแจ้งเตือนบนแถบสถานะของ Android และ iPhone (เมื่อเพิ่มลงหน้าจอโฮม) <em>หมายเหตุ: การเตือนตามเวลาเช้า/ค่ำจะทำงานขณะเปิดแอปค้างไว้ หากต้องการเตือนแม้ปิดแอปแนะนำให้ส่งออกลง Google Calendar (.ics) ควบคู่กัน</em>
+              </p>
+
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-xs font-bold text-muted mb-1">เวลาเตือนรอบเช้า</label>
+                  <input type="time" id="prof-time-morning" value="08:00" onchange="saveScheduleNotifTimes()" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-muted mb-1">เวลาเตือนรอบค่ำ</label>
+                  <input type="time" id="prof-time-night" value="21:00" onchange="saveScheduleNotifTimes()" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm" />
+                </div>
+              </div>
+
+              <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                <button type="button" onclick="requestSystemNotifPermission()" class="flex-1 py-2.5 px-3 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold transition active:scale-95">
+                  เปิดสิทธิ์แจ้งเตือนมือถือ
+                </button>
+                <button type="button" onclick="triggerUrgentAlert(false, true)" class="flex-1 py-2.5 px-3 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-[#14213D] text-xs sm:text-sm font-bold transition">
+                  ทดสอบเด้งแจ้งเตือนทันที
+                </button>
+              </div>
+            </div>
+
+            <!-- Google Calendar Integration Card -->
+            <div class="bg-white rounded-[14px] border border-cardBorder p-5 shadow-xs space-y-3">
+              <div class="flex items-center justify-between border-b border-cardBorder pb-3">
+                <h3 class="text-base font-bold text-[#14213D]">📅 เชื่อมต่อ Google Calendar</h3>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#DCFCE7] text-[#166534]">พร้อมใช้งาน</span>
+              </div>
+              <p class="text-xs text-muted leading-relaxed">
+                คุณสามารถกดปุ่ม <strong>"📅 Google Calendar"</strong> ที่การ์ดงานแต่ละชิ้นเพื่อเพิ่มเดดไลน์เข้าแอป Google Calendar ทันที หรือดาวน์โหลดไฟล์ปฏิทินทั้งเทอม (.ics) ด้านล่าง:
+              </p>
+              <button type="button" onclick="downloadFullCalendarICS()" class="theme-btn-primary w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold border border-black/10 active:scale-95">
+                📥 ดาวน์โหลดปฏิทินตารางเรียน & การบ้านทั้งหมด (.ics)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Storage Warning & Manual Device Transfer (Sync Code + .json File) -->
+        <div class="bg-[#FFFBEB] rounded-[14px] border border-[#FCD34D] p-5 shadow-xs space-y-4">
+          <div class="flex items-start gap-2.5">
+            <span class="text-xl leading-none mt-0.5">⚠️</span>
+            <div class="space-y-1">
+              <h3 class="text-sm sm:text-base font-bold text-[#92400E]">ข้อควรระวังในการเก็บข้อมูล & การย้ายเครื่อง (มือถือ ↔ แท็บเล็ต)</h3>
+              <p class="text-xs sm:text-sm text-[#92400E]/95 leading-relaxed">
+                ข้อมูลธีมสี รายวิชา ตารางเรียน และการบ้านทั้งหมดถูกบันทึกไว้ใน <strong>หน่วยความจำเบราว์เซอร์ของเครื่องนี้เท่านั้น</strong> หากล้างแคช (Clear Cache) ลบแอป หรือเปลี่ยนเครื่อง ข้อมูลจะไม่ตามไปด้วยอัตโนมัติ สามารถย้ายข้อมูลได้ 2 วิธีด้านล่างนี้:
+              </p>
+            </div>
+          </div>
+
+          <!-- Method 1: Quick Sync Code (Best for Mobile <-> Tablet via LINE / Quick Share) -->
+          <div class="bg-white rounded-xl border border-amber-200 p-3.5 space-y-2.5">
+            <div class="text-xs sm:text-sm font-bold text-[#14213D]">📱 วิธีที่ 1: ย้ายด้วยรหัสข้อความ (แนะนำสำหรับ มือถือ ↔ แท็บเล็ต)</div>
+            <p class="text-[11px] sm:text-xs text-muted leading-relaxed">
+              กดแชร์หรือคัดลอกรหัสส่งเข้า LINE (Keep Memo) / Quick Share แล้วนำไปวางในอีกเครื่องโดยไม่ต้องหาไฟล์
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button type="button" onclick="shareFullSyncCode()" class="theme-btn-primary flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold shadow-xs border border-black/10 active:scale-95">
+                <span>📤 แชร์รหัสย้ายเครื่อง</span>
+              </button>
+              <button type="button" onclick="copyFullSyncCode()" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-[#14213D] text-xs font-bold transition active:scale-95">
+                <span>📋 คัดลอกรหัสย้ายเครื่อง</span>
+              </button>
+            </div>
+            <div class="flex gap-2 pt-0.5">
+              <input type="text" id="full-sync-code-input" placeholder="วางรหัสย้ายเครื่อง (HWSYNC:...) ที่นี่..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-pageBg border border-cardBorder text-xs text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
+              <button type="button" onclick="importFullSyncCode()" class="shrink-0 px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs font-bold transition active:scale-95">
+                นำเข้า
+              </button>
+            </div>
+          </div>
+
+          <!-- Method 2: JSON File Backup & Restore -->
+          <div class="bg-white/80 rounded-xl border border-amber-200/80 p-3.5 space-y-2.5">
+            <div class="text-xs sm:text-sm font-bold text-[#14213D]">💾 วิธีที่ 2: สำรองและกู้คืนเป็นไฟล์ (.json)</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button type="button" onclick="exportBackupData()" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs font-bold shadow-xs transition active:scale-95">
+                <span>📥 ดาวน์โหลดไฟล์สำรอง (.json)</span>
+              </button>
+              <label class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-amber-300 bg-white hover:bg-amber-100/60 text-[#14213D] text-xs font-bold cursor-pointer transition active:scale-95">
+                <span>📤 เลือกไฟล์ .json กู้คืนข้อมูล</span>
+                <input type="file" accept=".json,application/json" onchange="importBackupData(event)" class="hidden" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Mobile Floating "+ เพิ่มงาน" Button (Raised above bottom nav + Netlify badge) -->
+    <button id="mobile-fab-add" onclick="toggleMobileForm(true)" class="md:hidden fixed right-4 z-30 inline-flex items-center gap-2 px-5 py-3.5 rounded-full bg-[#0F766E] text-white font-bold text-sm shadow-lg shadow-teal-900/25 active:scale-95 transition" style="bottom: calc(8rem + env(safe-area-inset-bottom));">
+      <span class="text-lg leading-none">+</span>
+      <span>เพิ่มงาน</span>
+    </button>
+
+    <!-- Mobile Sticky Bottom Navigation Bar (Raised above Powered by Netlify badge) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-cardBorder z-30 px-1 pt-1.5 safe-bottom-nav shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+      <div class="grid grid-cols-6 gap-0.5">
+        <button data-tab="list" onclick="switchTab('list')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition relative">
+          <span class="text-base leading-tight">📋</span>
+          <span class="mt-0.5">งาน</span>
+          <span id="badge-list-mobile" class="absolute top-0.5 right-1 px-1.5 py-0.2 text-[9px] rounded-full bg-[#8B1230] text-white font-bold">0</span>
+        </button>
+        <button data-tab="subjects" onclick="switchTab('subjects')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition relative">
+          <span class="text-base leading-tight">🗂️</span>
+          <span class="mt-0.5">รายวิชา</span>
+          <span id="badge-subjects-mobile" class="hidden absolute top-0.5 right-1 px-1.5 py-0.2 text-[9px] rounded-full bg-[#14213D] text-white font-bold">0</span>
+        </button>
+        <button data-tab="schedule" onclick="switchTab('schedule')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
+          <span class="text-base leading-tight">📅</span>
+          <span class="mt-0.5">ตาราง</span>
+        </button>
+        <button data-tab="courses" onclick="switchTab('courses')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
+          <span class="text-base leading-tight">⚙️</span>
+          <span class="mt-0.5">จัดการ</span>
+        </button>
+        <button data-tab="history" onclick="switchTab('history')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition relative">
+          <span class="text-base leading-tight">🕒</span>
+          <span class="mt-0.5">ประวัติ</span>
+          <span id="badge-history-mobile" class="hidden absolute top-0.5 right-1 px-1.5 py-0.2 text-[9px] rounded-full bg-teal-700 text-white font-bold">0</span>
+        </button>
+        <button data-tab="profile" onclick="switchTab('profile')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
+          <span class="text-base leading-tight">🎨</span>
+          <span class="mt-0.5">ธีมสี</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 1: Install PWA on iOS & Android Instructions        -->
+  <!-- ========================================================= -->
+  <div id="install-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-cardBorder max-w-lg w-full p-5 sm:p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-cardBorder pb-3">
+        <h3 class="text-lg font-bold text-[#14213D]">📲 ติดตั้ง Homework List ลงมือถือ / แท็บเล็ต</h3>
+        <button onclick="closeInstallModal()" class="w-8 h-8 rounded-lg bg-pageBg text-muted hover:text-[#14213D] font-bold">✕</button>
+      </div>
+
+      <p class="text-xs sm:text-sm text-muted">
+        เพิ่มเป็นแอปเต็มหน้าจอบนอุปกรณ์ เพื่อให้ระบบ Service Worker แจ้งเตือนบนมือถือได้อย่างสมบูรณ์:
+      </p>
+
+      <div class="rounded-xl bg-pageBg border border-cardBorder p-4 space-y-2">
+        <div class="font-bold text-sm text-[#14213D]">🍎 สำหรับ iPhone / iPad (เปิดผ่าน Safari)</div>
+        <ol class="text-xs sm:text-sm text-[#14213D]/90 space-y-1.5 list-decimal list-inside leading-relaxed">
+          <li>เปิดหน้าเว็บนี้ด้วยเบราว์เซอร์ <strong>Safari</strong></li>
+          <li>แตะปุ่ม <strong>แชร์ (Share)</strong> แล้วเลือก <strong>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</strong></li>
+          <li>เปิดแอปจากไอคอนบนหน้าจอโฮม แล้วกด <strong>"เปิดสิทธิ์แจ้งเตือนมือถือ"</strong> ในหน้าธีม & ตั้งค่า</li>
+        </ol>
+      </div>
+
+      <div class="rounded-xl bg-pageBg border border-cardBorder p-4 space-y-2">
+        <div class="font-bold text-sm text-[#14213D]">🤖 สำหรับ Android มือถือ / แท็บเล็ต (เปิดผ่าน Chrome)</div>
+        <ol class="text-xs sm:text-sm text-[#14213D]/90 space-y-1.5 list-decimal list-inside leading-relaxed">
+          <li>เปิดหน้าเว็บนี้ด้วยเบราว์เซอร์ <strong>Google Chrome</strong></li>
+          <li>แตะปุ่มเมนู <strong>จุด 3 จุด (⋮)</strong> มุมขวาบน แล้วเลือก <strong>"ติดตั้งแอป" (Install app)</strong></li>
+          <li>กดอนุญาตการแจ้งเตือน ระบบจะแสดง Notification บนแถบสถานะของ Android ทันที</li>
+        </ol>
+      </div>
+
+      <div class="flex justify-end pt-1">
+        <button onclick="closeInstallModal()" class="theme-btn-primary px-5 py-2.5 rounded-xl text-sm font-bold border border-black/10">เข้าใจแล้ว</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 2: Sync / Import / Export homework.txt              -->
+  <!-- ========================================================= -->
+  <div id="transfer-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-cardBorder max-w-lg w-full p-5 sm:p-6 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-cardBorder pb-3">
+        <h3 class="text-lg font-bold text-[#14213D]">🔄 ซิงก์ข้อมูลกับไฟล์ PC (homework.txt)</h3>
+        <button onclick="closeTransferModal()" class="w-8 h-8 rounded-lg bg-pageBg text-muted hover:text-[#14213D] font-bold">✕</button>
+      </div>
+
+      <p class="text-xs sm:text-sm text-muted leading-relaxed">
+        นำเข้าหรือส่งออกข้อมูลในรูปแบบ <code class="px-1.5 py-0.5 rounded bg-pageBg text-[#14213D] font-semibold">DD/MM/YYYY | วิชา | รายละเอียด</code> เพื่อใช้งานร่วมกับสคริปต์บน Windows ได้ทันที
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <button onclick="downloadHomeworkTxt()" class="theme-btn-primary flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm border border-black/10">
+          <span>⬇️ ดาวน์โหลด homework.txt</span>
+        </button>
+        <label class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] font-bold text-sm hover:bg-slate-200 cursor-pointer transition">
+          <span>⬆️ นำเข้าไฟล์ .txt</span>
+          <input type="file" accept=".txt" onchange="importHomeworkTxtFile(event)" class="hidden" />
+        </label>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-xs font-bold text-muted">ข้อความรูปแบบ homework.txt</label>
+          <button onclick="copyTxtToClipboard()" class="text-xs font-bold text-teal-700 hover:underline">คัดลอกข้อความ</button>
+        </div>
+        <textarea id="txt-sync-area" rows="6" class="w-full p-3 rounded-xl bg-pageBg border border-cardBorder text-xs font-mono text-[#14213D] focus:outline-none"></textarea>
+        <div class="flex justify-end mt-2">
+          <button onclick="applyTextImport()" class="px-4 py-2 rounded-xl bg-[#0F766E] text-white text-xs font-bold hover:bg-teal-800 transition">
+            นำเข้าจากข้อความด้านบน
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Dialog Modal -->
+  <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-cardBorder max-w-sm w-full p-5 shadow-xl space-y-4">
+      <h3 id="confirm-modal-title" class="text-base font-bold text-[#14213D]">ยืนยันการทำรายการ</h3>
+      <p id="confirm-modal-desc" class="text-xs sm:text-sm text-muted leading-relaxed">ต้องการดำเนินการต่อหรือไม่?</p>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] text-xs sm:text-sm font-bold">ยกเลิก</button>
+        <button id="confirm-modal-ok" class="px-4 py-2 rounded-xl bg-[#8B1230] text-white text-xs sm:text-sm font-bold">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 3: Automatic Urgent & Midnight Rollover Alert Modal  -->
+  <!-- ========================================================= -->
+  <div id="urgent-alert-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-cardBorder max-w-lg w-full overflow-hidden shadow-2xl flex flex-col max-h-[88vh]">
+      <div id="urgent-alert-banner" class="bg-[#8B1230] text-white px-5 py-4 flex items-start justify-between gap-3">
+        <div>
+          <div id="urgent-alert-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold mb-1">
+            🔥 แจ้งเตือนกำหนดส่งงาน
+          </div>
+          <h3 id="urgent-alert-title" class="text-lg sm:text-xl font-bold leading-snug">มีงานที่ต้องส่งเร็วๆ นี้!</h3>
+          <p id="urgent-alert-subtitle" class="text-xs text-white/90 mt-0.5">สรุปรายการที่เลยกำหนด ส่งวันนี้ และส่งพรุ่งนี้</p>
+        </div>
+        <button onclick="closeUrgentAlertModal()" class="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold shrink-0">✕</button>
+      </div>
+
+      <div id="urgent-alert-summary" class="px-5 py-2.5 bg-pageBg border-b border-cardBorder flex flex-wrap items-center gap-2 text-xs font-bold"></div>
+
+      <div id="urgent-alert-list" class="p-4 sm:p-5 space-y-2.5 overflow-y-auto flex-1"></div>
+
+      <div class="px-5 py-3.5 bg-pageBg border-t border-cardBorder flex items-center justify-between gap-2">
+        <button onclick="openNotifSettingsModal(); closeUrgentAlertModal();" class="text-xs font-bold text-muted hover:text-[#14213D] underline">
+          ⚙️ ตั้งค่าการแจ้งเตือน
+        </button>
+        <button onclick="closeUrgentAlertModal()" class="theme-btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-xs border border-black/10 active:scale-95">
+          รับทราบ / ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 4: Notification Settings & Preview Controls         -->
+  <!-- ========================================================= -->
+  <div id="notif-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-cardBorder max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-cardBorder pb-3">
+        <h3 class="text-lg font-bold text-[#14213D]">🔔 ตั้งค่าและการทดสอบแจ้งเตือน</h3>
+        <button onclick="closeNotifSettingsModal()" class="w-8 h-8 rounded-lg bg-pageBg text-muted hover:text-[#14213D] font-bold">✕</button>
+      </div>
+
+      <div class="rounded-xl bg-pageBg border border-cardBorder p-3.5 space-y-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs sm:text-sm font-bold text-[#14213D]">การแจ้งเตือนระดับอุปกรณ์ (Mobile SW)</span>
+          <span id="notif-perm-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-[#14213D]">กำลังตรวจสอบ...</span>
+        </div>
+        <p class="text-xs text-muted leading-relaxed">
+          ส่ง Notification ผ่าน Service Worker เพื่อให้แสดงผลบนแถบแจ้งเตือนของ Android และ iOS ได้จริง
+        </p>
+        <button id="btn-req-notif-perm" onclick="requestSystemNotifPermission()" class="w-full py-2 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold transition active:scale-95">
+          อนุญาตการแจ้งเตือนบนอุปกรณ์
+        </button>
+      </div>
+
+      <div class="space-y-2.5">
+        <label class="flex items-center justify-between p-3 rounded-xl border border-cardBorder bg-white cursor-pointer">
+          <div>
+            <div class="text-xs sm:text-sm font-bold text-[#14213D]">เด้งสรุปงานด่วนอัตโนมัติเมื่อเข้าแอป</div>
+            <div class="text-[11px] text-muted">แจ้งเตือนเมื่อมีงานเลยกำหนด ส่งวันนี้ หรือส่งพรุ่งนี้</div>
+          </div>
+          <input type="checkbox" id="chk-notif-auto" onchange="saveNotifPrefs()" class="w-5 h-5 accent-[#0F766E] rounded cursor-pointer" />
+        </label>
+
+        <label class="flex items-center justify-between p-3 rounded-xl border border-cardBorder bg-white cursor-pointer">
+          <div>
+            <div class="text-xs sm:text-sm font-bold text-[#14213D]">เสียงกระดิ่งแจ้งเตือน (Web Audio Chime)</div>
+            <div class="text-[11px] text-muted">เล่นเสียงเตือนนุ่มๆ เมื่อมีหน้าต่างแจ้งเตือนเด้งขึ้น</div>
+          </div>
+          <input type="checkbox" id="chk-notif-sound" onchange="saveNotifPrefs()" class="w-5 h-5 accent-[#0F766E] rounded cursor-pointer" />
+        </label>
+      </div>
+
+      <div class="rounded-xl bg-amber-50/70 border border-amber-200 p-3.5 space-y-2">
+        <div class="text-xs font-bold text-[#92400E]">🧪 ทดสอบระบบแจ้งเตือนทันที</div>
+        <div class="grid grid-cols-1 gap-2">
+          <button onclick="closeNotifSettingsModal(); triggerUrgentAlert(false, true);" class="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-amber-100/70 border border-amber-300 text-[#14213D] text-xs font-bold transition text-left flex items-center justify-between">
+            <span>1. ทดสอบแจ้งเตือนเข้ามือถือ + หน้าต่างสรุปงาน</span>
+            <span>▶</span>
+          </button>
+          <button onclick="closeNotifSettingsModal(); simulateMidnightRollover();" class="theme-btn-primary w-full py-2.5 px-3 rounded-xl text-xs font-bold border border-black/10 text-left flex items-center justify-between">
+            <span>2. ทดสอบแจ้งเตือนเมื่อผ่านเที่ยงคืน (00:00 น.)</span>
+            <span>🕛</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Toast Notification -->
+  <div id="toast-box" class="hidden fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#14213D] text-white text-xs sm:text-sm font-semibold shadow-lg border border-slate-600 transition-all text-center max-w-[90vw]">
+    แจ้งเตือน
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. Service Worker Registration (Real Android & iOS Mobile Notification)
+    // =========================================================================
+    let swRegistration = null;
+
+    async function initServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        try {
+          swRegistration = await navigator.serviceWorker.register('./sw.js');
+          const badge = document.getElementById('prof-sw-badge');
+          if (badge) {
+            badge.textContent = 'SW พร้อมทำงาน ✓';
+            badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#DCFCE7] text-[#166534]';
+          }
+        } catch (err) {
+          const badge = document.getElementById('prof-sw-badge');
+          if (badge) {
+            badge.textContent = 'ใช้งานโหมดหน้าเว็บ';
+          }
+        }
+      }
+    }
+
+    // =========================================================================
+    // 2. 10 Pastel System Themes (Default: Pastel Blue) & Pastel Subject Badges
+    // =========================================================================
+    const APP_THEMES = [
+      { id: 'pastel-blue',     name: 'น้ำเงินพาสเทล',   primary: '#8AB4F8', secondary: '#6EA0F2', soft: '#E4EEFF', text: '#14213D', subtext: '#263B5E' },
+      { id: 'pastel-sky',      name: 'ฟ้าครามอ่อน',     primary: '#93D5F6', secondary: '#74C4ED', soft: '#E5F5FD', text: '#123347', subtext: '#234C66' },
+      { id: 'pastel-mint',     name: 'เขียวมิ้นต์',      primary: '#8CE0CE', secondary: '#6FD1BC', soft: '#E2F8F3', text: '#0F3D34', subtext: '#1E594E' },
+      { id: 'pastel-sage',     name: 'เขียวใบเตยอ่อน',  primary: '#A8DFAF', secondary: '#8ED197', soft: '#E8F8EA', text: '#163B1C', subtext: '#26572E' },
+      { id: 'pastel-lavender', name: 'ม่วงลาเวนเดอร์',  primary: '#C4B0F9', secondary: '#B097F4', soft: '#F0EBFE', text: '#2B1859', subtext: '#42297A' },
+      { id: 'pastel-lilac',    name: 'ม่วงชมพูอ่อน',   primary: '#E0B4F3', secondary: '#D19BE8', soft: '#F7ECFC', text: '#3F1752', subtext: '#5A2773' },
+      { id: 'pastel-pink',     name: 'ชมพูซากุระ',     primary: '#F7B5CD', secondary: '#EE9BB9', soft: '#FDEBF2', text: '#57152E', subtext: '#752342' },
+      { id: 'pastel-peach',    name: 'ส้มพีชละมุน',     primary: '#F9C49E', secondary: '#F2B080', soft: '#FEF0E6', text: '#57280B', subtext: '#753B17' },
+      { id: 'pastel-lemon',    name: 'เหลืองวานิลลา',   primary: '#F6DF8B', secondary: '#ECD06C', soft: '#FDF7E2', text: '#4D3B06', subtext: '#6B5410' },
+      { id: 'pastel-slate',    name: 'เทาฟ้าพาสเทล',   primary: '#B6C4D8', secondary: '#9EB0C9', soft: '#ECF0F6', text: '#1E293B', subtext: '#334155' }
+    ];
+
+    const PASTEL_THEMES = [
+      { label: 'เขียวมิ้นต์ (Teal)', bg: '#D5F0EC', fg: '#0B4F48', dot: '#0F766E' },
+      { label: 'เหลืองครีม (Amber)', bg: '#FCEFC3', fg: '#5C4308', dot: '#A16207' },
+      { label: 'ม่วงอ่อน (Lavender)', bg: '#EEE6FC', fg: '#3F1D78', dot: '#6D28D9' },
+      { label: 'ฟ้าพาสเทล (Blue)', bg: '#D6E6FA', fg: '#123B6B', dot: '#1D4ED8' },
+      { label: 'ม่วงเข้มพาสเทล (Violet)', bg: '#D9C8F7', fg: '#2E1065', dot: '#5B21B6' },
+      { label: 'ชมพูโรส (Pink)', bg: '#FADCE6', fg: '#7A1B3F', dot: '#BE185D' },
+      { label: 'เขียวใบไม้ (Green)', bg: '#D3EFD6', fg: '#14532D', dot: '#15803D' },
+      { label: 'ส้มพีช (Peach)', bg: '#FAD3B5', fg: '#6B2A06', dot: '#C2410C' },
+      { label: 'ส้มอ่อน (Apricot)', bg: '#FDE8D6', fg: '#7C2D12', dot: '#C2410C' },
+      { label: 'เทา slate (Slate)', bg: '#E3E6EC', fg: '#2B3240', dot: '#475569' }
+    ];
+
+    const THAI_DOW = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+    const THAI_MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+    const STORAGE_PROFILE    = 'hwlist_local_profile_v1';
+    const STORAGE_NOTIF_PREF = 'hwlist_notif_prefs_v1';
+    const STORAGE_LAST_DAY   = 'hwlist_last_day_v1';
+
+    let currentUser = null;
+    let courses = [];
+    let activeItems = [];
+    let historyItems = [];
+    let editingTaskId = null;
+    let editingCourseId = null;
+    let currentTab = 'list';
+    let notifPrefs = { autoPopup: true, sound: true };
+    let activeDateYMD = '';
+    let midnightTimeoutId = null;
+    let isMidnightAlertMode = false;
+    let lastScheduledNotifKey = '';
+    let startupAlertShownForDate = '';
+
+    function safeSetStorage(key, value) {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (e) {
+        showToast('ไม่สามารถบันทึกข้อมูลลงเครื่องได้ (พื้นที่เต็มหรือโหมดไม่ระบุตัวตน)');
+        return false;
+      }
+    }
+
+    function getUserDataKey(suffix) {
+      return `hwlist_data_local_${suffix}`;
+    }
+
+    function applyAppTheme(themeId) {
+      const found = APP_THEMES.find(t => t.id === themeId) || APP_THEMES[0];
+      document.documentElement.style.setProperty('--theme-primary', found.primary);
+      document.documentElement.style.setProperty('--theme-secondary', found.secondary);
+      document.documentElement.style.setProperty('--theme-text', found.text);
+      document.documentElement.style.setProperty('--theme-subtext', found.subtext);
+      document.documentElement.style.setProperty('--theme-soft', found.soft);
+      const meta = document.getElementById('meta-theme-color');
+      if (meta) meta.setAttribute('content', found.primary);
+      const badge = document.getElementById('current-theme-badge');
+      if (badge) {
+        badge.textContent = found.name;
+        badge.style.background = found.soft;
+        badge.style.color = found.text;
+      }
+      renderThemeSwatches(found.id);
+    }
+
+    function renderThemeSwatches(activeId) {
+      const container = document.getElementById('theme-swatch-grid');
+      if (!container) return;
+      container.innerHTML = APP_THEMES.map(t => {
+        const selected = t.id === activeId;
+        return `
+          <button type="button" onclick="selectAppTheme('${t.id}')" class="p-2.5 rounded-xl border ${selected ? 'border-2 border-[#14213D] shadow-xs' : 'border-cardBorder bg-white hover:bg-pageBg'} flex flex-col items-center gap-1.5 transition active:scale-95" style="${selected ? `background:${t.soft};` : ''}">
+            <span class="w-7 h-7 rounded-full border border-black/15 shadow-2xs" style="background:${t.primary};"></span>
+            <span class="text-[11px] font-bold text-[#14213D] leading-tight text-center">${t.name}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectAppTheme(themeId) {
+      if (!currentUser) currentUser = getDefaultProfile();
+      currentUser.themeId = themeId;
+      persistCurrentUser();
+      applyAppTheme(themeId);
+      const found = APP_THEMES.find(t => t.id === themeId);
+      showToast(`เปลี่ยนสีธีมเป็น "${found ? found.name : ''}" เรียบร้อยแล้ว`);
+    }
+
+    // =========================================================================
+    // 3. Local Settings Management (Theme & Notification Times Only)
+    // =========================================================================
+    function getDefaultProfile() {
+      return {
+        themeId: 'pastel-blue',
+        morningTime: '08:00',
+        nightTime: '21:00'
+      };
+    }
+
+    function persistCurrentUser() {
+      if (!currentUser) return;
+      safeSetStorage(STORAGE_PROFILE, JSON.stringify(currentUser));
+    }
+
+    function migrateLegacyUserDataIfNeeded() {
+      if (localStorage.getItem(getUserDataKey('courses')) !== null || localStorage.getItem(getUserDataKey('active')) !== null) {
+        return;
+      }
+      let legacyUid = 'guest';
+      try {
+        const oldSession = JSON.parse(localStorage.getItem('hwlist_session_v1') || 'null');
+        if (oldSession && oldSession.username) {
+          legacyUid = oldSession.username;
+          currentUser = {
+            ...getDefaultProfile(),
+            morningTime: oldSession.morningTime || '08:00',
+            nightTime: oldSession.nightTime || '21:00'
+          };
+          persistCurrentUser();
+        }
+      } catch {}
+
+      const oldCourses = localStorage.getItem(`hwlist_data_${legacyUid}_courses`);
+      const oldActive = localStorage.getItem(`hwlist_data_${legacyUid}_active`);
+      const oldHistory = localStorage.getItem(`hwlist_data_${legacyUid}_history`);
+      if (oldCourses !== null) safeSetStorage(getUserDataKey('courses'), oldCourses);
+      if (oldActive !== null) safeSetStorage(getUserDataKey('active'), oldActive);
+      if (oldHistory !== null) safeSetStorage(getUserDataKey('history'), oldHistory);
+    }
+
+    function syncProfileUI() {
+      if (!currentUser) currentUser = getDefaultProfile();
+      const validTheme = APP_THEMES.some(t => t.id === currentUser.themeId) ? currentUser.themeId : 'pastel-blue';
+      currentUser.themeId = validTheme;
+      document.getElementById('prof-time-morning').value = currentUser.morningTime || '08:00';
+      document.getElementById('prof-time-night').value = currentUser.nightTime || '21:00';
+      applyAppTheme(validTheme);
+    }
+
+    function saveScheduleNotifTimes() {
+      if (!currentUser) currentUser = getDefaultProfile();
+      currentUser.morningTime = document.getElementById('prof-time-morning').value || '08:00';
+      currentUser.nightTime = document.getElementById('prof-time-night').value || '21:00';
+      persistCurrentUser();
+      showToast(`ตั้งเวลาแจ้งเตือนประจำวันเป็น ${currentUser.morningTime} น. และ ${currentUser.nightTime} น.`);
+    }
+
+    // =========================================================================
+    // 4. Google Calendar Integration (One-Click Link + Full .ics Export)
+    // =========================================================================
+    function openGoogleCalendarForTask(taskId) {
+      const item = activeItems.find(x => x.id === taskId);
+      if (!item) return;
+      const course = getCourseByName(item.subject);
+
+      const effectiveDue = item.due || toYMD(getTodayDate());
+      const title = `[${course.code}] ${item.subject} — ${item.due ? 'ส่งการบ้าน' : 'รอส่งการบ้าน'}`;
+      const ymdClean = effectiveDue.replace(/-/g, '');
+      const dueDateObj = parseYMD(effectiveDue);
+      const nextDayObj = new Date(dueDateObj);
+      nextDayObj.setDate(dueDateObj.getDate() + 1);
+      const nextYmdClean = toYMD(nextDayObj).replace(/-/g, '');
+
+      const detailsLines = [
+        `วิชา: ${item.subject} (${course.code})`,
+        `รายละเอียดงาน: ${item.task}`,
+        course.room && course.room !== 'ห้อง N/A' ? `ห้องเรียน: ${course.room}` : '',
+        course.info ? `ช่องทางส่งงาน: ${course.info}` : '',
+        `บันทึกจากแอป Homework List`
+      ].filter(Boolean);
+
+      const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: title,
+        dates: `${ymdClean}/${nextYmdClean}`,
+        details: detailsLines.join('\n'),
+        location: course.info || course.room || '',
+        ctz: 'Asia/Bangkok'
+      });
+
+      const url = `https://calendar.google.com/calendar/render?${params.toString()}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    function escapeICS(str) {
+      return String(str || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/;/g, '\\;')
+        .replace(/,/g, '\\,')
+        .replace(/\r?\n/g, '\\n');
+    }
+
+    function downloadFullCalendarICS() {
+      if (courses.length === 0 && activeItems.length === 0) {
+        showToast('ยังไม่มีข้อมูลตารางเรียนหรือการบ้านสำหรับส่งออก');
+        return;
+      }
+
+      const icsDays = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+      const nowStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Homework List//TH',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'X-WR-CALNAME:Homework List — ตารางเรียนและกำหนดส่งงาน',
+        'X-WR-TIMEZONE:Asia/Bangkok'
+      ];
+
+      const today = getTodayDate();
+      courses.forEach((c, idx) => {
+        const range = parseHourRange(c.time);
+        if (!range) return;
+        const diff = (Number(c.dow) - today.getDay() + 7) % 7;
+        const firstDate = new Date(today);
+        firstDate.setDate(today.getDate() + diff);
+        const ymd = toYMD(firstDate).replace(/-/g, '');
+        const startHH = String(range.startH).padStart(2, '0') + '0000';
+        const endHH = String(range.endH).padStart(2, '0') + '0000';
+
+        lines.push('BEGIN:VEVENT');
+        lines.push(`UID:course-${c.id}-${idx}@homeworklist`);
+        lines.push(`DTSTAMP:${nowStamp}`);
+        lines.push(`DTSTART;TZID=Asia/Bangkok:${ymd}T${startHH}`);
+        lines.push(`DTEND;TZID=Asia/Bangkok:${ymd}T${endHH}`);
+        lines.push(`RRULE:FREQ=WEEKLY;COUNT=16;BYDAY=${icsDays[Number(c.dow)]}`);
+        lines.push(`SUMMARY:${escapeICS(`[${c.code}] ${c.name}`)}`);
+        lines.push(`LOCATION:${escapeICS(c.room || 'ห้อง N/A')}`);
+        lines.push(`DESCRIPTION:${escapeICS(c.info ? `ช่องทางส่งงาน: ${c.info}` : 'ตารางเรียนจาก Homework List')}`);
+        lines.push('BEGIN:VALARM');
+        lines.push('TRIGGER:-PT30M');
+        lines.push('ACTION:DISPLAY');
+        lines.push(`DESCRIPTION:ใกล้ถึงเวลาเรียน ${escapeICS(c.name)}`);
+        lines.push('END:VALARM');
+        lines.push('END:VEVENT');
+      });
+
+      activeItems.filter(it => Boolean(it.due)).forEach((it, idx) => {
+        const course = getCourseByName(it.subject);
+        const ymd = it.due.replace(/-/g, '');
+        lines.push('BEGIN:VEVENT');
+        lines.push(`UID:hw-${it.id}-${idx}@homeworklist`);
+        lines.push(`DTSTAMP:${nowStamp}`);
+        lines.push(`DTSTART;TZID=Asia/Bangkok:${ymd}T083000`);
+        lines.push(`DTEND;TZID=Asia/Bangkok:${ymd}T093000`);
+        lines.push(`SUMMARY:${escapeICS(`ส่งงาน [${course.code}] ${it.subject}`)}`);
+        lines.push(`DESCRIPTION:${escapeICS(it.task)}`);
+        lines.push(`LOCATION:${escapeICS(course.info || course.room || '')}`);
+        lines.push('BEGIN:VALARM');
+        lines.push('TRIGGER:-P1D');
+        lines.push('ACTION:DISPLAY');
+        lines.push(`DESCRIPTION:พรุ่งนี้ส่งงาน ${escapeICS(it.subject)}`);
+        lines.push('END:VALARM');
+        lines.push('END:VEVENT');
+      });
+
+      lines.push('END:VCALENDAR');
+
+      const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Homework-List-Calendar.ics';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('ดาวน์โหลดไฟล์ปฏิทิน (.ics) แล้ว! เปิดไฟล์เพื่อนำเข้า Google / Apple Calendar ได้ทันที');
+    }
+
+    // =========================================================================
+    // 5. Helpers & Data Persistence
+    // =========================================================================
+    function getCourseByName(name) {
+      const found = courses.find(c => c.name === name);
+      if (found) return found;
+      return {
+        code: 'TASK',
+        name: name || 'ทั่วไป',
+        dow: 1,
+        time: '',
+        room: 'ห้อง N/A',
+        info: '',
+        bg: '#E3E6EC',
+        fg: '#2B3240',
+        dot: '#475569'
+      };
+    }
+
+    function getUniqueCoursesByName() {
+      const seen = new Set();
+      const unique = [];
+      for (const c of courses) {
+        const key = `${c.code}::${c.name}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(c);
+        }
+      }
+      return unique;
+    }
+
+    function getTodayDate() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    function parseYMD(ymdStr) {
+      const [y, m, d] = ymdStr.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function toYMD(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function toDMY(dateObj) {
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const y = dateObj.getFullYear();
+      return `${d}/${m}/${y}`;
+    }
+
+    function calcDaysDiff(dueYMD) {
+      if (!dueYMD) return null;
+      const today = getTodayDate();
+      const due = parseYMD(dueYMD);
+      return Math.round((due - today) / (1000 * 60 * 60 * 24));
+    }
+
+    function formatThaiShort(ymdStr) {
+      if (!ymdStr) return 'ยังไม่กำหนดวัน';
+      const d = parseYMD(ymdStr);
+      return `${THAI_DOW[d.getDay()]} ${d.getDate()} ${THAI_MON[d.getMonth()]}`;
+    }
+
+    function formatThaiFull(dateObj) {
+      return `วัน${THAI_DOW[dateObj.getDay()]}ที่ ${dateObj.getDate()} ${THAI_MON[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+    }
+
+    function getTileLabel(days) {
+      if (days === null || days === undefined || Number.isNaN(days)) return 'รอส่ง';
+      if (days < 0) return `เลย ${-days} วัน`;
+      if (days === 0) return 'วันนี้';
+      if (days === 1) return 'พรุ่งนี้';
+      return `อีก ${days} วัน`;
+    }
+
+    function getNextClassYMD(dow) {
+      const today = getTodayDate();
+      const curDow = today.getDay();
+      let diff = (Number(dow) - curDow + 7) % 7;
+      if (diff === 0) diff = 7;
+      const next = new Date(today);
+      next.setDate(today.getDate() + diff);
+      return toYMD(next);
+    }
+
+    function escapeHTML(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function copyTextToClipboardUniversal(text, successMsg) {
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(successMsg);
+        }).catch(() => {
+          copyTextFallback(text);
+          showToast(successMsg);
+        });
+      } else {
+        copyTextFallback(text);
+        showToast(successMsg);
+      }
+    }
+
+    function showToast(msg) {
+      const box = document.getElementById('toast-box');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        box.classList.add('hidden');
+      }, 2800);
+    }
+
+    let _confirmCallback = null;
+    function openConfirmModal(title, desc, onConfirm) {
+      document.getElementById('confirm-modal-title').textContent = title;
+      document.getElementById('confirm-modal-desc').textContent = desc;
+      _confirmCallback = onConfirm;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+    function closeConfirmModal() {
+      document.getElementById('confirm-modal').classList.add('hidden');
+      _confirmCallback = null;
+    }
+    document.getElementById('confirm-modal-ok').addEventListener('click', () => {
+      if (_confirmCallback) _confirmCallback();
+      closeConfirmModal();
+    });
+
+    function loadData() {
+      try { courses = JSON.parse(localStorage.getItem(getUserDataKey('courses')) || '[]'); } catch { courses = []; }
+      try { activeItems = JSON.parse(localStorage.getItem(getUserDataKey('active')) || '[]'); } catch { activeItems = []; }
+      try { historyItems = JSON.parse(localStorage.getItem(getUserDataKey('history')) || '[]'); } catch { historyItems = []; }
+      saveData();
+    }
+
+    function saveData() {
+      safeSetStorage(getUserDataKey('courses'), JSON.stringify(courses));
+      safeSetStorage(getUserDataKey('active'), JSON.stringify(activeItems));
+      safeSetStorage(getUserDataKey('history'), JSON.stringify(historyItems));
+    }
+
+    // =========================================================================
+    // 6. Navigation & Form Controls
+    // =========================================================================
+    function switchTab(tabName) {
+      currentTab = tabName;
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn-desktop').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+          btn.classList.add('theme-pill-active');
+          btn.classList.remove('text-muted', 'hover:bg-pageBg');
+        } else {
+          btn.classList.remove('theme-pill-active');
+          btn.classList.add('text-muted', 'hover:bg-pageBg');
+        }
+      });
+
+      document.querySelectorAll('.tab-btn-mobile').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+          btn.classList.add('theme-mobile-active');
+          btn.classList.remove('text-muted');
+        } else {
+          btn.classList.remove('theme-mobile-active');
+          btn.classList.add('text-muted');
+        }
+      });
+
+      const fab = document.getElementById('mobile-fab-add');
+      if (tabName === 'list') {
+        fab.classList.remove('hidden');
+      } else {
+        fab.classList.add('hidden');
+      }
+    }
+
+    function toggleMobileForm(show) {
+      const container = document.getElementById('add-form-container');
+      if (show) {
+        container.classList.remove('hidden');
+        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    function syncSubjectDropdown() {
+      const sel = document.getElementById('inp-subject');
+      const prevVal = sel.value;
+      const allNames = getUniqueCoursesByName().map(c => c.name);
+      activeItems.forEach(it => {
+        if (!allNames.includes(it.subject)) allNames.push(it.subject);
+      });
+
+      if (allNames.length === 0) {
+        sel.innerHTML = `<option value="" style="background:#F3F4F8; color:#14213D;">-- กรุณาเพิ่มรายวิชาที่แท็บจัดการวิชาก่อน --</option>`;
+        document.getElementById('inp-due').value = toYMD(getTodayDate());
+      } else {
+        sel.innerHTML = allNames.map(name => {
+          const c = getCourseByName(name);
+          const prefix = c.code !== 'TASK' ? `[${c.code}] ` : '';
+          return `<option value="${escapeHTML(name)}" style="background:${c.bg}; color:${c.fg}; font-weight:700;">● ${prefix}${escapeHTML(name)}</option>`;
+        }).join('');
+      }
+
+      if (prevVal && allNames.includes(prevVal)) {
+        sel.value = prevVal;
+      }
+      onSubjectChange();
+    }
+
+    function onSubjectChange() {
+      const selEl = document.getElementById('inp-subject');
+      const subjName = selEl.value;
+      const hintBox = document.getElementById('form-course-hint');
+      const c = courses.find(x => x.name === subjName);
+      if (c) {
+        selEl.style.backgroundColor = c.bg;
+        selEl.style.color = c.fg;
+        selEl.style.borderColor = c.dot;
+        const dayStr = THAI_DOW[c.dow];
+        const detailParts = [`${dayStr} ${c.time}`, c.room, c.info].filter(Boolean).join(' | ');
+        hintBox.innerHTML = `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold text-xs" style="background:${c.bg}; color:${c.fg};">
+            <span class="w-2 h-2 rounded-full" style="background:${c.dot};"></span>
+            ${escapeHTML(c.code)}
+          </span>
+          <span class="text-[#14213D] font-semibold">${escapeHTML(detailParts)}</span>
+        `;
+        const noDueEl = document.getElementById('inp-no-due');
+        if (!editingTaskId && !(noDueEl && noDueEl.checked)) {
+          document.getElementById('inp-due').value = getNextClassYMD(c.dow);
+        }
+      } else {
+        selEl.style.backgroundColor = '';
+        selEl.style.color = '';
+        selEl.style.borderColor = '';
+        hintBox.innerHTML = `<span class="text-muted">ยังไม่มีรายวิชา — ไปที่แท็บ <button type="button" onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button> เพื่อเพิ่มรายวิชา</span>`;
+      }
+    }
+
+    // =========================================================================
+    // 7. Task & Course CRUD
+    // =========================================================================
+    function toggleNoDueDate() {
+      const noDueEl = document.getElementById('inp-no-due');
+      const dueEl = document.getElementById('inp-due');
+      if (!noDueEl || !dueEl) return;
+      if (noDueEl.checked) {
+        dueEl.value = '';
+        dueEl.disabled = true;
+        dueEl.required = false;
+      } else {
+        dueEl.disabled = false;
+        dueEl.required = true;
+        const subjName = document.getElementById('inp-subject').value;
+        const c = courses.find(x => x.name === subjName);
+        dueEl.value = c ? getNextClassYMD(c.dow) : toYMD(getTodayDate());
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const isNoDue = document.getElementById('inp-no-due')?.checked;
+      const due = isNoDue ? '' : document.getElementById('inp-due').value;
+      const subject = document.getElementById('inp-subject').value.trim();
+      const task = document.getElementById('inp-task').value.trim();
+
+      if ((!isNoDue && !due) || !subject || !task) {
+        showToast('กรุณาเลือกวิชา และกรอกรายละเอียดการบ้าน');
+        return;
+      }
+
+      if (editingTaskId) {
+        const idx = activeItems.findIndex(x => x.id === editingTaskId);
+        if (idx !== -1) {
+          activeItems[idx] = { ...activeItems[idx], due, subject, task };
+        }
+        showToast('บันทึกการแก้ไขเรียบร้อยแล้ว');
+        cancelEdit();
+      } else {
+        activeItems.push({
+          id: 'hw-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+          due,
+          subject,
+          task
+        });
+        document.getElementById('inp-task').value = '';
+        if (isNoDue) {
+          document.getElementById('inp-no-due').checked = false;
+          toggleNoDueDate();
+        }
+        showToast(isNoDue ? 'เพิ่มงานสถานะ "รอส่ง" เรียบร้อยแล้ว' : 'เพิ่มการบ้านเรียบร้อยแล้ว');
+        if (window.innerWidth < 768) toggleMobileForm(false);
+      }
+
+      saveData();
+      renderAll();
+    }
+
+    function startEdit(id) {
+      const item = activeItems.find(x => x.id === id);
+      if (!item) return;
+
+      editingTaskId = id;
+      switchTab('list');
+      const container = document.getElementById('add-form-container');
+      container.classList.remove('hidden');
+
+      document.getElementById('form-mode-title').innerHTML = `
+        <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+        <span class="text-blue-700">กำลังแก้ไขรายการการบ้าน</span>
+      `;
+      const noDueEl = document.getElementById('inp-no-due');
+      const dueEl = document.getElementById('inp-due');
+      if (!item.due) {
+        noDueEl.checked = true;
+        dueEl.value = '';
+        dueEl.disabled = true;
+        dueEl.required = false;
+      } else {
+        noDueEl.checked = false;
+        dueEl.disabled = false;
+        dueEl.required = true;
+        dueEl.value = item.due;
+      }
+      document.getElementById('inp-subject').value = item.subject;
+      document.getElementById('inp-task').value = item.task;
+      onSubjectChange();
+
+      const btnSubmit = document.getElementById('btn-submit-hw');
+      btnSubmit.textContent = 'บันทึกแก้ไข';
+      btnSubmit.classList.remove('bg-[#0F766E]', 'hover:bg-teal-800');
+      btnSubmit.classList.add('bg-blue-700', 'hover:bg-blue-800');
+
+      document.getElementById('btn-cancel-edit').classList.remove('hidden');
+      container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('inp-task').focus();
+    }
+
+    function cancelEdit() {
+      editingTaskId = null;
+      document.getElementById('form-mode-title').innerHTML = `
+        <span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span>
+        <span>เพิ่มการบ้านใหม่</span>
+      `;
+      document.getElementById('inp-task').value = '';
+      const noDueEl = document.getElementById('inp-no-due');
+      const dueEl = document.getElementById('inp-due');
+      if (noDueEl && dueEl) {
+        noDueEl.checked = false;
+        dueEl.disabled = false;
+        dueEl.required = true;
+      }
+      const btnSubmit = document.getElementById('btn-submit-hw');
+      btnSubmit.textContent = '+ เพิ่มงาน';
+      btnSubmit.classList.add('bg-[#0F766E]', 'hover:bg-teal-800');
+      btnSubmit.classList.remove('bg-blue-700', 'hover:bg-blue-800');
+      document.getElementById('btn-cancel-edit').classList.add('hidden');
+      onSubjectChange();
+    }
+
+    function quickAddForSubject(subjectName) {
+      cancelEdit();
+      switchTab('list');
+      document.getElementById('inp-subject').value = subjectName;
+      onSubjectChange();
+      const container = document.getElementById('add-form-container');
+      container.classList.remove('hidden');
+      container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('inp-task').focus();
+    }
+
+    function completeItem(id) {
+      const item = activeItems.find(x => x.id === id);
+      if (!item) return;
+      if (editingTaskId === id) cancelEdit();
+
+      historyItems.unshift({
+        id: 'hist-' + Date.now(),
+        doneDate: toYMD(getTodayDate()),
+        due: item.due,
+        subject: item.subject,
+        task: item.task
+      });
+
+      activeItems = activeItems.filter(x => x.id !== id);
+      saveData();
+      renderAll();
+      if (!document.getElementById('urgent-alert-modal').classList.contains('hidden')) {
+        renderUrgentAlertModalContent(isMidnightAlertMode);
+      }
+      showToast('✓ บันทึกส่งงานเข้าประวัติเรียบร้อย');
+    }
+
+    function restoreHistoryItem(id) {
+      const h = historyItems.find(x => x.id === id);
+      if (!h) return;
+      activeItems.push({ id: 'hw-' + Date.now(), due: h.due, subject: h.subject, task: h.task });
+      historyItems = historyItems.filter(x => x.id !== id);
+      saveData();
+      renderAll();
+      showToast('↩ กู้คืนงานกลับไปหน้ารายการแล้ว');
+    }
+
+    function deleteHistoryItem(id) {
+      historyItems = historyItems.filter(x => x.id !== id);
+      saveData();
+      renderAll();
+      showToast('ลบรายการประวัติแล้ว');
+    }
+
+    function clearAllHistory() {
+      openConfirmModal('ยืนยันการล้างประวัติ', 'ต้องการลบประวัติการส่งงานย้อนหลังทั้งหมดใช่หรือไม่?', () => {
+        historyItems = [];
+        saveData();
+        renderAll();
+        showToast('ล้างประวัติการส่งงานทั้งหมดแล้ว');
+      });
+    }
+
+    function initThemeDropdown() {
+      const sel = document.getElementById('c-inp-theme');
+      sel.innerHTML = PASTEL_THEMES.map((t, idx) => `<option value="${idx}">${t.label}</option>`).join('');
+    }
+
+    function copyAiPrompt() {
+      const promptEl = document.getElementById('ai-prompt-text');
+      const text = promptEl ? promptEl.textContent.trim() : '';
+      copyTextToClipboardUniversal(text, 'คัดลอกคำสั่ง (Prompt) แล้ว! นำไปส่งให้ AI พร้อมรูปตารางเรียนได้เลย');
+    }
+
+    function checkCourseOverlap(dow, timeStr, excludeId) {
+      const newRange = parseHourRange(timeStr);
+      if (!newRange) return null;
+      return courses.find(c => {
+        if (excludeId && c.id === excludeId) return false;
+        if (Number(c.dow) !== Number(dow)) return false;
+        const r = parseHourRange(c.time);
+        if (!r) return false;
+        return newRange.startH < r.endH && newRange.endH > r.startH;
+      }) || null;
+    }
+
+    function handleSaveCourse(e) {
+      e.preventDefault();
+      const code = document.getElementById('c-inp-code').value.trim();
+      const name = document.getElementById('c-inp-name').value.trim();
+      const dow = Number(document.getElementById('c-inp-dow').value);
+      const time = document.getElementById('c-inp-time').value.trim().replace(/\./g, ':').replace(/\s*-\s*/g, '–');
+      const room = document.getElementById('c-inp-room').value.trim() || 'ห้อง N/A';
+      const info = document.getElementById('c-inp-info').value.trim();
+      const themeIdx = Number(document.getElementById('c-inp-theme').value) || 0;
+      const theme = PASTEL_THEMES[themeIdx % PASTEL_THEMES.length];
+
+      if (!code || !name) return;
+
+      const overlapCourse = checkCourseOverlap(dow, time, editingCourseId);
+
+      if (editingCourseId) {
+        const idx = courses.findIndex(c => c.id === editingCourseId);
+        if (idx !== -1) {
+          const oldName = courses[idx].name;
+          courses[idx] = { ...courses[idx], code, name, dow, time, room, info, bg: theme.bg, fg: theme.fg, dot: theme.dot };
+          if (oldName !== name) {
+            activeItems.forEach(t => { if (t.subject === oldName) t.subject = name; });
+            historyItems.forEach(h => { if (h.subject === oldName) h.subject = name; });
+          }
+        }
+        showToast(overlapCourse
+          ? `อัปเดตแล้ว (หมายเหตุ: เวลาซ้อนกับวิชา ${overlapCourse.name})`
+          : 'อัปเดตข้อมูลรายวิชาเรียบร้อย');
+        cancelCourseEdit();
+      } else {
+        courses.push({
+          id: 'c-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+          code, name, dow, time, room, info,
+          bg: theme.bg, fg: theme.fg, dot: theme.dot
+        });
+        document.getElementById('single-course-form').reset();
+        const uniqueCount = getUniqueCoursesByName().length;
+        document.getElementById('c-inp-theme').value = String(uniqueCount % PASTEL_THEMES.length);
+        showToast(overlapCourse
+          ? `เพิ่มวิชา "${name}" แล้ว (หมายเหตุ: เวลาซ้อนกับวิชา ${overlapCourse.name})`
+          : `เพิ่มวิชา "${name}" เรียบร้อย`);
+      }
+
+      saveData();
+      syncSubjectDropdown();
+      renderAll();
+    }
+
+    function startEditCourse(id) {
+      const c = courses.find(x => x.id === id);
+      if (!c) return;
+      editingCourseId = id;
+      document.getElementById('course-form-title').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span><span class="text-blue-700">แก้ไขรายวิชา</span>`;
+      document.getElementById('btn-cancel-course-edit').classList.remove('hidden');
+      document.getElementById('c-inp-code').value = c.code;
+      document.getElementById('c-inp-name').value = c.name;
+      document.getElementById('c-inp-dow').value = String(c.dow);
+      document.getElementById('c-inp-time').value = c.time;
+      document.getElementById('c-inp-room').value = c.room || 'ห้อง N/A';
+      document.getElementById('c-inp-info').value = c.info;
+      const foundThemeIdx = PASTEL_THEMES.findIndex(t => t.bg.toLowerCase() === c.bg.toLowerCase());
+      document.getElementById('c-inp-theme').value = String(foundThemeIdx >= 0 ? foundThemeIdx : 0);
+      const btn = document.getElementById('btn-save-course');
+      btn.textContent = 'บันทึกการแก้ไขวิชา';
+      btn.classList.remove('bg-[#0F766E]');
+      btn.classList.add('bg-blue-700');
+      document.getElementById('single-course-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function cancelCourseEdit() {
+      editingCourseId = null;
+      document.getElementById('course-form-title').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span><span>เพิ่มรายวิชาใหม่</span>`;
+      document.getElementById('btn-cancel-course-edit').classList.add('hidden');
+      document.getElementById('single-course-form').reset();
+      const btn = document.getElementById('btn-save-course');
+      btn.textContent = '+ บันทึกรายวิชา';
+      btn.classList.add('bg-[#0F766E]');
+      btn.classList.remove('bg-blue-700');
+    }
+
+    function deleteCourse(id) {
+      const c = courses.find(x => x.id === id);
+      if (!c) return;
+      openConfirmModal('ลบ / ถอนรายวิชา', `ต้องการลบวิชา [${c.code}] ${c.name} (${THAI_DOW[c.dow]} ${c.time}) ออกจากตารางเรียนใช่หรือไม่?`, () => {
+        if (editingCourseId === id) cancelCourseEdit();
+        courses = courses.filter(x => x.id !== id);
+        saveData();
+        syncSubjectDropdown();
+        renderAll();
+        showToast('ลบรายวิชาเรียบร้อยแล้ว');
+      });
+    }
+
+    function confirmClearAllCourses() {
+      openConfirmModal('ล้างรายวิชาทั้งหมด', 'รายวิชาทั้งหมดในตารางจะถูกลบออก เพื่อเตรียมลงวิชาใหม่ ต้องการดำเนินการต่อหรือไม่?', () => {
+        cancelCourseEdit();
+        courses = [];
+        saveData();
+        syncSubjectDropdown();
+        renderAll();
+        showToast('ล้างรายวิชาทั้งหมดแล้ว');
+      });
+    }
+
+    function detectThaiDow(text) {
+      if (/อาทิตย์|อา\./.test(text)) return 0;
+      if (/จันทร์|จ\./.test(text)) return 1;
+      if (/อังคาร|อ\./.test(text)) return 2;
+      if (/พฤหัสบดี|พฤหัส|พฤ\./.test(text)) return 4;
+      if (/พุธ|พ\./.test(text)) return 3;
+      if (/ศุกร์|ศ\./.test(text)) return 5;
+      if (/เสาร์|ส\./.test(text)) return 6;
+      return 1;
+    }
+
+    function parseAndImportBulkCourses(replaceAll) {
+      const raw = document.getElementById('bulk-paste-area').value.trim();
+      if (!raw) {
+        showToast('กรุณาวางข้อความตารางเรียนที่ได้จาก AI ก่อน');
+        return;
+      }
+
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const parsedCourses = [];
+      const existingList = replaceAll ? [] : [...courses];
+      const themeBySubjectKey = new Map();
+
+      existingList.forEach(c => {
+        themeBySubjectKey.set(`${c.code}::${c.name}`, { bg: c.bg, fg: c.fg, dot: c.dot });
+      });
+
+      for (const line of lines) {
+        if (line.startsWith('#') || line.startsWith('```')) continue;
+
+        let code = '', name = '', dow = 1, time = '', room = 'ห้อง N/A', info = '';
+
+        if (line.includes('|')) {
+          const parts = line.split('|').map(p => p.trim());
+          if (parts.length < 3) continue;
+          code = parts[0] || 'COURSE';
+          name = parts[1] || 'ไม่ระบุชื่อวิชา';
+          dow = parts[2] ? detectThaiDow(parts[2]) : 1;
+          time = (parts[3] || '').replace(/\./g, ':').replace(/\s*-\s*/g, '–');
+          const extra = parts.slice(4).join(' | ').trim();
+          room = extra || 'ห้อง N/A';
+          info = (extra && extra !== 'ห้อง N/A') ? extra : '';
+        } else {
+          const codeMatch = line.match(/\b(\d{7,8})\b/);
+          if (!codeMatch) continue;
+          code = codeMatch[1];
+          let rest = line.replace(code, '').trim();
+          const timeMatch = rest.match(/(\d{1,2}[:.]\d{2}\s*[-–]\s*\d{1,2}[:.]\d{2})/);
+          time = timeMatch ? timeMatch[1].replace(/\./g, ':').replace(/\s*-\s*/g, '–') : '';
+          if (timeMatch) rest = rest.replace(timeMatch[0], ' ');
+          const dayMatch = rest.match(/(วัน)?(อาทิตย์|จันทร์|อังคาร|พฤหัสบดี|พฤหัส|พุธ|ศุกร์|เสาร์)/);
+          dow = dayMatch ? detectThaiDow(dayMatch[0]) : 1;
+          if (dayMatch) rest = rest.replace(dayMatch[0], ' ');
+          const cols = rest.split(/\t+|\s{2,}/).map(s => s.trim()).filter(Boolean);
+          name = cols[0] || `วิชา ${code}`;
+          const extra = cols.slice(1).join(' · ');
+          room = extra || 'ห้อง N/A';
+          info = (extra && extra !== 'ห้อง N/A') ? extra : '';
+        }
+
+        const subjKey = `${code}::${name}`;
+        let theme = themeBySubjectKey.get(subjKey);
+        if (!theme) {
+          theme = PASTEL_THEMES[themeBySubjectKey.size % PASTEL_THEMES.length];
+          themeBySubjectKey.set(subjKey, theme);
+        }
+
+        parsedCourses.push({
+          id: 'c-' + Date.now() + '-' + parsedCourses.length + '-' + Math.random().toString(36).slice(2, 5),
+          code, name, dow, time, room, info,
+          bg: theme.bg, fg: theme.fg, dot: theme.dot
+        });
+      }
+
+      if (parsedCourses.length === 0) {
+        showToast('ไม่พบรูปแบบรายวิชาที่ถูกต้อง กรุณาตรวจสอบข้อความ');
+        return;
+      }
+
+      courses = replaceAll ? parsedCourses : [...courses, ...parsedCourses];
+      const uniqueCount = getUniqueCoursesByName().length;
+      document.getElementById('bulk-paste-area').value = '';
+      saveData();
+      syncSubjectDropdown();
+      renderAll();
+      showToast(`นำเข้าตารางเรียนสำเร็จ ${uniqueCount} รายวิชา (${parsedCourses.length} คาบ)!`);
+    }
+
+    function encodeUnicodeBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let bin = '';
+      bytes.forEach(b => { bin += String.fromCharCode(b); });
+      return btoa(bin);
+    }
+
+    function decodeUnicodeBase64(b64) {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    }
+
+    function copyCoursePresetCode() {
+      if (courses.length === 0) {
+        showToast('ยังไม่มีรายวิชาสำหรับสร้างโค้ดแชร์');
+        return;
+      }
+      const uniqueCount = getUniqueCoursesByName().length;
+      const compact = courses.map(c => [c.code, c.name, c.dow, c.time, c.room || 'ห้อง N/A', c.info, c.bg, c.fg, c.dot]);
+      const codeStr = 'HW2569:' + encodeUnicodeBase64(JSON.stringify(compact));
+      copyTextToClipboardUniversal(codeStr, `คัดลอกโค้ดชุดวิชา (${uniqueCount} รายวิชา) แล้ว! ส่งเข้า LINE ให้เพื่อนได้เลย`);
+    }
+
+    function importCoursePresetCode() {
+      const raw = document.getElementById('preset-code-input').value.trim();
+      if (!raw) {
+        showToast('กรุณาวางโค้ดชุดวิชาจากเพื่อนก่อน');
+        return;
+      }
+      try {
+        const clean = raw.startsWith('HW2569:') ? raw.slice(7) : raw;
+        const arr = JSON.parse(decodeUnicodeBase64(clean));
+        if (!Array.isArray(arr) || arr.length === 0) throw new Error('Invalid format');
+
+        const imported = arr.map((item, idx) => {
+          const fallback = PASTEL_THEMES[idx % PASTEL_THEMES.length];
+          const hasRoom = item.length >= 9;
+          return {
+            id: 'c-' + Date.now() + '-' + idx,
+            code: String(item[0] || 'COURSE'),
+            name: String(item[1] || 'ไม่ระบุวิชา'),
+            dow: Number(item[2] ?? 1),
+            time: String(item[3] || ''),
+            room: hasRoom ? String(item[4] || 'ห้อง N/A') : 'ห้อง N/A',
+            info: hasRoom ? String(item[5] || '') : String(item[4] || ''),
+            bg: (hasRoom ? item[6] : item[5]) || fallback.bg,
+            fg: (hasRoom ? item[7] : item[6]) || fallback.fg,
+            dot: (hasRoom ? item[8] : item[7]) || fallback.dot
+          };
+        });
+
+        const uniqueImportedCount = new Set(imported.map(c => `${c.code}::${c.name}`)).size;
+        openConfirmModal('นำเข้าชุดวิชาจากเพื่อน', `พบชุดวิชาทั้งหมด ${uniqueImportedCount} รายวิชา (${imported.length} คาบ) ต้องการแทนที่รายวิชาปัจจุบันของคุณใช่หรือไม่?`, () => {
+          courses = imported;
+          document.getElementById('preset-code-input').value = '';
+          saveData();
+          syncSubjectDropdown();
+          renderAll();
+          showToast(`โหลดชุดวิชาสำเร็จ ${uniqueImportedCount} รายวิชา!`);
+        });
+      } catch {
+        showToast('โค้ดชุดวิชาไม่ถูกต้อง กรุณาคัดลอกมาให้ครบถ้วน');
+      }
+    }
+
+    // =========================================================================
+    // 8. Weekly Visual Grid Timetable & Rendering
+    // =========================================================================
+    function parseHourRange(timeStr) {
+      if (!timeStr) return null;
+      const m = timeStr.match(/(\d{1,2})[:.](\d{2})\s*[-–]\s*(\d{1,2})[:.](\d{2})/);
+      if (!m) return null;
+      const startH = parseInt(m[1], 10);
+      const endH = parseInt(m[3], 10) + (parseInt(m[4], 10) > 0 ? 1 : 0);
+      if (isNaN(startH) || isNaN(endH) || endH <= startH) return null;
+      return { startH, endH };
+    }
+
+    function renderWeeklyGridTimetable(todayDow) {
+      const container = document.getElementById('weekly-timetable-grid');
+      if (!container) return;
+
+      const START_HOUR = 9;
+      const END_HOUR = 21;
+      const hours = [];
+      for (let h = START_HOUR; h < END_HOUR; h++) hours.push(h);
+
+      const daysOrder = [
+        { dow: 1, name: 'จันทร์', isWeekend: false },
+        { dow: 2, name: 'อังคาร', isWeekend: false },
+        { dow: 3, name: 'พุธ', isWeekend: false },
+        { dow: 4, name: 'พฤหัสบดี', isWeekend: false },
+        { dow: 5, name: 'ศุกร์', isWeekend: false },
+        { dow: 6, name: 'เสาร์', isWeekend: true },
+        { dow: 0, name: 'อาทิตย์', isWeekend: true }
+      ];
+
+      let html = `<table class="timetable-table"><thead><tr class="theme-surface text-[11px] sm:text-xs font-bold">`;
+      html += `<th class="timetable-sticky-col theme-surface w-[92px] py-3 px-2 text-center border-black/15">วัน / เวลา</th>`;
+      for (const h of hours) {
+        const h1 = String(h).padStart(2, '0') + ':00';
+        const h2 = String(h + 1).padStart(2, '0') + ':00';
+        html += `<th class="py-3 px-1 text-center font-bold border-black/15">${h1}–${h2}</th>`;
+      }
+      html += `</tr></thead><tbody>`;
+
+      for (const dObj of daysOrder) {
+        const dayCourses = courses
+          .filter(c => Number(c.dow) === dObj.dow)
+          .map(c => ({ ...c, range: parseHourRange(c.time) }))
+          .filter(c => c.range !== null)
+          .sort((a, b) => a.range.startH - b.range.startH);
+
+        const isToday = (todayDow === dObj.dow);
+        const rowBg = dObj.isWeekend ? 'bg-[#FFF5F7]' : 'bg-white';
+        const dayCellBg = dObj.isWeekend ? 'bg-[#FBE4E8] text-[#8B1230]' : 'bg-[#F8FAFC] text-[#14213D]';
+        const todayRing = isToday ? 'ring-2 ring-inset ring-blue-400' : '';
+
+        html += `<tr class="${rowBg}">`;
+        html += `<td class="timetable-sticky-col ${dayCellBg} ${todayRing} font-bold text-xs sm:text-sm text-center py-6 px-2 select-none">${dObj.name}</td>`;
+
+        let h = START_HOUR;
+        while (h < END_HOUR) {
+          const block = dayCourses.find(c => c.range.startH === h);
+          if (block) {
+            const clampedEnd = Math.min(END_HOUR, block.range.endH);
+            const span = Math.max(1, clampedEnd - h);
+            const roomLabel = block.room || 'ห้อง N/A';
+            const timeLabel = block.time ? `${block.time} · ` : '';
+            html += `
+              <td colspan="${span}" class="p-1.5 align-middle ${rowBg}">
+                <div class="rounded-xl px-2.5 py-2.5 min-h-[64px] flex flex-col justify-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]" style="background:${block.bg}; color:${block.fg};">
+                  <div class="font-bold text-xs leading-snug break-words">${escapeHTML(block.name)}</div>
+                  <div class="text-[11px] opacity-85 mt-0.5 leading-tight break-words">${escapeHTML(timeLabel + roomLabel)}</div>
+                </div>
+              </td>
+            `;
+            h += span;
+          } else {
+            html += `<td class="p-1 ${rowBg}"></td>`;
+            h += 1;
+          }
+        }
+        html += `</tr>`;
+      }
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    function createHomeworkCardHTML(item, isUrgent) {
+      const days = calcDaysDiff(item.due);
+      const course = getCourseByName(item.subject);
+
+      let tileBg, tileFg, borderStyle;
+      if (days === null) {
+        tileBg = '#E0E7FF';
+        tileFg = '#3730A3';
+        borderStyle = 'border-indigo-200';
+      } else if (days <= 0) {
+        tileBg = '#FBE4E8';
+        tileFg = '#8B1230';
+        borderStyle = 'border-[#8B1230]/60';
+      } else if (isUrgent) {
+        tileBg = '#FEF3C7';
+        tileFg = '#92400E';
+        borderStyle = 'border-cardBorder';
+      } else {
+        tileBg = '#EEF0F6';
+        tileFg = '#14213D';
+        borderStyle = 'border-cardBorder';
+      }
+
+      const channelSubtitle = course.info ? `<div class="text-[11px] text-muted mt-0.5 truncate">📍 ${escapeHTML(course.info)}</div>` : '';
+
+      return `
+        <div class="bg-white rounded-[14px] border ${borderStyle} p-3.5 sm:p-4 shadow-xs flex flex-col lg:flex-row lg:items-center gap-3.5 transition hover:shadow-sm">
+          <div class="flex items-start gap-3.5 flex-1 min-w-0">
+            <div class="w-24 sm:w-32 shrink-0 rounded-xl py-2.5 px-2 text-center flex flex-col justify-center" style="background:${tileBg}; color:${tileFg};">
+              <div class="text-base sm:text-xl font-bold leading-tight">${getTileLabel(days)}</div>
+              <div class="text-[11px] sm:text-xs font-semibold mt-0.5 opacity-90">${formatThaiShort(item.due)}</div>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold" style="background:${course.bg}; color:${course.fg};">
+                  <span class="w-2 h-2 rounded-full" style="background:${course.dot};"></span>
+                  ${escapeHTML(course.code)}
+                </span>
+                <h4 class="text-sm sm:text-base font-bold text-[#14213D] truncate">${escapeHTML(item.subject)}</h4>
+              </div>
+              ${channelSubtitle}
+              <p class="text-sm sm:text-base text-[#14213D]/95 mt-1.5 whitespace-pre-line-wrap leading-relaxed">${escapeHTML(item.task)}</p>
+            </div>
+          </div>
+
+          <!-- Action Buttons including Google Calendar -->
+          <div class="flex flex-wrap items-center justify-end gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 shrink-0">
+            <button onclick="openGoogleCalendarForTask('${item.id}')" title="เพิ่มลง Google Calendar" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-amber-50 text-[#14213D] text-xs font-bold transition active:scale-95">
+              📅 Google Calendar
+            </button>
+            <button onclick="startEdit('${item.id}')" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition active:scale-95">
+              ✎ แก้ไข
+            </button>
+            <button onclick="completeItem('${item.id}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-teal-50 hover:border-teal-300 text-[#14213D] hover:text-teal-800 text-xs font-bold transition active:scale-95">
+              ✓ เสร็จแล้ว
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAll() {
+      const today = getTodayDate();
+      document.getElementById('header-date-text').textContent = formatThaiFull(today);
+
+      activeItems.sort((a, b) => {
+        if (!a.due && !b.due) return 0;
+        if (!a.due) return 1;
+        if (!b.due) return -1;
+        return a.due.localeCompare(b.due);
+      });
+
+      const urgentItems = activeItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d <= 7; });
+      const laterItems = activeItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d > 7; });
+      const pendingItems = activeItems.filter(it => !it.due);
+      const dueSoonCount = activeItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d <= 1; }).length;
+      const uniqueCourses = getUniqueCoursesByName();
+
+      document.getElementById('stat-total').textContent = activeItems.length;
+      document.getElementById('stat-urgent').textContent = urgentItems.length;
+      document.getElementById('stat-today').textContent = dueSoonCount;
+      document.getElementById('stat-done').textContent = historyItems.length;
+
+      document.getElementById('badge-list-desktop').textContent = activeItems.length;
+      document.getElementById('badge-subjects-desktop').textContent = uniqueCourses.length;
+      document.getElementById('badge-courses-desktop').textContent = uniqueCourses.length;
+      document.getElementById('badge-history-desktop').textContent = historyItems.length;
+      document.getElementById('badge-list-mobile').textContent = activeItems.length;
+
+      const mSubjBadge = document.getElementById('badge-subjects-mobile');
+      if (uniqueCourses.length > 0) {
+        mSubjBadge.textContent = uniqueCourses.length;
+        mSubjBadge.classList.remove('hidden');
+      } else {
+        mSubjBadge.classList.add('hidden');
+      }
+
+      const mHistBadge = document.getElementById('badge-history-mobile');
+      if (historyItems.length > 0) {
+        mHistBadge.textContent = historyItems.length;
+        mHistBadge.classList.remove('hidden');
+      } else {
+        mHistBadge.classList.add('hidden');
+      }
+
+      // 1. Tasks View
+      const emptyEl = document.getElementById('hw-empty-state');
+      const secUrgent = document.getElementById('section-urgent');
+      const secLater = document.getElementById('section-later');
+      const secPending = document.getElementById('section-pending');
+
+      if (activeItems.length === 0) {
+        emptyEl.classList.remove('hidden');
+        secUrgent.classList.add('hidden');
+        secLater.classList.add('hidden');
+        secPending.classList.add('hidden');
+      } else {
+        emptyEl.classList.add('hidden');
+        if (urgentItems.length > 0) {
+          secUrgent.classList.remove('hidden');
+          document.getElementById('count-urgent-label').textContent = `${urgentItems.length} งาน`;
+          document.getElementById('list-urgent').innerHTML = urgentItems.map(it => createHomeworkCardHTML(it, true)).join('');
+        } else {
+          secUrgent.classList.add('hidden');
+        }
+        if (laterItems.length > 0) {
+          secLater.classList.remove('hidden');
+          document.getElementById('count-later-label').textContent = `${laterItems.length} งาน`;
+          document.getElementById('list-later').innerHTML = laterItems.map(it => createHomeworkCardHTML(it, false)).join('');
+        } else {
+          secLater.classList.add('hidden');
+        }
+        if (pendingItems.length > 0) {
+          secPending.classList.remove('hidden');
+          document.getElementById('count-pending-label').textContent = `${pendingItems.length} งาน`;
+          document.getElementById('list-pending').innerHTML = pendingItems.map(it => createHomeworkCardHTML(it, false)).join('');
+        } else {
+          secPending.classList.add('hidden');
+        }
+      }
+
+      // 2. Subjects View
+      document.getElementById('subjects-count-badge').textContent = `${uniqueCourses.length} รายวิชา`;
+      const subjGrid = document.getElementById('subjects-grid');
+      if (uniqueCourses.length === 0) {
+        subjGrid.innerHTML = `
+          <div class="md:col-span-2 bg-white rounded-[14px] border border-cardBorder p-8 text-center space-y-2">
+            <div class="text-3xl">📚</div>
+            <div class="text-sm font-bold text-[#14213D]">ยังไม่มีรายวิชาในระบบ (0 รายวิชา)</div>
+            <p class="text-xs sm:text-sm text-muted">กดไปที่แท็บ <button onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button> เพื่อเพิ่มรายวิชาทีละวิชา หรือวางตารางเรียนที่แปลงจาก AI</p>
+          </div>
+        `;
+      } else {
+        subjGrid.innerHTML = uniqueCourses.map(c => {
+          const courseTasks = activeItems.filter(it => it.subject === c.name);
+          const sameSubjectSlots = courses.filter(x => x.code === c.code && x.name === c.name);
+          const scheduleSummary = sameSubjectSlots.map(s => `${THAI_DOW[s.dow]} ${s.time}`).join(', ');
+          const subLine = [scheduleSummary, c.info].filter(Boolean).join(' · ');
+
+          let tasksInnerHTML = courseTasks.length === 0
+            ? `<div class="text-xs text-muted py-2 text-center">ไม่มีงานค้าง</div>`
+            : `<div class="space-y-2">` + courseTasks.map(t => {
+                const d = calcDaysDiff(t.due);
+                const tagColor = d === null ? 'text-[#3730A3] bg-[#E0E7FF]' : (d <= 0 ? 'text-[#8B1230] bg-[#FBE4E8]' : (d <= 7 ? 'text-[#92400E] bg-[#FEF3C7]' : 'text-[#14213D] bg-white'));
+                return `
+                  <div class="bg-white rounded-xl p-2.5 border border-cardBorder/80 flex items-start justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-1.5 mb-1">
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${tagColor}">${getTileLabel(d)} (${formatThaiShort(t.due)})</span>
+                      </div>
+                      <p class="text-xs sm:text-sm text-[#14213D] font-medium whitespace-pre-line-wrap">${escapeHTML(t.task)}</p>
+                    </div>
+                    <button onclick="completeItem('${t.id}')" title="เสร็จแล้ว" class="shrink-0 w-7 h-7 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs flex items-center justify-center transition">
+                      ✓
+                    </button>
+                  </div>
+                `;
+              }).join('') + `</div>`;
+
+          return `
+            <div class="bg-white rounded-[14px] border border-cardBorder p-4 shadow-xs flex flex-col justify-between">
+              <div>
+                <div class="flex items-start justify-between gap-2 mb-3">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold" style="background:${c.bg}; color:${c.fg};">
+                        <span class="w-2 h-2 rounded-full" style="background:${c.dot};"></span>
+                        ${escapeHTML(c.code)}
+                      </span>
+                      <h3 class="text-sm sm:text-base font-bold text-[#14213D]">${escapeHTML(c.name)}</h3>
+                    </div>
+                    <p class="text-xs text-muted mt-1">${escapeHTML(subLine)}</p>
+                  </div>
+                  <button onclick="quickAddForSubject('${escapeHTML(c.name)}')" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-pageBg hover:bg-[#14213D] hover:text-white text-[#14213D] text-xs font-bold transition">
+                    + เพิ่ม
+                  </button>
+                </div>
+              </div>
+              <div class="bg-pageBg rounded-xl p-3 border border-slate-200/60">
+                ${tasksInnerHTML}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 3. Schedule View
+      renderWeeklyGridTimetable(today.getDay());
+      document.getElementById('schedule-count-badge').textContent = `${uniqueCourses.length} รายวิชา`;
+
+      const courseInfoTableEl = document.getElementById('course-info-table');
+      if (uniqueCourses.length === 0) {
+        courseInfoTableEl.innerHTML = `<div class="p-8 text-center text-sm text-muted">ยังไม่มีรายวิชา กดไปที่แท็บ <button onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button> เพื่อเพิ่มรายวิชา</div>`;
+      } else {
+        courseInfoTableEl.innerHTML = uniqueCourses.map(c => {
+          const sameSubjectSlots = courses.filter(x => x.code === c.code && x.name === c.name);
+          const scheduleSummary = sameSubjectSlots.map(s => `${THAI_DOW[s.dow]} ${s.time}`).join(', ');
+          const extraDetail = [c.room, c.info].filter(v => v && v !== 'ห้อง N/A').join(' · ');
+          return `
+            <div class="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50/70">
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold shrink-0" style="background:${c.bg}; color:${c.fg};">
+                  <span class="w-2 h-2 rounded-full" style="background:${c.dot};"></span>
+                  ${escapeHTML(c.code)}
+                </span>
+                <span class="font-bold text-sm text-[#14213D]">${escapeHTML(c.name)}</span>
+              </div>
+              <div class="text-xs sm:text-sm font-medium text-muted sm:text-right">
+                ${escapeHTML(scheduleSummary)} ${extraDetail ? `· <span class="text-[#14213D] font-semibold">${escapeHTML(extraDetail)}</span>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 4. Manage Courses View
+      const countText = uniqueCourses.length === courses.length
+        ? `${uniqueCourses.length} รายวิชา`
+        : `${uniqueCourses.length} รายวิชา (${courses.length} คาบเรียน)`;
+      document.getElementById('manage-course-total').textContent = countText;
+
+      const manageListEl = document.getElementById('manage-courses-list');
+      if (courses.length === 0) {
+        manageListEl.innerHTML = `<div class="p-8 text-center text-sm text-muted">ไม่มีรายวิชาในรายการ สามารถเพิ่มทีละวิชาหรือวางตารางเรียนด้านบนได้เลย</div>`;
+      } else {
+        manageListEl.innerHTML = courses.map(c => `
+          <div class="px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/60">
+            <div class="space-y-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold" style="background:${c.bg}; color:${c.fg};">
+                  <span class="w-2 h-2 rounded-full" style="background:${c.dot};"></span>
+                  ${escapeHTML(c.code)}
+                </span>
+                <span class="font-bold text-sm text-[#14213D]">${escapeHTML(c.name)}</span>
+              </div>
+              <div class="text-xs text-muted">
+                ${escapeHTML(THAI_DOW[c.dow])} ${escapeHTML(c.time)} · ${escapeHTML(c.room || 'ห้อง N/A')} ${c.info && c.info !== c.room ? `| ${escapeHTML(c.info)}` : ''}
+              </div>
+            </div>
+            <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+              <button onclick="startEditCourse('${c.id}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition">
+                ✎ แก้ไข
+              </button>
+              <button onclick="deleteCourse('${c.id}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
+                ลบ / ถอน
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 5. History View
+      const histEmpty = document.getElementById('history-empty-state');
+      const histList = document.getElementById('list-history');
+      const btnClearHist = document.getElementById('btn-clear-history');
+
+      if (historyItems.length === 0) {
+        histEmpty.classList.remove('hidden');
+        histList.innerHTML = '';
+        btnClearHist.classList.add('hidden');
+      } else {
+        histEmpty.classList.add('hidden');
+        btnClearHist.classList.remove('hidden');
+        histList.innerHTML = historyItems.map(h => {
+          const course = getCourseByName(h.subject);
+          const isLate = Boolean(h.due) && h.doneDate > h.due;
+          const dueNote = h.due ? `กำหนด ${formatThaiShort(h.due)}${isLate ? ' · ช้า' : ''}` : 'รอส่ง / ไม่กำหนดวัน';
+          const statusBadge = isLate
+            ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-[#FBE4E8] text-[#8B1230]">ส่งเมื่อ ${toDMY(parseYMD(h.doneDate))} (${dueNote})</span>`
+            : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-[#DCFCE7] text-[#166534]">✓ ส่งเมื่อ ${toDMY(parseYMD(h.doneDate))} (${dueNote})</span>`;
+
+          return `
+            <div class="bg-white rounded-[14px] border border-cardBorder p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="space-y-1.5 min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold" style="background:${course.bg}; color:${course.fg};">
+                    <span class="w-2 h-2 rounded-full" style="background:${course.dot};"></span>
+                    ${escapeHTML(course.code)}
+                  </span>
+                  ${statusBadge}
+                </div>
+                <h4 class="text-sm sm:text-base font-bold text-[#14213D]">${escapeHTML(h.subject)}</h4>
+                <p class="text-xs sm:text-sm text-muted whitespace-pre-line-wrap">${escapeHTML(h.task)}</p>
+              </div>
+              <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                <button onclick="restoreHistoryItem('${h.id}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition">
+                  ↩ กู้คืน
+                </button>
+                <button onclick="deleteHistoryItem('${h.id}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
+                  ลบ
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // =========================================================================
+    // 9. Install Modal & PC homework.txt Sync
+    // =========================================================================
+    function openInstallModal() { document.getElementById('install-modal').classList.remove('hidden'); }
+    function closeInstallModal() { document.getElementById('install-modal').classList.add('hidden'); }
+
+    function generateHomeworkTxtString() {
+      const lines = ['# รูปแบบ 1 บรรทัดต่อ 1 งาน: วันที่ส่ง (หรือ รอส่ง) | วิชา | การบ้าน'];
+      activeItems.forEach(it => {
+        const dmy = it.due ? toDMY(parseYMD(it.due)) : 'รอส่ง';
+        const cleanTask = it.task.replace(/\r?\n/g, '\\n');
+        lines.push(`${dmy} | ${it.subject} | ${cleanTask}`);
+      });
+      return lines.join('\n');
+    }
+
+    function openTransferModal() {
+      document.getElementById('txt-sync-area').value = generateHomeworkTxtString();
+      document.getElementById('transfer-modal').classList.remove('hidden');
+    }
+    function closeTransferModal() { document.getElementById('transfer-modal').classList.add('hidden'); }
+
+    function downloadHomeworkTxt() {
+      const content = generateHomeworkTxtString();
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'homework.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('ดาวน์โหลดไฟล์ homework.txt แล้ว');
+    }
+
+    function copyTxtToClipboard() {
+      const ta = document.getElementById('txt-sync-area');
+      const text = ta ? ta.value : '';
+      copyTextToClipboardUniversal(text, 'คัดลอกข้อมูลรูปแบบ homework.txt แล้ว');
+    }
+
+    function parseHomeworkTxtContent(rawText) {
+      const lines = rawText.split(/\r?\n/);
+      const parsed = [];
+      for (const line of lines) {
+        const l = line.trim();
+        if (!l || l.startsWith('#')) continue;
+        const parts = l.split('|');
+        if (parts.length < 3) continue;
+        const dateStr = parts[0].trim();
+        const subj = parts[1].trim();
+        const taskRaw = parts.slice(2).join('|').trim().replace(/\\n/g, '\n');
+
+        let dueVal = '';
+        if (!/^(รอส่ง|ไม่กำหนด|-|none)$/i.test(dateStr)) {
+          let y, m, d;
+          if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(dateStr)) {
+            [y, m, d] = dateStr.split('-').map(Number);
+          } else if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/.test(dateStr)) {
+            [d, m, y] = dateStr.split(/[\/-]/).map(Number);
+          } else {
+            continue;
+          }
+          if (y > 2400) y -= 543;
+          const dt = new Date(y, m - 1, d);
+          if (isNaN(dt.getTime())) continue;
+          dueVal = toYMD(dt);
+        }
+
+        parsed.push({
+          id: 'imp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+          due: dueVal,
+          subject: subj,
+          task: taskRaw
+        });
+      }
+      return parsed;
+    }
+
+    function applyTextImport() {
+      const raw = document.getElementById('txt-sync-area').value;
+      const imported = parseHomeworkTxtContent(raw);
+      if (imported.length === 0) {
+        showToast('ไม่พบรายการที่ถูกต้องในข้อความ');
+        return;
+      }
+      activeItems = imported;
+      saveData();
+      syncSubjectDropdown();
+      renderAll();
+      closeTransferModal();
+      showToast(`นำเข้าข้อมูลสำเร็จ ${imported.length} รายการ`);
+    }
+
+    function importHomeworkTxtFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('txt-sync-area').value = evt.target.result;
+        applyTextImport();
+      };
+      reader.readAsText(file, 'UTF-8');
+      e.target.value = '';
+    }
+
+    // =========================================================================
+    // 10. Real Mobile Service Worker Notifications & Scheduled/Midnight Checks
+    // =========================================================================
+    function loadNotifPrefs() {
+      try {
+        const raw = localStorage.getItem(STORAGE_NOTIF_PREF);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          notifPrefs = { autoPopup: parsed.autoPopup !== false, sound: parsed.sound !== false };
+        }
+      } catch {
+        notifPrefs = { autoPopup: true, sound: true };
+      }
+      updateNotifStatusUI();
+    }
+
+    function saveNotifPrefs() {
+      notifPrefs.autoPopup = document.getElementById('chk-notif-auto').checked;
+      notifPrefs.sound = document.getElementById('chk-notif-sound').checked;
+      safeSetStorage(STORAGE_NOTIF_PREF, JSON.stringify(notifPrefs));
+      updateNotifStatusUI();
+      showToast('บันทึกการตั้งค่าแจ้งเตือนแล้ว');
+    }
+
+    function updateNotifStatusUI() {
+      const headerBtn = document.getElementById('btn-header-notif');
+      const permBadge = document.getElementById('notif-perm-badge');
+      const reqBtn = document.getElementById('btn-req-notif-perm');
+
+      const hasNotifAPI = ('Notification' in window);
+      const perm = hasNotifAPI ? Notification.permission : 'unsupported';
+
+      if (perm === 'granted') {
+        headerBtn.innerHTML = '<span>🔔 แจ้งเตือนทำงาน</span>';
+        headerBtn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/85 hover:bg-white text-teal-800 border border-teal-600/30 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95';
+        if (permBadge) {
+          permBadge.textContent = 'อนุญาตแล้ว ✓';
+          permBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#DCFCE7] text-[#166534]';
+        }
+        if (reqBtn) {
+          reqBtn.textContent = '✓ เปิดใช้งานการแจ้งเตือนบนอุปกรณ์เรียบร้อย';
+          reqBtn.className = 'w-full py-2 rounded-xl bg-slate-200 text-[#14213D] text-xs sm:text-sm font-bold';
+        }
+      } else if (perm === 'denied') {
+        headerBtn.innerHTML = '<span>🔕 แจ้งเตือนถูกปิด</span>';
+        headerBtn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/85 hover:bg-white text-[#8B1230] border border-[#8B1230]/30 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95';
+        if (permBadge) {
+          permBadge.textContent = 'ถูกบล็อกในเบราว์เซอร์';
+          permBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FBE4E8] text-[#8B1230]';
+        }
+      } else {
+        headerBtn.innerHTML = '<span>🔔 เปิดแจ้งเตือน</span>';
+        headerBtn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/80 hover:bg-white text-[#14213D] border border-black/10 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95';
+        if (permBadge) {
+          permBadge.textContent = hasNotifAPI ? 'ยังไม่เปิดสิทธิ์ OS' : 'แจ้งเตือนภายในแอป';
+          permBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FEF3C7] text-[#92400E]';
+        }
+      }
+    }
+
+    function openNotifSettingsModal() {
+      document.getElementById('chk-notif-auto').checked = notifPrefs.autoPopup;
+      document.getElementById('chk-notif-sound').checked = notifPrefs.sound;
+      updateNotifStatusUI();
+      document.getElementById('notif-modal').classList.remove('hidden');
+    }
+
+    function closeNotifSettingsModal() {
+      document.getElementById('notif-modal').classList.add('hidden');
+    }
+
+    async function sendOSNotification(title, bodyText, tag) {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+      try {
+        const reg = swRegistration || await navigator.serviceWorker.getRegistration();
+        if (reg && reg.showNotification) {
+          await reg.showNotification(title, {
+            body: bodyText,
+            tag: tag || 'homework-list-alert',
+            icon: './icon-192.png',
+            badge: './icon-192.png',
+            renotify: true,
+            vibrate: [200, 100, 200],
+            data: { url: './index.html' }
+          });
+          return;
+        }
+      } catch (e) {}
+
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SHOW_NOTIFICATION',
+          title,
+          body: bodyText,
+          tag: tag || 'homework-list-alert'
+        });
+        return;
+      }
+
+      try {
+        const n = new Notification(title, { body: bodyText, tag: tag || 'homework-list-alert', icon: './icon-192.png' });
+        n.onclick = () => { window.focus(); n.close(); };
+      } catch {}
+    }
+
+    function requestSystemNotifPermission() {
+      if (!('Notification' in window)) {
+        showToast('เบราว์เซอร์นี้ไม่รองรับ OS Notification (บน iPhone กรุณากด "เพิ่มไปยังหน้าจอโฮม" ก่อน)');
+        return;
+      }
+      Notification.requestPermission().then(result => {
+        updateNotifStatusUI();
+        if (result === 'granted') {
+          playNotificationChime(false);
+          sendOSNotification(
+            'Homework List — เปิดแจ้งเตือนสำเร็จ!',
+            'ระบบเชื่อมต่อ Service Worker เรียบร้อย พร้อมแจ้งเตือนกำหนดส่งงานบนมือถือของคุณ',
+            'hw-test-grant'
+          );
+          showToast('เปิดสิทธิ์การแจ้งเตือนบนมือถือเรียบร้อยแล้ว');
+        } else {
+          showToast('ไม่ได้รับสิทธิ์แจ้งเตือนระดับอุปกรณ์ (ยังแจ้งเตือนในแอปได้ตามปกติ)');
+        }
+      });
+    }
+
+    function playNotificationChime(isMidnight) {
+      if (!notifPrefs.sound) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const notes = isMidnight ? [523.25, 659.25, 783.99, 1046.5] : [587.33, 880.0];
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.14);
+          gain.gain.setValueAtTime(0.001, ctx.currentTime + idx * 0.14);
+          gain.gain.exponentialRampToValueAtTime(0.14, ctx.currentTime + idx * 0.14 + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.14 + 0.45);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.14);
+          osc.stop(ctx.currentTime + idx * 0.14 + 0.48);
+        });
+      } catch {}
+    }
+
+    function getDueSoonItems() {
+      return activeItems
+        .filter(it => Boolean(it.due))
+        .map(it => ({ ...it, days: calcDaysDiff(it.due) }))
+        .filter(it => it.days !== null && it.days <= 1)
+        .sort((a, b) => a.days - b.days);
+    }
+
+    function renderUrgentAlertModalContent(isMidnight) {
+      const dueList = getDueSoonItems();
+      const overdueCount = dueList.filter(x => x.days < 0).length;
+      const todayCount = dueList.filter(x => x.days === 0).length;
+      const tomorrowCount = dueList.filter(x => x.days === 1).length;
+
+      const banner = document.getElementById('urgent-alert-banner');
+      const badge = document.getElementById('urgent-alert-badge');
+      const title = document.getElementById('urgent-alert-title');
+      const subtitle = document.getElementById('urgent-alert-subtitle');
+
+      if (isMidnight) {
+        banner.className = 'theme-surface px-5 py-4 flex items-start justify-between gap-3 border-b border-black/10';
+        badge.innerHTML = '🕛 ผ่านเที่ยงคืน (00:00 น.) · เข้าสู่วันใหม่แล้ว';
+        title.textContent = `อัปเดตกำหนดส่งงาน (${formatThaiFull(getTodayDate())})`;
+        subtitle.textContent = dueList.length > 0
+          ? 'ตรวจสอบรายการที่ถึงกำหนดส่งวันนี้และพรุ่งนี้ด้านล่าง'
+          : 'เข้าสู่วันใหม่เรียบร้อย วันนี้และพรุ่งนี้ยังไม่มีงานที่ครบกำหนดส่ง';
+      } else {
+        banner.className = 'bg-[#8B1230] text-white px-5 py-4 flex items-start justify-between gap-3';
+        badge.innerHTML = '🔥 แจ้งเตือนกำหนดส่งงาน (วันนี้ / พรุ่งนี้)';
+        title.textContent = dueList.length > 0
+          ? `มีงานต้องส่ง ${dueList.length} รายการ!`
+          : 'ไม่มีงานค้างส่งสำหรับวันนี้และพรุ่งนี้';
+        subtitle.textContent = formatThaiFull(getTodayDate());
+      }
+
+      const summaryEl = document.getElementById('urgent-alert-summary');
+      const pills = [];
+      if (overdueCount > 0) pills.push(`<span class="px-2.5 py-1 rounded-lg bg-[#FBE4E8] text-[#8B1230]">เลยกำหนด ${overdueCount} งาน</span>`);
+      if (todayCount > 0) pills.push(`<span class="px-2.5 py-1 rounded-lg bg-[#FBE4E8] text-[#8B1230]">ส่งวันนี้ ${todayCount} งาน</span>`);
+      if (tomorrowCount > 0) pills.push(`<span class="px-2.5 py-1 rounded-lg bg-[#FEF3C7] text-[#92400E]">ส่งพรุ่งนี้ ${tomorrowCount} งาน</span>`);
+      if (pills.length === 0) pills.push(`<span class="px-2.5 py-1 rounded-lg bg-[#DCFCE7] text-[#166534]">✓ เคลียร์ครบ ไม่มีงานด่วนวันนี้/พรุ่งนี้</span>`);
+      summaryEl.innerHTML = pills.join('');
+
+      const listEl = document.getElementById('urgent-alert-list');
+      if (dueList.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-center py-6 space-y-1.5">
+            <div class="text-3xl">🎉</div>
+            <div class="text-sm font-bold text-[#14213D]">ยอดเยี่ยม! ไม่มีงานที่ต้องส่งวันนี้หรือพรุ่งนี้</div>
+            <div class="text-xs text-muted">สามารถดูงานถัดไปในหน้ารายการหลักได้ตามปกติ</div>
+          </div>
+        `;
+      } else {
+        listEl.innerHTML = dueList.map(it => {
+          const course = getCourseByName(it.subject);
+          let statusLabel, statusClass;
+          if (it.days < 0) { statusLabel = `เลยกำหนด ${-it.days} วัน!`; statusClass = 'bg-[#FBE4E8] text-[#8B1230]'; }
+          else if (it.days === 0) { statusLabel = 'ส่งวันนี้!'; statusClass = 'bg-[#FBE4E8] text-[#8B1230]'; }
+          else { statusLabel = 'ส่งพรุ่งนี้'; statusClass = 'bg-[#FEF3C7] text-[#92400E]'; }
+
+          return `
+            <div class="rounded-xl border border-cardBorder bg-white p-3.5 shadow-xs flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1 space-y-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${statusClass}">${statusLabel} (${formatThaiShort(it.due)})</span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold" style="background:${course.bg}; color:${course.fg};">
+                    <span class="w-1.5 h-1.5 rounded-full" style="background:${course.dot};"></span>
+                    ${escapeHTML(course.code)}
+                  </span>
+                </div>
+                <div class="text-sm font-bold text-[#14213D]">${escapeHTML(it.subject)}</div>
+                <p class="text-xs text-muted whitespace-pre-line-wrap leading-relaxed">${escapeHTML(it.task)}</p>
+              </div>
+              <button onclick="completeItem('${it.id}')" class="shrink-0 px-3 py-2 rounded-xl bg-[#DCFCE7] hover:bg-teal-600 text-[#166534] hover:text-white text-xs font-bold transition active:scale-95">
+                ✓ เสร็จแล้ว
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function triggerUrgentAlert(isMidnight, forceShow) {
+      const dueList = getDueSoonItems();
+      if (!forceShow && !isMidnight && !notifPrefs.autoPopup) return;
+      if (!forceShow && dueList.length === 0) return;
+
+      isMidnightAlertMode = isMidnight;
+      renderUrgentAlertModalContent(isMidnight);
+      document.getElementById('urgent-alert-modal').classList.remove('hidden');
+      playNotificationChime(isMidnight);
+
+      if (dueList.length > 0) {
+        const osTitle = isMidnight
+          ? `🕛 เข้าสู่วันใหม่แล้ว! มีงานต้องส่ง ${dueList.length} รายการ`
+          : `🔥 Homework List: มีงานต้องส่ง ${dueList.length} รายการ`;
+        const lines = dueList.slice(0, 3).map(it => {
+          const tag = it.days < 0 ? `[เลย ${-it.days} วัน]` : (it.days === 0 ? '[วันนี้]' : '[พรุ่งนี้]');
+          return `${tag} ${it.subject}: ${it.task.split('\n')[0]}`;
+        });
+        if (dueList.length > 3) lines.push(`...และอีก ${dueList.length - 3} งาน`);
+        sendOSNotification(osTitle, lines.join('\n'), isMidnight ? 'hw-midnight' : 'hw-daily');
+      } else if (isMidnight || forceShow) {
+        sendOSNotification(
+          'Homework List — แจ้งเตือนกำหนดส่งงาน',
+          `${formatThaiFull(getTodayDate())} — วันนี้และพรุ่งนี้ไม่มีงานที่ครบกำหนดส่ง`,
+          'hw-status'
+        );
+      }
+    }
+
+    function closeUrgentAlertModal() {
+      document.getElementById('urgent-alert-modal').classList.add('hidden');
+    }
+
+    function onMidnightRollover() {
+      const newYMD = toYMD(getTodayDate());
+      activeDateYMD = newYMD;
+      startupAlertShownForDate = newYMD;
+      safeSetStorage(STORAGE_LAST_DAY, newYMD);
+      onSubjectChange();
+      renderAll();
+      scheduleNextMidnightTimer();
+      triggerUrgentAlert(true, true);
+    }
+
+    function simulateMidnightRollover() {
+      renderAll();
+      triggerUrgentAlert(true, true);
+    }
+
+    function scheduleNextMidnightTimer() {
+      if (midnightTimeoutId) clearTimeout(midnightTimeoutId);
+      const now = new Date();
+      const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
+      const msUntilMidnight = Math.max(1000, nextMidnight.getTime() - now.getTime());
+      midnightTimeoutId = setTimeout(() => { checkDateRollover(); }, msUntilMidnight);
+    }
+
+    function checkDateRollover() {
+      const now = new Date();
+      const currentYMD = toYMD(getTodayDate());
+      if (activeDateYMD && currentYMD !== activeDateYMD) {
+        onMidnightRollover();
+        return;
+      }
+
+      if (currentUser) {
+        const hhmm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+        const schedKey = `${currentYMD}_${hhmm}`;
+        if ((hhmm === currentUser.morningTime || hhmm === currentUser.nightTime) && lastScheduledNotifKey !== schedKey) {
+          lastScheduledNotifKey = schedKey;
+          triggerUrgentAlert(false, false);
+        }
+      }
+    }
+
+    // =========================================================================
+    // 10.5 Manual Device Transfer (Full Sync Code & JSON Backup / Restore)
+    // =========================================================================
+    function buildFullBackupPayload() {
+      return {
+        app: 'HomeworkListPWA',
+        version: 3,
+        exportedAt: new Date().toISOString(),
+        profile: currentUser || getDefaultProfile(),
+        courses: courses,
+        active: activeItems,
+        history: historyItems,
+        notifPrefs: notifPrefs
+      };
+    }
+
+    function applyStructuredBackupObject(parsed) {
+      const srcProfile = parsed.profile || parsed.userRecord;
+      if (srcProfile) {
+        if (!currentUser) currentUser = getDefaultProfile();
+        if (srcProfile.themeId && APP_THEMES.some(t => t.id === srcProfile.themeId)) {
+          currentUser.themeId = srcProfile.themeId;
+        }
+        currentUser.morningTime = srcProfile.morningTime || currentUser.morningTime;
+        currentUser.nightTime = srcProfile.nightTime || currentUser.nightTime;
+        persistCurrentUser();
+      }
+
+      courses = Array.isArray(parsed.courses) ? parsed.courses : [];
+      activeItems = Array.isArray(parsed.active) ? parsed.active : [];
+      historyItems = Array.isArray(parsed.history) ? parsed.history : [];
+      saveData();
+
+      if (parsed.notifPrefs) {
+        notifPrefs = {
+          autoPopup: parsed.notifPrefs.autoPopup !== false,
+          sound: parsed.notifPrefs.sound !== false
+        };
+        safeSetStorage(STORAGE_NOTIF_PREF, JSON.stringify(notifPrefs));
+      }
+
+      syncProfileUI();
+      syncSubjectDropdown();
+      renderAll();
+    }
+
+    function generateFullSyncCodeString() {
+      const payload = buildFullBackupPayload();
+      return 'HWSYNC:' + encodeUnicodeBase64(JSON.stringify(payload));
+    }
+
+    function copyTextFallback(text) {
+      const tempInput = document.createElement('textarea');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      tempInput.setSelectionRange(0, 999999);
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+    }
+
+    function copyFullSyncCode() {
+      const syncCode = generateFullSyncCodeString();
+      copyTextToClipboardUniversal(syncCode, 'คัดลอกรหัสย้ายเครื่องแล้ว! ส่งเข้า LINE หรือ Quick Share ได้เลย');
+    }
+
+    async function shareFullSyncCode() {
+      const syncCode = generateFullSyncCodeString();
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Homework List — รหัสย้ายข้อมูลข้ามเครื่อง',
+            text: syncCode
+          });
+          showToast('เปิดหน้าต่างแชร์รหัสย้ายเครื่องแล้ว');
+          return;
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+        }
+      }
+      copyFullSyncCode();
+    }
+
+    function importFullSyncCode() {
+      const inputEl = document.getElementById('full-sync-code-input');
+      const raw = inputEl ? inputEl.value.trim() : '';
+      if (!raw) {
+        showToast('กรุณาวางรหัสย้ายเครื่อง (HWSYNC:...) ก่อน');
+        return;
+      }
+
+      try {
+        const clean = raw.startsWith('HWSYNC:') ? raw.slice(7).trim() : raw;
+        const parsed = JSON.parse(decodeUnicodeBase64(clean));
+        if (!parsed || parsed.app !== 'HomeworkListPWA' || !Array.isArray(parsed.courses) || !Array.isArray(parsed.active)) {
+          throw new Error('Invalid sync payload');
+        }
+
+        const taskCount = parsed.active.length;
+        const courseCount = new Set(parsed.courses.map(c => `${c.code}::${c.name}`)).size;
+
+        openConfirmModal(
+          'ยืนยันการนำเข้ารหัสย้ายเครื่อง',
+          `พบข้อมูลสำรอง (รายวิชา ${courseCount} วิชา, งานค้าง ${taskCount} รายการ) ระบบจะเขียนทับข้อมูลปัจจุบันในเครื่องนี้ ยืนยันหรือไม่?`,
+          () => {
+            applyStructuredBackupObject(parsed);
+            if (inputEl) inputEl.value = '';
+            showToast('ย้ายข้อมูลเข้าเครื่องนี้สำเร็จเรียบร้อย!');
+          }
+        );
+      } catch (err) {
+        showToast('รหัสย้ายเครื่องไม่ถูกต้องหรือคัดลอกมาไม่ครบถ้วน');
+      }
+    }
+
+    function exportBackupData() {
+      const payload = buildFullBackupPayload();
+      const jsonStr = JSON.stringify(payload, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = toYMD(getTodayDate());
+      a.href = url;
+      a.download = `homework-backup-${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('ดาวน์โหลดไฟล์สำรองข้อมูล (.json) เรียบร้อยแล้ว');
+    }
+
+    function importBackupData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (!parsed || typeof parsed !== 'object') {
+            throw new Error('Invalid JSON structure');
+          }
+
+          const isStructuredBackup = parsed.app === 'HomeworkListPWA' && Array.isArray(parsed.courses) && Array.isArray(parsed.active);
+          const isRawStorageBackup = !isStructuredBackup && Object.keys(parsed).some(k => k.startsWith('hwlist_'));
+
+          if (!isStructuredBackup && !isRawStorageBackup) {
+            showToast('ไฟล์ไม่ถูกต้อง กรุณาเลือกไฟล์สำรองข้อมูล (.json) ของแอปนี้');
+            return;
+          }
+
+          const taskCount = isStructuredBackup ? parsed.active.length : '-';
+          const courseCount = isStructuredBackup ? new Set(parsed.courses.map(c => `${c.code}::${c.name}`)).size : '-';
+          const summaryMsg = isStructuredBackup
+            ? `พบข้อมูลรายวิชา ${courseCount} วิชา และงานค้าง ${taskCount} รายการ การกู้คืนจะเขียนทับข้อมูลปัจจุบันในเครื่องนี้ ยืนยันหรือไม่?`
+            : 'การกู้คืนข้อมูลจะเขียนทับข้อมูลปัจจุบันในเครื่องนี้ ยืนยันหรือไม่?';
+
+          openConfirmModal('ยืนยันการกู้คืน / ย้ายข้อมูล', summaryMsg, () => {
+            if (isStructuredBackup) {
+              applyStructuredBackupObject(parsed);
+            } else {
+              Object.keys(parsed).forEach(key => {
+                if (typeof parsed[key] === 'string') {
+                  safeSetStorage(key, parsed[key]);
+                }
+              });
+              migrateLegacyUserDataIfNeeded();
+              loadData();
+              loadNotifPrefs();
+              syncProfileUI();
+              syncSubjectDropdown();
+              renderAll();
+            }
+            showToast('กู้คืนและย้ายข้อมูลเข้าเครื่องนี้สำเร็จเรียบร้อย!');
+          });
+        } catch (err) {
+          showToast('ไฟล์ไม่ถูกต้องหรือเสียหาย กรุณาเลือกไฟล์ .json ที่สำรองไว้');
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+      event.target.value = '';
+    }
+
+    // =========================================================================
+    // 11. Boot Application Directly
+    // =========================================================================
+    function bootApp() {
+      try {
+        const savedProfile = localStorage.getItem(STORAGE_PROFILE);
+        currentUser = savedProfile ? { ...getDefaultProfile(), ...JSON.parse(savedProfile) } : getDefaultProfile();
+      } catch {
+        currentUser = getDefaultProfile();
+      }
+
+      migrateLegacyUserDataIfNeeded();
+      persistCurrentUser();
+      syncProfileUI();
+      loadData();
+      loadNotifPrefs();
+      initThemeDropdown();
+      syncSubjectDropdown();
+      switchTab('list');
+      renderAll();
+
+      const todayStr = toYMD(getTodayDate());
+      const storedDay = localStorage.getItem(STORAGE_LAST_DAY);
+      activeDateYMD = todayStr;
+      startupAlertShownForDate = todayStr;
+      safeSetStorage(STORAGE_LAST_DAY, todayStr);
+
+      if (storedDay && storedDay !== todayStr) {
+        triggerUrgentAlert(true, false);
+      } else {
+        triggerUrgentAlert(false, false);
+      }
+
+      scheduleNextMidnightTimer();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initServiceWorker();
+      bootApp();
+      setInterval(checkDateRollover, 15000);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        const currentYMD = toYMD(getTodayDate());
+        if (activeDateYMD && currentYMD !== activeDateYMD) {
+          onMidnightRollover();
+        } else {
+          renderAll();
+          if (startupAlertShownForDate !== currentYMD) {
+            startupAlertShownForDate = currentYMD;
+            triggerUrgentAlert(false, false);
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

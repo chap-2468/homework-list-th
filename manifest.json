@@ -1,0 +1,39 @@
+{
+  "id": "./index.html",
+  "name": "Homework List — ระบบจัดการการบ้านและตารางเรียน",
+  "short_name": "Homework List",
+  "description": "ระบบจัดการการบ้าน ตารางเรียน แจ้งเตือนมือถือ และเชื่อมต่อ Google Calendar",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F3F4F8",
+  "theme_color": "#14213D",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
