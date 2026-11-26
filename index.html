@@ -13,6 +13,9 @@
   <link rel="manifest" href="./manifest.json" />
   <title>Homework List — ระบบจัดการการบ้านและตารางเรียน</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase Compat SDK (รองรับทั้ง https:// และเปิดไฟล์ในเครื่อง) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -193,7 +196,7 @@
       </div>
     </header>
 
-    <!-- Desktop / Tablet Top Pill Navigation (6 Tabs including Theme/Settings) -->
+    <!-- Desktop / Tablet Top Pill Navigation -->
     <nav class="hidden md:block bg-white border-b border-cardBorder sticky top-0 z-20">
       <div class="max-w-6xl mx-auto px-6 py-2.5 flex items-center justify-between gap-2 overflow-x-auto">
         <div class="flex items-center gap-1.5">
@@ -563,7 +566,12 @@
               <span class="text-xl">☁️</span>
               <h3 class="text-base font-bold text-[#14213D]">ซิงก์ข้อมูลคลาวด์อัตโนมัติ (PC ↔ มือถือ ↔ แท็บเล็ต)</h3>
             </div>
-            <span id="profile-cloud-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E]">กำลังเชื่อมต่อ...</span>
+            <div class="flex items-center gap-2">
+              <span id="profile-cloud-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E]">กำลังเชื่อมต่อ...</span>
+              <button type="button" onclick="window.cloudSync && window.cloudSync.reconnect()" class="px-2.5 py-0.5 rounded-lg bg-pageBg hover:bg-slate-200 border border-cardBorder text-[11px] font-bold text-[#14213D] transition">
+                🔄 รีเฟรชการเชื่อมต่อ
+              </button>
+            </div>
           </div>
 
           <p class="text-xs sm:text-sm text-muted leading-relaxed">
@@ -591,6 +599,8 @@
               </div>
             </div>
           </div>
+
+          <div id="cloud-error-hint" class="hidden rounded-xl bg-[#FBE4E8] border border-[#8B1230]/30 p-3 text-xs text-[#8B1230] leading-relaxed"></div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -934,12 +944,12 @@
 
   <script>
     // =========================================================================
-    // 1. Service Worker Registration (Real Android & iOS Mobile Notification)
+    // 1. Service Worker Registration
     // =========================================================================
     let swRegistration = null;
 
     async function initServiceWorker() {
-      if ('serviceWorker' in navigator) {
+      if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
         try {
           swRegistration = await navigator.serviceWorker.register('./sw.js');
           const badge = document.getElementById('prof-sw-badge');
@@ -957,7 +967,7 @@
     }
 
     // =========================================================================
-    // 2. 10 Pastel System Themes (Default: Pastel Blue) & Pastel Subject Badges
+    // 2. 10 Pastel System Themes & Pastel Subject Badges
     // =========================================================================
     const APP_THEMES = [
       { id: 'pastel-blue',     name: 'น้ำเงินพาสเทล',   primary: '#8AB4F8', secondary: '#6EA0F2', soft: '#E4EEFF', text: '#14213D', subtext: '#263B5E' },
@@ -1062,7 +1072,7 @@
     }
 
     // =========================================================================
-    // 3. Local Settings Management (Theme & Notification Times Only)
+    // 3. Local Settings Management
     // =========================================================================
     function getDefaultProfile() {
       return {
@@ -1122,7 +1132,7 @@
     }
 
     // =========================================================================
-    // 4. Google Calendar Integration (One-Click Link + Full .ics Export)
+    // 4. Google Calendar Integration
     // =========================================================================
     function openGoogleCalendarForTask(taskId) {
       const item = activeItems.find(x => x.id === taskId);
@@ -2103,7 +2113,6 @@
             </div>
           </div>
 
-          <!-- Action Buttons including Google Calendar -->
           <div class="flex flex-wrap items-center justify-end gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 shrink-0">
             <button onclick="openGoogleCalendarForTask('${item.id}')" title="เพิ่มลง Google Calendar" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-amber-50 text-[#14213D] text-xs font-bold transition active:scale-95">
               📅 Google Calendar
@@ -2999,7 +3008,258 @@
     }
 
     // =========================================================================
-    // 11. Boot Application Directly
+    // 11. Firebase Realtime Database Cloud Sync (Compat SDK)
+    // =========================================================================
+    (function setupFirebaseCloudSync() {
+      const firebaseConfig = {
+        apiKey: "AIzaSyAZWRzAYC6urDjUkuM2nEdoLlOInZFGzpQ",
+        authDomain: "homework-list-sync.firebaseapp.com",
+        databaseURL: "[https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app](https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app)",
+        projectId: "homework-list-sync",
+        storageBucket: "homework-list-sync.firebasestorage.app",
+        messagingSenderId: "413595618223",
+        appId: "1:413595618223:web:e2400a1336efd9a2d67d5a"
+      };
+
+      let syncId = "";
+      try {
+        syncId = localStorage.getItem("hw_firebase_sync_id") || "";
+      } catch (e) {}
+
+      if (!syncId || syncId.length < 6) {
+        syncId = "hw-" + Math.random().toString(36).substring(2, 8);
+        try {
+          localStorage.setItem("hw_firebase_sync_id", syncId);
+        } catch (e) {}
+      }
+
+      let db = null;
+      let isApplyingRemote = false;
+      let activeRef = null;
+      let lastLocalPushTs = 0;
+      let connectTimeoutTimer = null;
+
+      function renderSyncIdBox() {
+        const syncDisplay = document.getElementById("display-sync-id");
+        if (syncDisplay) syncDisplay.textContent = syncId;
+      }
+
+      function showCloudErrorHint(msg) {
+        const hintEl = document.getElementById("cloud-error-hint");
+        if (!hintEl) return;
+        if (!msg) {
+          hintEl.classList.add("hidden");
+          hintEl.textContent = "";
+        } else {
+          hintEl.classList.remove("hidden");
+          hintEl.textContent = msg;
+        }
+      }
+
+      function updateCloudBadge(state, label) {
+        renderSyncIdBox();
+        const headerPill = document.getElementById("header-cloud-status");
+        const profileBadge = document.getElementById("profile-cloud-badge");
+
+        if (state === "synced") {
+          clearTimeout(connectTimeoutTimer);
+          showCloudErrorHint("");
+        }
+
+        if (headerPill) {
+          if (state === "synced") {
+            headerPill.innerHTML = `<span>☁️</span><span>ซิงก์แล้ว (${syncId})</span>`;
+            headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-teal-800 text-xs font-bold transition shadow-2xs border border-teal-600/30";
+          } else if (state === "syncing") {
+            headerPill.innerHTML = `<span>⏳</span><span>กำลังซิงก์...</span>`;
+            headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 text-[#92400E] text-xs font-bold transition shadow-2xs border border-amber-400/40";
+          } else {
+            headerPill.innerHTML = `<span>⚠️</span><span>${label || "ออฟไลน์"}</span>`;
+            headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 text-[#8B1230] text-xs font-bold transition shadow-2xs border border-red-400/40";
+          }
+        }
+
+        if (profileBadge) {
+          if (state === "synced") {
+            profileBadge.textContent = "เชื่อมต่อคลาวด์แล้ว ✓";
+            profileBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#DCFCE7] text-[#166534]";
+          } else if (state === "syncing") {
+            profileBadge.textContent = "กำลังซิงก์ข้อมูล...";
+            profileBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E]";
+          } else {
+            profileBadge.textContent = label || "เชื่อมต่อไม่สำเร็จ";
+            profileBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FBE4E8] text-[#8B1230]";
+          }
+        }
+      }
+
+      function ensureFirebaseReady() {
+        if (db) return true;
+        if (typeof window.firebase === "undefined") {
+          updateCloudBadge("error", "โหลด SDK ไม่สำเร็จ");
+          showCloudErrorHint("ไม่สามารถโหลดสคริปต์ Firebase จากอินเทอร์เน็ตได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วกดปุ่มรีเฟรชการเชื่อมต่อ");
+          return false;
+        }
+        try {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+          }
+          db = firebase.database();
+          return true;
+        } catch (err) {
+          console.error("Firebase init exception:", err);
+          updateCloudBadge("error", "ตั้งค่าผิดพลาด");
+          showCloudErrorHint("เกิดข้อผิดพลาดในการเริ่มต้น Firebase: " + (err.message || err));
+          return false;
+        }
+      }
+
+      async function pushToCloud() {
+        if (isApplyingRemote || !syncId || syncId.length < 6) return;
+        if (!ensureFirebaseReady()) return;
+
+        updateCloudBadge("syncing");
+        try {
+          const cleanPayload = JSON.parse(JSON.stringify(buildFullBackupPayload()));
+          lastLocalPushTs = Date.now();
+          await db.ref(`users/${syncId}`).set({
+            payload: cleanPayload,
+            updatedAt: lastLocalPushTs
+          });
+          updateCloudBadge("synced");
+        } catch (err) {
+          console.error("Firebase push error:", err);
+          const isPermDenied = String(err.message || "").toLowerCase().includes("permission");
+          updateCloudBadge("error", isPermDenied ? "ติดสิทธิ์ Rules" : "ซิงก์ไม่สำเร็จ");
+          showCloudErrorHint(isPermDenied
+            ? "Firebase ปฏิเสธสิทธิ์การเขียนข้อมูล (Permission Denied) — กรุณาตรวจสอบใน Firebase Console > Realtime Database > Rules ว่าตั้งค่า .read และ .write เป็น true แล้ว"
+            : "ไม่สามารถส่งข้อมูลขึ้นคลาวด์ได้: " + (err.message || "ตรวจสอบอินเทอร์เน็ต"));
+        }
+      }
+
+      function attachRealtimeListener() {
+        if (!ensureFirebaseReady()) return;
+        if (activeRef) {
+          activeRef.off();
+        }
+        activeRef = db.ref(`users/${syncId}`);
+        activeRef.on("value", (snapshot) => {
+          const record = snapshot.val();
+          updateCloudBadge("synced");
+          if (!record || !record.payload) return;
+          if (record.updatedAt && Math.abs(record.updatedAt - lastLocalPushTs) < 800) {
+            return;
+          }
+          isApplyingRemote = true;
+          try {
+            applyStructuredBackupObject(record.payload, true);
+          } finally {
+            setTimeout(() => { isApplyingRemote = false; }, 150);
+          }
+        }, (err) => {
+          console.error("Firebase listener error:", err);
+          updateCloudBadge("error", "ติดสิทธิ์ Rules");
+          showCloudErrorHint("ไม่สามารถรับข้อมูลเรียลไทม์ได้: " + (err.message || "Permission denied"));
+        });
+      }
+
+      async function initCloudSync() {
+        renderSyncIdBox();
+        if (!ensureFirebaseReady()) return;
+
+        updateCloudBadge("syncing");
+        clearTimeout(connectTimeoutTimer);
+        connectTimeoutTimer = setTimeout(() => {
+          const badge = document.getElementById("profile-cloud-badge");
+          if (badge && badge.textContent.includes("กำลัง")) {
+            updateCloudBadge("error", "หมดเวลาเชื่อมต่อ");
+            showCloudErrorHint("เชื่อมต่อ Firebase ใช้เวลานานเกินไป — กรุณาตรวจสอบอินเทอร์เน็ต หรือตรวจสอบ URL ของ Realtime Database ใน Firebase Console");
+          }
+        }, 12000);
+
+        try {
+          const snap = await db.ref(`users/${syncId}`).once("value");
+          if (snap.exists() && snap.val() && snap.val().payload) {
+            isApplyingRemote = true;
+            try {
+              applyStructuredBackupObject(snap.val().payload, true);
+            } finally {
+              setTimeout(() => { isApplyingRemote = false; }, 150);
+            }
+            updateCloudBadge("synced");
+          } else {
+            await pushToCloud();
+          }
+          attachRealtimeListener();
+        } catch (err) {
+          console.error("Firebase init sync error:", err);
+          const isPermDenied = String(err.message || "").toLowerCase().includes("permission");
+          updateCloudBadge("error", isPermDenied ? "ติดสิทธิ์ Rules" : "ออฟไลน์");
+          showCloudErrorHint(isPermDenied
+            ? "Firebase ปฏิเสธสิทธิ์การเข้าถึง (Permission Denied) — กรุณาตรวจสอบ Rules ของ Realtime Database"
+            : "เชื่อมต่อคลาวด์ไม่สำเร็จ: " + (err.message || "ตรวจสอบอินเทอร์เน็ต"));
+        }
+      }
+
+      async function switchSyncId(newIdRaw) {
+        const cleanId = String(newIdRaw || "").trim();
+        if (cleanId.length < 6) {
+          showToast("รหัสซิงก์ต้องมีความยาวอย่างน้อย 6 ตัวอักษรครับ");
+          return;
+        }
+        if (!/^[a-zA-Z0-9_-]+$/.test(cleanId)) {
+          showToast("ใช้ได้เฉพาะตัวอักษรภาษาอังกฤษ ตัวเลข ขีดกลาง (-) และขีดล่าง (_)");
+          return;
+        }
+
+        syncId = cleanId;
+        try {
+          localStorage.setItem("hw_firebase_sync_id", syncId);
+        } catch (e) {}
+        renderSyncIdBox();
+
+        const inp = document.getElementById("inp-custom-sync-id");
+        if (inp) inp.value = "";
+
+        if (!ensureFirebaseReady()) return;
+
+        updateCloudBadge("syncing");
+        try {
+          const snap = await db.ref(`users/${syncId}`).once("value");
+          if (snap.exists() && snap.val() && snap.val().payload) {
+            isApplyingRemote = true;
+            try {
+              applyStructuredBackupObject(snap.val().payload, true);
+            } finally {
+              setTimeout(() => { isApplyingRemote = false; }, 150);
+            }
+            updateCloudBadge("synced");
+            showToast(`เชื่อมต่อรหัส "${syncId}" และดึงข้อมูลเรียบร้อยแล้ว!`);
+          } else {
+            await pushToCloud();
+            showToast(`สร้างและเชื่อมต่อรหัส "${syncId}" เรียบร้อยแล้ว!`);
+          }
+          attachRealtimeListener();
+        } catch (err) {
+          console.error("Switch sync ID error:", err);
+          updateCloudBadge("error", "เชื่อมต่อไม่สำเร็จ");
+          showCloudErrorHint("เปลี่ยนรหัสซิงก์ไม่สำเร็จ: " + (err.message || "ตรวจสอบอินเทอร์เน็ตหรือ Rules"));
+          showToast("เชื่อมต่อไม่สำเร็จ กรุณาตรวจสอบข้อความแจ้งเตือนด้านล่าง");
+        }
+      }
+
+      window.cloudSync = {
+        init: initCloudSync,
+        reconnect: initCloudSync,
+        push: pushToCloud,
+        switchSyncId: switchSyncId,
+        getSyncId: () => syncId,
+        copySyncId: () => copyTextToClipboardUniversal(syncId, `คัดลอกรหัสซิงก์ "${syncId}" แล้ว! นำไปวางในเครื่องอื่นได้เลย`)
+      };
+    })();
+
+    // =========================================================================
+    // 12. Boot Application Directly
     // =========================================================================
     function bootApp() {
       try {
@@ -3058,188 +3318,6 @@
         }
       }
     });
-  </script>
-
-  <!-- ======================================================================= -->
-  <!-- 12. Firebase Realtime Database Cloud Sync Module (PC / Mobile / Tablet) -->
-  <!-- ======================================================================= -->
-  <script type="module">
-    import { initializeApp } from "[https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js](https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js)";
-    import { getDatabase, ref, set, get, onValue, off } from "[https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js](https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js)";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAZWRzAYC6urDjUkuM2nEdoLlOInZFGzpQ",
-      authDomain: "homework-list-sync.firebaseapp.com",
-      databaseURL: "[https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app](https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app)",
-      projectId: "homework-list-sync",
-      storageBucket: "homework-list-sync.firebasestorage.app",
-      messagingSenderId: "413595618223",
-      appId: "1:413595618223:web:e2400a1336efd9a2d67d5a"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    let syncId = localStorage.getItem("hw_firebase_sync_id");
-    if (!syncId || syncId.length < 6) {
-      syncId = "hw-" + Math.random().toString(36).substring(2, 8);
-      localStorage.setItem("hw_firebase_sync_id", syncId);
-    }
-
-    let isApplyingRemote = false;
-    let activeRef = null;
-    let lastLocalPushTs = 0;
-
-    function updateCloudBadge(state, label) {
-      const headerPill = document.getElementById("header-cloud-status");
-      const profileBadge = document.getElementById("profile-cloud-badge");
-      const syncDisplay = document.getElementById("display-sync-id");
-
-      if (syncDisplay) syncDisplay.textContent = syncId;
-
-      if (headerPill) {
-        if (state === "synced") {
-          headerPill.innerHTML = `<span>☁️</span><span>ซิงก์แล้ว (${syncId})</span>`;
-          headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-teal-800 text-xs font-bold transition shadow-2xs border border-teal-600/30";
-        } else if (state === "syncing") {
-          headerPill.innerHTML = `<span>⏳</span><span>กำลังซิงก์...</span>`;
-          headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 text-[#92400E] text-xs font-bold transition shadow-2xs border border-amber-400/40";
-        } else {
-          headerPill.innerHTML = `<span>⚠️</span><span>${label || "ออฟไลน์"}</span>`;
-          headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 text-[#8B1230] text-xs font-bold transition shadow-2xs border border-red-400/40";
-        }
-      }
-
-      if (profileBadge) {
-        if (state === "synced") {
-          profileBadge.textContent = "เชื่อมต่อคลาวด์แล้ว ✓";
-          profileBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#DCFCE7] text-[#166534]";
-        } else if (state === "syncing") {
-          profileBadge.textContent = "กำลังซิงก์ข้อมูล...";
-          profileBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E]";
-        } else {
-          profileBadge.textContent = label || "ออฟไลน์ / ตรวจสอบ Rules";
-          profileBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FBE4E8] text-[#8B1230]";
-        }
-      }
-    }
-
-    async function pushToCloud() {
-      if (isApplyingRemote || !syncId || syncId.length < 6) return;
-      updateCloudBadge("syncing");
-      try {
-        const cleanPayload = JSON.parse(JSON.stringify(buildFullBackupPayload()));
-        lastLocalPushTs = Date.now();
-        await set(ref(db, `users/${syncId}`), {
-          payload: cleanPayload,
-          updatedAt: lastLocalPushTs
-        });
-        updateCloudBadge("synced");
-      } catch (err) {
-        console.error("Firebase push error:", err);
-        updateCloudBadge("error", "ซิงก์ไม่สำเร็จ");
-      }
-    }
-
-    function attachRealtimeListener() {
-      if (activeRef) {
-        off(activeRef);
-      }
-      activeRef = ref(db, `users/${syncId}`);
-      onValue(activeRef, (snapshot) => {
-        const record = snapshot.val();
-        if (!record || !record.payload) return;
-        if (record.updatedAt && Math.abs(record.updatedAt - lastLocalPushTs) < 800) {
-          updateCloudBadge("synced");
-          return;
-        }
-        isApplyingRemote = true;
-        try {
-          applyStructuredBackupObject(record.payload, true);
-          updateCloudBadge("synced");
-        } finally {
-          setTimeout(() => { isApplyingRemote = false; }, 150);
-        }
-      }, (err) => {
-        console.error("Firebase listener error:", err);
-        updateCloudBadge("error", "ติดสิทธิ์ Rules");
-      });
-    }
-
-    async function initCloudSync() {
-      updateCloudBadge("syncing");
-      try {
-        const userRef = ref(db, `users/${syncId}`);
-        const snap = await get(userRef);
-        if (snap.exists() && snap.val() && snap.val().payload) {
-          isApplyingRemote = true;
-          try {
-            applyStructuredBackupObject(snap.val().payload, true);
-          } finally {
-            setTimeout(() => { isApplyingRemote = false; }, 150);
-          }
-          updateCloudBadge("synced");
-        } else {
-          await pushToCloud();
-        }
-        attachRealtimeListener();
-      } catch (err) {
-        console.error("Firebase init error:", err);
-        updateCloudBadge("error", "ออฟไลน์");
-      }
-    }
-
-    async function switchSyncId(newIdRaw) {
-      const cleanId = String(newIdRaw || "").trim();
-      if (cleanId.length < 6) {
-        showToast("รหัสซิงก์ต้องมีความยาวอย่างน้อย 6 ตัวอักษรครับ");
-        return;
-      }
-      if (!/^[a-zA-Z0-9_-]+$/.test(cleanId)) {
-        showToast("ใช้ได้เฉพาะตัวอักษรภาษาอังกฤษ ตัวเลข ขีดกลาง (-) และขีดล่าง (_)");
-        return;
-      }
-
-      syncId = cleanId;
-      localStorage.setItem("hw_firebase_sync_id", syncId);
-      const inp = document.getElementById("inp-custom-sync-id");
-      if (inp) inp.value = "";
-
-      updateCloudBadge("syncing");
-      try {
-        const snap = await get(ref(db, `users/${syncId}`));
-        if (snap.exists() && snap.val() && snap.val().payload) {
-          isApplyingRemote = true;
-          try {
-            applyStructuredBackupObject(snap.val().payload, true);
-          } finally {
-            setTimeout(() => { isApplyingRemote = false; }, 150);
-          }
-          updateCloudBadge("synced");
-          showToast(`เชื่อมต่อรหัส "${syncId}" และดึงข้อมูลเรียบร้อยแล้ว!`);
-        } else {
-          await pushToCloud();
-          showToast(`สร้างและเชื่อมต่อรหัส "${syncId}" เรียบร้อยแล้ว!`);
-        }
-        attachRealtimeListener();
-      } catch (err) {
-        console.error("Switch sync ID error:", err);
-        updateCloudBadge("error", "เชื่อมต่อไม่สำเร็จ");
-        showToast("เชื่อมต่อไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตหรือ Rules");
-      }
-    }
-
-    window.cloudSync = {
-      init: initCloudSync,
-      push: pushToCloud,
-      switchSyncId: switchSyncId,
-      getSyncId: () => syncId,
-      copySyncId: () => copyTextToClipboardUniversal(syncId, `คัดลอกรหัสซิงก์ "${syncId}" แล้ว! นำไปวางในเครื่องอื่นได้เลย`)
-    };
-
-    if (document.readyState !== "loading") {
-      initCloudSync();
-    }
   </script>
 </body>
 </html>
