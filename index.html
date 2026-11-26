@@ -102,7 +102,7 @@
     .timetable-table {
       border-collapse: collapse;
       table-layout: fixed;
-      min-width: 1120px;
+      min-width: 1680px;
       width: 100%;
     }
     .timetable-table th,
@@ -258,7 +258,7 @@
             </div>
 
             <div class="md:col-span-5">
-              <label class="block text-xs font-bold text-muted mb-1.5">รายละเอียดการบ้าน (ขึ้นบรรทัดใหม่ได้)</label>
+              <label class="block text-xs font-bold text-muted mb-1.5">รายละเอียดการบ้าน</label>
               <textarea id="inp-task" rows="2" placeholder="กรอกรายละเอียดการบ้าน..." required class="w-full p-2.5 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] text-sm focus:outline-none focus:ring-2 focus:ring-navy resize-y"></textarea>
             </div>
 
@@ -1984,12 +1984,16 @@
             const clampedEnd = Math.min(END_HOUR, block.range.endH);
             const span = Math.max(1, clampedEnd - h);
             const roomLabel = block.room || 'ห้อง N/A';
-            const timeLabel = block.time ? `${block.time} · ` : '';
+            const cleanName = String(block.name || '')
+              .replace(/\s*\([^)]*[\u0E00-\u0E7F][^)]*\)/g, '')
+              .replace(/[\u0E00-\u0E7F]+/g, '')
+              .replace(/\s{2,}/g, ' ')
+              .trim() || block.name;
             html += `
               <td colspan="${span}" class="p-1.5 align-middle ${rowBg}">
-                <div class="rounded-xl px-2.5 py-2.5 min-h-[64px] flex flex-col justify-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]" style="background:${block.bg}; color:${block.fg};">
-                  <div class="font-bold text-xs leading-snug break-words">${escapeHTML(block.name)}</div>
-                  <div class="text-[11px] opacity-85 mt-0.5 leading-tight break-words">${escapeHTML(timeLabel + roomLabel)}</div>
+                <div class="rounded-xl px-3 py-2.5 min-h-[64px] flex flex-col justify-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]" style="background:${block.bg}; color:${block.fg};">
+                  <div class="font-bold text-xs leading-snug break-words">${escapeHTML(cleanName)}</div>
+                  <div class="text-[11px] opacity-85 mt-0.5 leading-tight break-words">${escapeHTML(roomLabel)}</div>
                 </div>
               </td>
             `;
@@ -2220,25 +2224,46 @@
       if (uniqueCourses.length === 0) {
         courseInfoTableEl.innerHTML = `<div class="p-8 text-center text-sm text-muted">ยังไม่มีรายวิชา กดไปที่แท็บ <button onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button> เพื่อเพิ่มรายวิชา</div>`;
       } else {
-        courseInfoTableEl.innerHTML = uniqueCourses.map(c => {
-          const sameSubjectSlots = courses.filter(x => x.code === c.code && x.name === c.name);
-          const scheduleSummary = sameSubjectSlots.map(s => `${THAI_DOW[s.dow]} ${s.time}`).join(', ');
-          const extraDetail = [c.room, c.info].filter(v => v && v !== 'ห้อง N/A').join(' · ');
+        const rowsHTML = uniqueCourses.map(c => {
+          const roomText = c.room || 'ห้อง N/A';
+          const channelText = (c.info && c.info !== c.room && c.info !== 'ห้อง N/A') ? c.info : '-';
           return `
-            <div class="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50/70">
-              <div class="flex items-center gap-2.5 flex-wrap">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold shrink-0" style="background:${c.bg}; color:${c.fg};">
-                  <span class="w-2 h-2 rounded-full" style="background:${c.dot};"></span>
-                  ${escapeHTML(c.code)}
-                </span>
-                <span class="font-bold text-sm text-[#14213D]">${escapeHTML(c.name)}</span>
-              </div>
-              <div class="text-xs sm:text-sm font-medium text-muted sm:text-right">
-                ${escapeHTML(scheduleSummary)} ${extraDetail ? `· <span class="text-[#14213D] font-semibold">${escapeHTML(extraDetail)}</span>` : ''}
-              </div>
-            </div>
+            <tr class="hover:bg-slate-50/80 transition-colors">
+              <td class="px-4 py-3 border-r border-cardBorder align-middle">
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold shrink-0" style="background:${c.bg}; color:${c.fg};">
+                    <span class="w-2 h-2 rounded-full" style="background:${c.dot};"></span>
+                    ${escapeHTML(c.code)}
+                  </span>
+                  <span class="font-bold text-xs sm:text-sm text-[#14213D]">${escapeHTML(c.name)}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 border-r border-cardBorder text-xs sm:text-sm font-semibold text-[#14213D] align-middle">
+                ${escapeHTML(roomText)}
+              </td>
+              <td class="px-4 py-3 text-xs sm:text-sm text-muted align-middle">
+                ${escapeHTML(channelText)}
+              </td>
+            </tr>
           `;
         }).join('');
+
+        courseInfoTableEl.innerHTML = `
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr class="bg-pageBg/80 border-b border-cardBorder text-xs font-bold text-[#14213D]">
+                  <th class="px-4 py-2.5 border-r border-cardBorder w-[52%]">ข้อมูลวิชา</th>
+                  <th class="px-4 py-2.5 border-r border-cardBorder w-[24%]">ห้องเรียน</th>
+                  <th class="px-4 py-2.5 w-[24%]">ช่องทางส่งงาน</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-cardBorder">
+                ${rowsHTML}
+              </tbody>
+            </table>
+          </div>
+        `;
       }
 
       // 4. Manage Courses View
