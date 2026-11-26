@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homework-list-cache-v5';
+const CACHE_NAME = 'homework-list-cache-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,9 +8,10 @@ const ASSETS_TO_CACHE = [
 ];
 
 const EXTERNAL_CACHE_ORIGINS = [
-  '[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)',
-  '[https://fonts.googleapis.com](https://fonts.googleapis.com)',
-  '[https://fonts.gstatic.com](https://fonts.gstatic.com)'
+  'https://cdn.tailwindcss.com',
+  'https://fonts.googleapis.com',
+  'https://fonts.gstatic.com',
+  'https://www.gstatic.com'
 ];
 
 self.addEventListener('install', (event) => {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#7B9ED9" id="meta-theme-color" />
+  <meta name="theme-color" content="#8AB4F8" id="meta-theme-color" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -28,8 +28,8 @@
           },
           colors: {
             pageBg: '#F3F4F8',
-            navy: 'var(--theme-primary, #7B9ED9)',
-            navySub: 'var(--theme-secondary, #6286C4)',
+            navy: 'var(--theme-primary, #8AB4F8)',
+            navySub: 'var(--theme-secondary, #6EA0F2)',
             cardBorder: '#E1E4EC',
             muted: '#4A5470',
           }
@@ -39,11 +39,11 @@
   </script>
   <style>
     :root {
-      --theme-primary: #7B9ED9;
-      --theme-secondary: #6286C4;
+      --theme-primary: #8AB4F8;
+      --theme-secondary: #6EA0F2;
       --theme-text: #14213D;
-      --theme-subtext: #2B3A5E;
-      --theme-soft: #DCE7FA;
+      --theme-subtext: #263B5E;
+      --theme-soft: #E4EEFF;
     }
     body {
       font-family: 'Leelawadee UI', 'Sarabun', 'Noto Sans Thai', sans-serif;
@@ -105,7 +105,7 @@
     .timetable-table {
       border-collapse: collapse;
       table-layout: fixed;
-      min-width: 1680px;
+      min-width: 1780px;
       width: 100%;
     }
     .timetable-table th,
@@ -1996,7 +1996,7 @@
       const container = document.getElementById('weekly-timetable-grid');
       if (!container) return;
 
-      const START_HOUR = 9;
+      const START_HOUR = 8;
       const END_HOUR = 21;
       const hours = [];
       for (let h = START_HOUR; h < END_HOUR; h++) hours.push(h);
@@ -2114,13 +2114,13 @@
           </div>
 
           <div class="flex flex-wrap items-center justify-end gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 shrink-0">
-            <button onclick="openGoogleCalendarForTask('${item.id}')" title="เพิ่มลง Google Calendar" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-amber-50 text-[#14213D] text-xs font-bold transition active:scale-95">
+            <button onclick="openGoogleCalendarForTask('${escapeHTML(item.id)}')" title="เพิ่มลง Google Calendar" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-amber-50 text-[#14213D] text-xs font-bold transition active:scale-95">
               📅 Google Calendar
             </button>
-            <button onclick="startEdit('${item.id}')" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition active:scale-95">
+            <button onclick="startEdit('${escapeHTML(item.id)}')" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition active:scale-95">
               ✎ แก้ไข
             </button>
-            <button onclick="completeItem('${item.id}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-teal-50 hover:border-teal-300 text-[#14213D] hover:text-teal-800 text-xs font-bold transition active:scale-95">
+            <button onclick="completeItem('${escapeHTML(item.id)}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-teal-50 hover:border-teal-300 text-[#14213D] hover:text-teal-800 text-xs font-bold transition active:scale-95">
               ✓ เสร็จแล้ว
             </button>
           </div>
@@ -2239,7 +2239,7 @@
                       </div>
                       <p class="text-xs sm:text-sm text-[#14213D] font-medium whitespace-pre-line-wrap">${escapeHTML(t.task)}</p>
                     </div>
-                    <button onclick="completeItem('${t.id}')" title="เสร็จแล้ว" class="shrink-0 w-7 h-7 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs flex items-center justify-center transition">
+                    <button onclick="completeItem('${escapeHTML(t.id)}')" title="เสร็จแล้ว" class="shrink-0 w-7 h-7 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs flex items-center justify-center transition">
                       ✓
                     </button>
                   </div>
@@ -2260,7 +2260,7 @@
                     </div>
                     <p class="text-xs text-muted mt-1">${escapeHTML(subLine)}</p>
                   </div>
-                  <button onclick="quickAddForSubject('${escapeHTML(c.name)}')" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-pageBg hover:bg-[#14213D] hover:text-white text-[#14213D] text-xs font-bold transition">
+                  <button data-subject="${escapeHTML(c.name)}" onclick="quickAddForSubject(this.dataset.subject)" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-pageBg hover:bg-[#14213D] hover:text-white text-[#14213D] text-xs font-bold transition">
                     + เพิ่ม
                   </button>
                 </div>
@@ -2348,10 +2348,10 @@
               </div>
             </div>
             <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
-              <button onclick="startEditCourse('${c.id}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition">
+              <button onclick="startEditCourse('${escapeHTML(c.id)}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition">
                 ✎ แก้ไข
               </button>
-              <button onclick="deleteCourse('${c.id}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
+              <button onclick="deleteCourse('${escapeHTML(c.id)}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
                 ลบ / ถอน
               </button>
             </div>
@@ -2393,10 +2393,10 @@
                 <p class="text-xs sm:text-sm text-muted whitespace-pre-line-wrap">${escapeHTML(h.task)}</p>
               </div>
               <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
-                <button onclick="restoreHistoryItem('${h.id}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition">
+                <button onclick="restoreHistoryItem('${escapeHTML(h.id)}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition">
                   ↩ กู้คืน
                 </button>
-                <button onclick="deleteHistoryItem('${h.id}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
+                <button onclick="deleteHistoryItem('${escapeHTML(h.id)}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
                   ลบ
                 </button>
               </div>
@@ -2735,7 +2735,7 @@
                 <div class="text-sm font-bold text-[#14213D]">${escapeHTML(it.subject)}</div>
                 <p class="text-xs text-muted whitespace-pre-line-wrap leading-relaxed">${escapeHTML(it.task)}</p>
               </div>
-              <button onclick="completeItem('${it.id}')" class="shrink-0 px-3 py-2 rounded-xl bg-[#DCFCE7] hover:bg-teal-600 text-[#166534] hover:text-white text-xs font-bold transition active:scale-95">
+              <button onclick="completeItem('${escapeHTML(it.id)}')" class="shrink-0 px-3 py-2 rounded-xl bg-[#DCFCE7] hover:bg-teal-600 text-[#166534] hover:text-white text-xs font-bold transition active:scale-95">
                 ✓ เสร็จแล้ว
               </button>
             </div>
@@ -3014,12 +3014,14 @@
       const firebaseConfig = {
         apiKey: "AIzaSyAZWRzAYC6urDjUkuM2nEdoLlOInZFGzpQ",
         authDomain: "homework-list-sync.firebaseapp.com",
-        databaseURL: "[https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app](https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app)",
+        databaseURL: "https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "homework-list-sync",
         storageBucket: "homework-list-sync.firebasestorage.app",
         messagingSenderId: "413595618223",
         appId: "1:413595618223:web:e2400a1336efd9a2d67d5a"
       };
+
+      const clientInstanceId = "client-" + (Math.random().toString(36) + "00000000").substring(2, 10);
 
       let syncId = "";
       try {
@@ -3027,7 +3029,7 @@
       } catch (e) {}
 
       if (!syncId || syncId.length < 6) {
-        syncId = "hw-" + Math.random().toString(36).substring(2, 8);
+        syncId = "hw-" + (Math.random().toString(36) + "000000").substring(2, 8);
         try {
           localStorage.setItem("hw_firebase_sync_id", syncId);
         } catch (e) {}
@@ -3038,6 +3040,7 @@
       let activeRef = null;
       let lastLocalPushTs = 0;
       let connectTimeoutTimer = null;
+      let hasPendingOfflinePush = false;
 
       function renderSyncIdBox() {
         const syncDisplay = document.getElementById("display-sync-id");
@@ -3068,13 +3071,13 @@
 
         if (headerPill) {
           if (state === "synced") {
-            headerPill.innerHTML = `<span>☁️</span><span>ซิงก์แล้ว (${syncId})</span>`;
+            headerPill.innerHTML = `<span>☁️</span><span>ซิงก์แล้ว (${escapeHTML(syncId)})</span>`;
             headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-teal-800 text-xs font-bold transition shadow-2xs border border-teal-600/30";
           } else if (state === "syncing") {
             headerPill.innerHTML = `<span>⏳</span><span>กำลังซิงก์...</span>`;
             headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 text-[#92400E] text-xs font-bold transition shadow-2xs border border-amber-400/40";
           } else {
-            headerPill.innerHTML = `<span>⚠️</span><span>${label || "ออฟไลน์"}</span>`;
+            headerPill.innerHTML = `<span>⚠️</span><span>${escapeHTML(label || "ออฟไลน์")}</span>`;
             headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 text-[#8B1230] text-xs font-bold transition shadow-2xs border border-red-400/40";
           }
         }
@@ -3105,6 +3108,19 @@
             firebase.initializeApp(firebaseConfig);
           }
           db = firebase.database();
+
+          // Monitor real-time connection state
+          db.ref(".info/connected").on("value", (snap) => {
+            if (snap.val() === true) {
+              if (hasPendingOfflinePush) {
+                hasPendingOfflinePush = false;
+                pushToCloud();
+              } else {
+                updateCloudBadge("synced");
+              }
+            }
+          });
+
           return true;
         } catch (err) {
           console.error("Firebase init exception:", err);
@@ -3118,21 +3134,30 @@
         if (isApplyingRemote || !syncId || syncId.length < 6) return;
         if (!ensureFirebaseReady()) return;
 
+        if (!navigator.onLine) {
+          hasPendingOfflinePush = true;
+          updateCloudBadge("error", "ออฟไลน์ (รอซิงก์)");
+          return;
+        }
+
         updateCloudBadge("syncing");
         try {
           const cleanPayload = JSON.parse(JSON.stringify(buildFullBackupPayload()));
           lastLocalPushTs = Date.now();
           await db.ref(`users/${syncId}`).set({
             payload: cleanPayload,
-            updatedAt: lastLocalPushTs
+            updatedAt: lastLocalPushTs,
+            updatedBy: clientInstanceId
           });
+          hasPendingOfflinePush = false;
           updateCloudBadge("synced");
         } catch (err) {
           console.error("Firebase push error:", err);
           const isPermDenied = String(err.message || "").toLowerCase().includes("permission");
+          if (!isPermDenied) hasPendingOfflinePush = true;
           updateCloudBadge("error", isPermDenied ? "ติดสิทธิ์ Rules" : "ซิงก์ไม่สำเร็จ");
           showCloudErrorHint(isPermDenied
-            ? "Firebase ปฏิเสธสิทธิ์การเขียนข้อมูล (Permission Denied) — กรุณาตรวจสอบใน Firebase Console > Realtime Database > Rules ว่าตั้งค่า .read และ .write เป็น true แล้ว"
+            ? "Firebase ปฏิเสธสิทธิ์การเขียนข้อมูล (Permission Denied) — กรุณาตรวจสอบใน Firebase Console > Realtime Database > Rules ว่าตั้งค่า .read และ .write ถูกต้อง"
             : "ไม่สามารถส่งข้อมูลขึ้นคลาวด์ได้: " + (err.message || "ตรวจสอบอินเทอร์เน็ต"));
         }
       }
@@ -3147,7 +3172,10 @@
           const record = snapshot.val();
           updateCloudBadge("synced");
           if (!record || !record.payload) return;
-          if (record.updatedAt && Math.abs(record.updatedAt - lastLocalPushTs) < 800) {
+          if (record.updatedBy === clientInstanceId) {
+            return;
+          }
+          if (!record.updatedBy && record.updatedAt && Math.abs(record.updatedAt - lastLocalPushTs) < 800) {
             return;
           }
           isApplyingRemote = true;
@@ -3247,6 +3275,14 @@
           showToast("เชื่อมต่อไม่สำเร็จ กรุณาตรวจสอบข้อความแจ้งเตือนด้านล่าง");
         }
       }
+
+      window.addEventListener("online", () => {
+        if (hasPendingOfflinePush) {
+          pushToCloud();
+        } else {
+          initCloudSync();
+        }
+      });
 
       window.cloudSync = {
         init: initCloudSync,
