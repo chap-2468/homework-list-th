@@ -316,12 +316,12 @@
           <div id="list-later" class="space-y-3"></div>
         </div>
 
-        <!-- Pending / No-Deadline Section (รอส่ง) -->
+        <!-- Pending / No-Deadline Section (ไม่กำหนดวัน) -->
         <div id="section-pending" class="hidden space-y-3">
           <div class="flex items-center justify-between">
             <h3 class="text-base sm:text-lg font-bold text-[#14213D] flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-              <span>รอส่ง (ยังไม่กำหนดวันส่ง)</span>
+              <span>ไม่กำหนดวัน (ยังไม่กำหนดวันส่ง)</span>
             </h3>
             <span id="count-pending-label" class="text-xs font-bold px-2.5 py-1 rounded-full bg-[#E0E7FF] text-[#3730A3]">0 งาน</span>
           </div>
@@ -1234,7 +1234,7 @@
       const course = getCourseByName(item.subject);
 
       const effectiveDue = item.due || toYMD(getTodayDate());
-      const title = `[${course.code}] ${item.subject} — ${item.due ? 'ส่งการบ้าน' : 'รอส่งการบ้าน'}`;
+      const title = `[${course.code}] ${item.subject} — ${item.due ? 'ส่งการบ้าน' : 'การบ้าน (ไม่กำหนดวัน)'}`;
       const ymdClean = effectiveDue.replace(/-/g, '');
       const dueDateObj = parseYMD(effectiveDue);
       const nextDayObj = new Date(dueDateObj);
@@ -1411,7 +1411,7 @@
     }
 
     function formatThaiShort(ymdStr) {
-      if (!ymdStr) return 'ยังไม่กำหนดวัน';
+      if (!ymdStr) return 'ยังไม่มีกำหนดส่ง';
       const d = parseYMD(ymdStr);
       return `${THAI_DOW[d.getDay()]} ${d.getDate()} ${THAI_MON[d.getMonth()]}`;
     }
@@ -1421,7 +1421,7 @@
     }
 
     function getTileLabel(days) {
-      if (days === null || days === undefined || Number.isNaN(days)) return 'รอส่ง';
+      if (days === null || days === undefined || Number.isNaN(days)) return 'ไม่กำหนดวัน';
       if (days < 0) return `เลย ${-days} วัน`;
       if (days === 0) return 'วันนี้';
       if (days === 1) return 'พรุ่งนี้';
@@ -1662,7 +1662,7 @@
           document.getElementById('inp-no-due').checked = false;
           toggleNoDueDate();
         }
-        showToast(isNoDue ? 'เพิ่มงานสถานะ "รอส่ง" เรียบร้อยแล้ว' : 'เพิ่มการบ้านเรียบร้อยแล้ว');
+        showToast(isNoDue ? 'เพิ่มงานสถานะ "ไม่กำหนดวัน" เรียบร้อยแล้ว' : 'เพิ่มการบ้านเรียบร้อยแล้ว');
         if (window.innerWidth < 768) toggleMobileForm(false);
       }
 
@@ -1741,6 +1741,20 @@
       container.classList.remove('hidden');
       container.scrollIntoView({ behavior: 'smooth', block: 'center' });
       document.getElementById('inp-task').focus();
+    }
+
+    function toggleReadyToSubmit(id) {
+      const item = activeItems.find(x => x.id === id);
+      if (!item) return;
+      item.readyToSubmit = !item.readyToSubmit;
+      saveData();
+      renderAll();
+      if (!document.getElementById('urgent-alert-modal').classList.contains('hidden')) {
+        renderUrgentAlertModalContent(isMidnightAlertMode);
+      }
+      showToast(item.readyToSubmit
+        ? '📦 ตั้งสถานะเป็น "รอส่ง" (ทำเสร็จแล้ว รอส่งงาน)'
+        : '↩ ยกเลิกสถานะ "รอส่ง" กลับเป็นกำลังดำเนินการ');
     }
 
     function completeItem(id) {
@@ -2164,12 +2178,13 @@
     function createHomeworkCardHTML(item, isUrgent) {
       const days = calcDaysDiff(item.due);
       const course = getCourseByName(item.subject);
+      const isReady = Boolean(item.readyToSubmit);
 
       let tileBg, tileFg, borderStyle;
       if (days === null) {
         tileBg = '#E0E7FF';
         tileFg = '#3730A3';
-        borderStyle = 'border-indigo-200';
+        borderStyle = isReady ? 'border-amber-400' : 'border-indigo-200';
       } else if (days <= 0) {
         tileBg = '#FBE4E8';
         tileFg = '#8B1230';
@@ -2177,20 +2192,31 @@
       } else if (isUrgent) {
         tileBg = '#FEF3C7';
         tileFg = '#92400E';
-        borderStyle = 'border-cardBorder';
+        borderStyle = isReady ? 'border-amber-400' : 'border-cardBorder';
       } else {
         tileBg = '#EEF0F6';
         tileFg = '#14213D';
-        borderStyle = 'border-cardBorder';
+        borderStyle = isReady ? 'border-amber-400' : 'border-cardBorder';
       }
 
+      const tileTitleClass = days === null ? 'text-sm sm:text-lg font-bold leading-tight' : 'text-base sm:text-xl font-bold leading-tight';
       const channelSubtitle = course.info ? `<div class="text-[11px] text-muted mt-0.5 truncate">📍 ${escapeHTML(course.info)}</div>` : '';
+      const readyBadgeHTML = isReady
+        ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E] border border-amber-300">📦 รอส่ง (ทำเสร็จแล้ว)</span>`
+        : '';
+      const readyBtnHTML = isReady
+        ? `<button onclick="toggleReadyToSubmit('${escapeHTML(item.id)}')" title="ทำเสร็จแล้ว แต่ยังไม่ได้ส่งงาน (กดอีกครั้งเพื่อยกเลิกสถานะรอส่ง)" class="px-3.5 py-2 rounded-xl border border-amber-500 bg-[#FEF3C7] hover:bg-amber-200 text-[#92400E] text-xs font-bold shadow-2xs transition active:scale-95">
+            ✓ รอส่ง (ทำเสร็จแล้ว)
+          </button>`
+        : `<button onclick="toggleReadyToSubmit('${escapeHTML(item.id)}')" title="กดเมื่อทำเสร็จแล้ว แต่ยังไม่ได้ส่งงาน (รอส่ง)" class="px-3.5 py-2 rounded-xl border border-amber-300 bg-[#FFFBEB] hover:bg-[#FEF3C7] text-[#92400E] text-xs font-bold transition active:scale-95">
+            📦 รอส่ง
+          </button>`;
 
       return `
         <div class="bg-white rounded-[14px] border ${borderStyle} p-3.5 sm:p-4 shadow-xs flex flex-col lg:flex-row lg:items-center gap-3.5 transition hover:shadow-sm">
           <div class="flex items-start gap-3.5 flex-1 min-w-0">
             <div class="w-24 sm:w-32 shrink-0 rounded-xl py-2.5 px-2 text-center flex flex-col justify-center" style="background:${tileBg}; color:${tileFg};">
-              <div class="text-base sm:text-xl font-bold leading-tight">${getTileLabel(days)}</div>
+              <div class="${tileTitleClass}">${getTileLabel(days)}</div>
               <div class="text-[11px] sm:text-xs font-semibold mt-0.5 opacity-90">${formatThaiShort(item.due)}</div>
             </div>
 
@@ -2201,6 +2227,7 @@
                   ${escapeHTML(course.code)}
                 </span>
                 <h4 class="text-sm sm:text-base font-bold text-[#14213D] truncate">${escapeHTML(item.subject)}</h4>
+                ${readyBadgeHTML}
               </div>
               ${channelSubtitle}
               <p class="text-sm sm:text-base text-[#14213D]/95 mt-1.5 whitespace-pre-line-wrap leading-relaxed">${escapeHTML(item.task)}</p>
@@ -2214,7 +2241,8 @@
             <button onclick="startEdit('${escapeHTML(item.id)}')" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition active:scale-95">
               ✎ แก้ไข
             </button>
-            <button onclick="completeItem('${escapeHTML(item.id)}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-teal-50 hover:border-teal-300 text-[#14213D] hover:text-teal-800 text-xs font-bold transition active:scale-95">
+            ${readyBtnHTML}
+            <button onclick="completeItem('${escapeHTML(item.id)}')" title="ส่งงานเรียบร้อยแล้ว (ย้ายเข้าประวัติ)" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-teal-50 hover:border-teal-300 text-[#14213D] hover:text-teal-800 text-xs font-bold transition active:scale-95">
               ✓ เสร็จแล้ว
             </button>
           </div>
@@ -2324,18 +2352,28 @@
             ? `<div class="text-xs text-muted py-2 text-center">ไม่มีงานค้าง</div>`
             : `<div class="space-y-2">` + courseTasks.map(t => {
                 const d = calcDaysDiff(t.due);
+                const isReady = Boolean(t.readyToSubmit);
                 const tagColor = d === null ? 'text-[#3730A3] bg-[#E0E7FF]' : (d <= 0 ? 'text-[#8B1230] bg-[#FBE4E8]' : (d <= 7 ? 'text-[#92400E] bg-[#FEF3C7]' : 'text-[#14213D] bg-white'));
+                const dueLabelText = d === null ? 'ไม่กำหนดวัน' : `${getTileLabel(d)} (${formatThaiShort(t.due)})`;
+                const readyPill = isReady ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#FEF3C7] text-[#92400E] border border-amber-300">📦 รอส่ง</span>` : '';
+                const readySubBtn = isReady
+                  ? `<button onclick="toggleReadyToSubmit('${escapeHTML(t.id)}')" title="ทำเสร็จแล้ว รอส่งงาน (กดเพื่อยกเลิก)" class="shrink-0 px-2 h-7 rounded-lg bg-[#FEF3C7] border border-amber-400 text-[#92400E] font-bold text-[11px] flex items-center justify-center transition">📦 รอส่ง</button>`
+                  : `<button onclick="toggleReadyToSubmit('${escapeHTML(t.id)}')" title="ตั้งสถานะทำเสร็จแล้ว รอส่งงาน" class="shrink-0 px-2 h-7 rounded-lg bg-[#FFFBEB] border border-amber-200 hover:bg-[#FEF3C7] text-[#92400E] font-bold text-[11px] flex items-center justify-center transition">รอส่ง</button>`;
                 return `
-                  <div class="bg-white rounded-xl p-2.5 border border-cardBorder/80 flex items-start justify-between gap-2">
+                  <div class="bg-white rounded-xl p-2.5 border ${isReady ? 'border-amber-300' : 'border-cardBorder/80'} flex items-start justify-between gap-2">
                     <div class="min-w-0 flex-1">
-                      <div class="flex items-center gap-1.5 mb-1">
-                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${tagColor}">${getTileLabel(d)} (${formatThaiShort(t.due)})</span>
+                      <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${tagColor}">${dueLabelText}</span>
+                        ${readyPill}
                       </div>
                       <p class="text-xs sm:text-sm text-[#14213D] font-medium whitespace-pre-line-wrap">${escapeHTML(t.task)}</p>
                     </div>
-                    <button onclick="completeItem('${escapeHTML(t.id)}')" title="เสร็จแล้ว" class="shrink-0 w-7 h-7 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs flex items-center justify-center transition">
-                      ✓
-                    </button>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      ${readySubBtn}
+                      <button onclick="completeItem('${escapeHTML(t.id)}')" title="เสร็จแล้ว (ส่งงานเรียบร้อย)" class="shrink-0 w-7 h-7 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs flex items-center justify-center transition">
+                        ✓
+                      </button>
+                    </div>
                   </div>
                 `;
               }).join('') + `</div>`;
@@ -2468,7 +2506,7 @@
         histList.innerHTML = historyItems.map(h => {
           const course = getCourseByName(h.subject);
           const isLate = Boolean(h.due) && h.doneDate > h.due;
-          const dueNote = h.due ? `กำหนด ${formatThaiShort(h.due)}${isLate ? ' · ช้า' : ''}` : 'รอส่ง / ไม่กำหนดวัน';
+          const dueNote = h.due ? `กำหนด ${formatThaiShort(h.due)}${isLate ? ' · ช้า' : ''}` : 'ไม่กำหนดวัน';
           const statusBadge = isLate
             ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-[#FBE4E8] text-[#8B1230]">ส่งเมื่อ ${toDMY(parseYMD(h.doneDate))} (${dueNote})</span>`
             : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-[#DCFCE7] text-[#166534]">✓ ส่งเมื่อ ${toDMY(parseYMD(h.doneDate))} (${dueNote})</span>`;
@@ -2507,11 +2545,12 @@
     function closeInstallModal() { document.getElementById('install-modal').classList.add('hidden'); }
 
     function generateHomeworkTxtString() {
-      const lines = ['# รูปแบบ 1 บรรทัดต่อ 1 งาน: วันที่ส่ง (หรือ รอส่ง) | วิชา | การบ้าน'];
+      const lines = ['# รูปแบบ 1 บรรทัดต่อ 1 งาน: วันที่ส่ง (หรือ ไม่กำหนดวัน) | วิชา | การบ้าน'];
       activeItems.forEach(it => {
-        const dmy = it.due ? toDMY(parseYMD(it.due)) : 'รอส่ง';
+        const dmy = it.due ? toDMY(parseYMD(it.due)) : 'ไม่กำหนดวัน';
+        const statusPrefix = it.readyToSubmit ? '[รอส่ง] ' : '';
         const cleanTask = it.task.replace(/\r?\n/g, '\\n');
-        lines.push(`${dmy} | ${it.subject} | ${cleanTask}`);
+        lines.push(`${dmy} | ${it.subject} | ${statusPrefix}${cleanTask}`);
       });
       return lines.join('\n');
     }
@@ -2550,10 +2589,15 @@
         if (parts.length < 3) continue;
         const dateStr = parts[0].trim();
         const subj = parts[1].trim();
-        const taskRaw = parts.slice(2).join('|').trim().replace(/\\n/g, '\n');
+        let taskRaw = parts.slice(2).join('|').trim().replace(/\\n/g, '\n');
+        let isReady = false;
+        if (taskRaw.startsWith('[รอส่ง]')) {
+          isReady = true;
+          taskRaw = taskRaw.replace(/^\[รอส่ง\]\s*/, '');
+        }
 
         let dueVal = '';
-        if (!/^(รอส่ง|ไม่กำหนด|-|none)$/i.test(dateStr)) {
+        if (!/^(ไม่กำหนดวัน|รอส่ง|ไม่กำหนด|-|none)$/i.test(dateStr)) {
           let y, m, d;
           if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(dateStr)) {
             [y, m, d] = dateStr.split('-').map(Number);
@@ -2572,7 +2616,8 @@
           id: 'imp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
           due: dueVal,
           subject: subj,
-          task: taskRaw
+          task: taskRaw,
+          readyToSubmit: isReady
         });
       }
       return parsed;
@@ -2816,8 +2861,13 @@
           else if (it.days === 0) { statusLabel = 'ส่งวันนี้!'; statusClass = 'bg-[#FBE4E8] text-[#8B1230]'; }
           else { statusLabel = 'ส่งพรุ่งนี้'; statusClass = 'bg-[#FEF3C7] text-[#92400E]'; }
 
+          const isReady = Boolean(it.readyToSubmit);
+          const readyPill = isReady ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FEF3C7] text-[#92400E] border border-amber-300">📦 รอส่ง (ทำเสร็จแล้ว)</span>` : '';
+          const readyBtn = isReady
+            ? `<button onclick="toggleReadyToSubmit('${escapeHTML(it.id)}')" class="px-2.5 py-2 rounded-xl bg-[#FEF3C7] border border-amber-400 text-[#92400E] text-xs font-bold transition active:scale-95">✓ รอส่ง</button>`
+            : `<button onclick="toggleReadyToSubmit('${escapeHTML(it.id)}')" class="px-2.5 py-2 rounded-xl bg-[#FFFBEB] border border-amber-200 hover:bg-[#FEF3C7] text-[#92400E] text-xs font-bold transition active:scale-95">📦 รอส่ง</button>`;
           return `
-            <div class="rounded-xl border border-cardBorder bg-white p-3.5 shadow-xs flex items-start justify-between gap-3">
+            <div class="rounded-xl border ${isReady ? 'border-amber-400' : 'border-cardBorder'} bg-white p-3.5 shadow-xs flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1 space-y-1">
                 <div class="flex flex-wrap items-center gap-1.5">
                   <span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${statusClass}">${statusLabel} (${formatThaiShort(it.due)})</span>
@@ -2825,13 +2875,17 @@
                     <span class="w-1.5 h-1.5 rounded-full" style="background:${course.dot};"></span>
                     ${escapeHTML(course.code)}
                   </span>
+                  ${readyPill}
                 </div>
                 <div class="text-sm font-bold text-[#14213D]">${escapeHTML(it.subject)}</div>
                 <p class="text-xs text-muted whitespace-pre-line-wrap leading-relaxed">${escapeHTML(it.task)}</p>
               </div>
-              <button onclick="completeItem('${escapeHTML(it.id)}')" class="shrink-0 px-3 py-2 rounded-xl bg-[#DCFCE7] hover:bg-teal-600 text-[#166534] hover:text-white text-xs font-bold transition active:scale-95">
-                ✓ เสร็จแล้ว
-              </button>
+              <div class="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 shrink-0">
+                ${readyBtn}
+                <button onclick="completeItem('${escapeHTML(it.id)}')" class="px-3 py-2 rounded-xl bg-[#DCFCE7] hover:bg-teal-600 text-[#166534] hover:text-white text-xs font-bold transition active:scale-95">
+                  ✓ เสร็จแล้ว
+                </button>
+              </div>
             </div>
           `;
         }).join('');
@@ -3108,7 +3162,7 @@
       const firebaseConfig = {
         apiKey: "AIzaSyAZWRzAYC6urDjUkuM2nEdoLlOInZFGzpQ",
         authDomain: "homework-list-sync.firebaseapp.com",
-        databaseURL: "https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app",
+        databaseURL: "[https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app](https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app)",
         projectId: "homework-list-sync",
         storageBucket: "homework-list-sync.firebasestorage.app",
         messagingSenderId: "413595618223",
