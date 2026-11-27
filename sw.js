@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homework-list-cache-v14';
+const CACHE_NAME = 'homework-list-cache-v16';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

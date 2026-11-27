@@ -333,7 +333,7 @@
               + จัดการรายวิชา
             </button>
           </div>
-          <div id="subject-filter-bar" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <div id="subject-filter-bar" class="flex flex-wrap items-center gap-2 pt-0.5">
             <!-- Populated by JS -->
           </div>
         </div>
@@ -756,7 +756,7 @@
                 <span id="gpa-drawer-arrow">▼</span>
               </button>
             </div>
-            <div id="grade-subject-pills" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <div id="grade-subject-pills" class="flex flex-wrap items-center gap-2 pt-0.5">
               <!-- Populated by JS -->
             </div>
           </div>
@@ -2439,14 +2439,24 @@
         </button>
       `;
 
+      const formatShortEngName = (fullName) => {
+        const stripped = String(fullName || '')
+          .replace(/\s*\([^)]*[\u0E00-\u0E7F][^)]*\)/g, '')
+          .replace(/[\u0E00-\u0E7F]+/g, '')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+        return /[a-zA-Z]{2,}/.test(stripped) ? stripped : String(fullName || '');
+      };
+
       uniqueCourses.forEach(c => {
         const count = activeItems.filter(it => it.subject === c.name).length;
         const active = selectedSubjectFilter === c.name;
+        const shortName = formatShortEngName(c.name);
         html += `
-          <button type="button" data-subj="${escapeHTML(c.name)}" onclick="setSubjectFilter(this.dataset.subj)" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 ${active ? 'ring-2 ring-[#14213D] dark:ring-white shadow-2xs' : 'opacity-90 hover:opacity-100'}" style="background:${c.bg}; color:${c.fg}; border-color:${c.dot}40;">
+          <button type="button" data-subj="${escapeHTML(c.name)}" onclick="setSubjectFilter(this.dataset.subj)" class="max-w-full inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border text-left transition active:scale-95 ${active ? 'ring-2 ring-[#14213D] dark:ring-white shadow-2xs' : 'opacity-90 hover:opacity-100'}" style="background:${c.bg}; color:${c.fg}; border-color:${c.dot}40;">
             <span class="w-2 h-2 rounded-full shrink-0" style="background:${c.dot};"></span>
-            <span class="max-w-[140px] truncate">${escapeHTML(c.name)}</span>
-            <span class="px-1.5 py-0.2 rounded-full text-[11px] bg-white/85 text-[#14213D]">${count}</span>
+            <span class="break-words leading-snug">${escapeHTML(shortName)}</span>
+            <span class="shrink-0 px-1.5 py-0.2 rounded-full text-[11px] bg-white/85 text-[#14213D]">${count}</span>
           </button>
         `;
       });
@@ -2454,10 +2464,11 @@
       extraSubjects.forEach(name => {
         const count = activeItems.filter(it => it.subject === name).length;
         const active = selectedSubjectFilter === name;
+        const shortName = formatShortEngName(name);
         html += `
-          <button type="button" data-subj="${escapeHTML(name)}" onclick="setSubjectFilter(this.dataset.subj)" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 ${active ? 'theme-pill-active border-black/15' : 'bg-pageBg border-cardBorder text-[#14213D]'}">
-            <span class="max-w-[140px] truncate">${escapeHTML(name)}</span>
-            <span class="px-1.5 py-0.2 rounded-full text-[11px] bg-white/85 text-[#14213D]">${count}</span>
+          <button type="button" data-subj="${escapeHTML(name)}" onclick="setSubjectFilter(this.dataset.subj)" class="max-w-full inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border text-left transition active:scale-95 ${active ? 'theme-pill-active border-black/15' : 'bg-pageBg border-cardBorder text-[#14213D]'}">
+            <span class="break-words leading-snug">${escapeHTML(shortName)}</span>
+            <span class="shrink-0 px-1.5 py-0.2 rounded-full text-[11px] bg-white/85 text-[#14213D]">${count}</span>
           </button>
         `;
       });
@@ -5168,11 +5179,17 @@
             const bg = p.bg || '#E3E6EC';
             const fg = p.fg || '#14213D';
             const dot = p.dot || '#475569';
+            const strippedPill = String(p.name || '')
+              .replace(/\s*\([^)]*[\u0E00-\u0E7F][^)]*\)/g, '')
+              .replace(/[\u0E00-\u0E7F]+/g, '')
+              .replace(/\s{2,}/g, ' ')
+              .trim();
+            const shortPillName = /[a-zA-Z]{2,}/.test(strippedPill) ? strippedPill : String(p.name || '');
             return `
-              <button type="button" onclick="selectGradePlan('${escapeHTML(p.id)}')" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 ${isSelected ? 'ring-2 ring-[#14213D] dark:ring-white shadow-2xs' : 'opacity-85 hover:opacity-100'}" style="background:${bg}; color:${fg}; border-color:${dot}45;">
+              <button type="button" onclick="selectGradePlan('${escapeHTML(p.id)}')" class="max-w-full inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border text-left transition active:scale-95 ${isSelected ? 'ring-2 ring-[#14213D] dark:ring-white shadow-2xs' : 'opacity-85 hover:opacity-100'}" style="background:${bg}; color:${fg}; border-color:${dot}45;">
                 <span class="w-2 h-2 rounded-full shrink-0" style="background:${dot};"></span>
-                <span class="max-w-[140px] truncate">${escapeHTML(p.name)}</span>
-                <span class="px-1.5 py-0.2 rounded-md text-[11px] bg-white/90 text-[#14213D] font-bold">${evalRes.letter}</span>
+                <span class="break-words leading-snug">${escapeHTML(shortPillName)}</span>
+                <span class="shrink-0 px-1.5 py-0.2 rounded-md text-[11px] bg-white/90 text-[#14213D] font-bold">${evalRes.letter}</span>
               </button>
             `;
           }).join('');
@@ -5339,8 +5356,7 @@
           statusHtml = `<div class="text-xs font-bold text-emerald-700 dark:text-emerald-400">✓ ถึงเกณฑ์แล้ว</div><div class="text-[10px] text-muted">มีในมือ ${ev.actualEarned}</div>`;
           cardStyle = 'bg-[#DCFCE7]/55 dark:bg-emerald-950/30 border-emerald-500/40';
         } else if (neededFromRemaining <= ev.remainingMax) {
-          const pctNeeded = ev.remainingMax > 0 ? Math.round((neededFromRemaining / ev.remainingMax) * 100) : 0;
-          statusHtml = `<div class="text-xs font-bold text-[#14213D]">อีก ${neededFromRemaining} คะแนน</div><div class="text-[10px] font-semibold text-teal-700 dark:text-teal-400">(${pctNeeded}% ของที่เหลือ)</div>`;
+          statusHtml = `<div class="text-xs font-bold text-[#14213D]">อีก ${neededFromRemaining} คะแนน</div>`;
           if (isCurrentTarget) {
             cardStyle = 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 ring-1 ring-indigo-500';
           }
