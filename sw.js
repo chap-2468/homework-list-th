@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homework-list-cache-v6';
+const CACHE_NAME = 'homework-list-cache-v7';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS_TO_CACHE = [
 
 const EXTERNAL_CACHE_ORIGINS = [
   'https://cdn.tailwindcss.com',
+  'https://cdnjs.cloudflare.com',
   'https://fonts.googleapis.com',
   'https://fonts.gstatic.com',
   'https://www.gstatic.com'

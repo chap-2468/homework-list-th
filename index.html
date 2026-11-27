@@ -13,6 +13,7 @@
   <link rel="manifest" href="./manifest.json" />
   <title>Homework List — ระบบจัดการการบ้านและตารางเรียน</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- Firebase Compat SDK (รองรับทั้ง https:// และเปิดไฟล์ในเครื่อง) -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
@@ -345,13 +346,16 @@
       </section>
 
       <!-- ========================================================= -->
-      <!-- VIEW 3: ตารางเรียน + Export .ics Google Calendar          -->
+      <!-- VIEW 3: ตารางเรียน + Export .JPG & .ics Google Calendar    -->
       <!-- ========================================================= -->
       <section id="view-schedule" class="tab-view hidden space-y-6">
         <div class="space-y-2.5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ตารางเรียนประจำสัปดาห์</h2>
             <div class="flex flex-wrap items-center gap-2">
+              <button type="button" id="btn-download-schedule-jpg" onclick="downloadScheduleJPG()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs font-bold shadow-xs transition active:scale-95">
+                <span>🖼️ ดาวน์โหลดตารางเรียน (.JPG)</span>
+              </button>
               <button onclick="downloadFullCalendarICS()" class="theme-btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs border border-black/10 active:scale-95">
                 <span>📅 ส่งออกตารางเรียน & เดดไลน์ลง Google / Apple Calendar (.ics)</span>
               </button>
@@ -1132,8 +1136,98 @@
     }
 
     // =========================================================================
-    // 4. Google Calendar Integration
+    // 4. Google Calendar Integration & Schedule JPG Export
     // =========================================================================
+    async function downloadScheduleJPG() {
+      if (courses.length === 0) {
+        showToast('ยังไม่มีรายวิชาในตารางเรียนสำหรับดาวน์โหลด');
+        return;
+      }
+
+      const target = document.getElementById('schedule-capture-area');
+      if (!target) return;
+
+      if (typeof window.html2canvas !== 'function') {
+        showToast('กำลังโหลดตัวสร้างรูปภาพ กรุณาลองใหม่อีกครั้ง');
+        return;
+      }
+
+      const btn = document.getElementById('btn-download-schedule-jpg');
+      const originalBtnHTML = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ กำลังสร้างรูป...</span>';
+      }
+
+      try {
+        const rootStyles = getComputedStyle(document.documentElement);
+        const themeVars = {
+          '--theme-primary': rootStyles.getPropertyValue('--theme-primary').trim() || '#8AB4F8',
+          '--theme-secondary': rootStyles.getPropertyValue('--theme-secondary').trim() || '#6EA0F2',
+          '--theme-text': rootStyles.getPropertyValue('--theme-text').trim() || '#14213D',
+          '--theme-subtext': rootStyles.getPropertyValue('--theme-subtext').trim() || '#263B5E',
+          '--theme-soft': rootStyles.getPropertyValue('--theme-soft').trim() || '#E4EEFF'
+        };
+
+        const fullWidth = Math.max(target.scrollWidth, 1780);
+        const fullHeight = target.scrollHeight;
+
+        const canvas = await html2canvas(target, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          width: fullWidth,
+          height: fullHeight,
+          windowWidth: fullWidth + 40,
+          scrollX: 0,
+          scrollY: 0,
+          onclone: (clonedDoc) => {
+            Object.entries(themeVars).forEach(([k, v]) => {
+              clonedDoc.documentElement.style.setProperty(k, v);
+            });
+
+            const clonedGrid = clonedDoc.getElementById('weekly-timetable-grid');
+            if (clonedGrid) {
+              clonedGrid.style.overflow = 'visible';
+              clonedGrid.style.width = fullWidth + 'px';
+              clonedGrid.style.maxWidth = 'none';
+              if (clonedGrid.parentElement) {
+                clonedGrid.parentElement.style.overflow = 'visible';
+                clonedGrid.parentElement.style.maxWidth = 'none';
+              }
+            }
+
+            const clonedTarget = clonedDoc.getElementById('schedule-capture-area');
+            if (clonedTarget) {
+              clonedTarget.style.width = fullWidth + 'px';
+              clonedTarget.style.overflow = 'visible';
+              clonedTarget.style.backgroundColor = '#ffffff';
+            }
+
+            clonedDoc.querySelectorAll('.timetable-sticky-col').forEach((el) => {
+              el.style.position = 'static';
+            });
+          }
+        });
+
+        const link = document.createElement('a');
+        link.download = 'ตารางเรียน.jpg';
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        showToast('ดาวน์โหลดรูปตารางเรียน (.JPG) เรียบร้อยแล้ว');
+      } catch (err) {
+        console.error('Export schedule JPG error:', err);
+        showToast('ไม่สามารถสร้างรูปตารางเรียนได้ กรุณาลองใหม่อีกครั้ง');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalBtnHTML;
+        }
+      }
+    }
+
     function openGoogleCalendarForTask(taskId) {
       const item = activeItems.find(x => x.id === taskId);
       if (!item) return;
@@ -2011,7 +2105,7 @@
         { dow: 0, name: 'อาทิตย์', isWeekend: true }
       ];
 
-      let html = `<table class="timetable-table"><thead><tr class="theme-surface text-[11px] sm:text-xs font-bold">`;
+      let html = `<div id="schedule-capture-area" style="background: #ffffff; display: inline-block; min-width: 100%;"><table class="timetable-table"><thead><tr class="theme-surface text-[11px] sm:text-xs font-bold">`;
       html += `<th class="timetable-sticky-col theme-surface w-[92px] py-3 px-2 text-center border-black/15">วัน / เวลา</th>`;
       for (const h of hours) {
         const h1 = String(h).padStart(2, '0') + ':00';
@@ -2063,7 +2157,7 @@
         }
         html += `</tr>`;
       }
-      html += `</tbody></table>`;
+      html += `</tbody></table></div>`;
       container.innerHTML = html;
     }
 
