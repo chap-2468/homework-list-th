@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#8AB4F8" id="meta-theme-color" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -14,7 +14,7 @@
   <title>Homework List — ระบบจัดการการบ้านและตารางเรียน</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <!-- Firebase Compat SDK (รองรับทั้ง https:// และเปิดไฟล์ในเครื่อง) -->
+  <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -22,6 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -52,6 +53,7 @@
       color: #14213D;
       -webkit-tap-highlight-color: transparent;
       padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
     @media (min-width: 768px) {
       body {
@@ -88,16 +90,105 @@
       background-color: color-mix(in srgb, var(--theme-soft) 55%, #FFFFFF);
       border-color: color-mix(in srgb, var(--theme-primary) 35%, #E1E4EC);
     }
+
+    /* ========================================================= */
+    /* DARK MODE OVERRIDES                                       */
+    /* ========================================================= */
+    html.dark body {
+      background-color: #0F172A;
+      color: #F1F5F9;
+    }
+    html.dark .theme-surface {
+      background-color: color-mix(in srgb, var(--theme-primary) 26%, #1E293B);
+      color: #F8FAFC;
+      border-color: #334155;
+    }
+    html.dark .bg-white {
+      background-color: #1E293B !important;
+    }
+    html.dark .bg-white\/95 {
+      background-color: rgba(30, 41, 59, 0.94) !important;
+    }
+    html.dark .bg-white\/85,
+    html.dark .bg-white\/80,
+    html.dark .bg-white\/75,
+    html.dark .bg-white\/55 {
+      background-color: rgba(30, 41, 59, 0.85) !important;
+      color: #F1F5F9 !important;
+      border-color: #334155 !important;
+    }
+    html.dark .bg-pageBg,
+    html.dark .bg-pageBg\/80,
+    html.dark .bg-pageBg\/70 {
+      background-color: #0F172A !important;
+    }
+    html.dark .border-cardBorder,
+    html.dark .border-slate-100,
+    html.dark .border-slate-200\/60 {
+      border-color: #334155 !important;
+    }
+    html.dark .text-\[\#14213D\],
+    html.dark .text-\[\#14213D\]\/95,
+    html.dark .text-\[\#14213D\]\/90 {
+      color: #F1F5F9 !important;
+    }
+    html.dark .text-muted {
+      color: #94A3B8 !important;
+    }
+    html.dark .theme-soft-input {
+      background-color: #0F172A !important;
+      border-color: #334155 !important;
+      color: #F1F5F9 !important;
+    }
+    html.dark input,
+    html.dark select,
+    html.dark textarea {
+      color-scheme: dark;
+    }
+    html.dark .timetable-table th,
+    html.dark .timetable-table td {
+      border-color: #334155;
+    }
+    html.dark .tt-row-weekday {
+      background-color: #1E293B !important;
+    }
+    html.dark .tt-row-weekend {
+      background-color: #261B29 !important;
+    }
+    html.dark .tt-day-weekday {
+      background-color: #0F172A !important;
+      color: #F1F5F9 !important;
+    }
+    html.dark .tt-day-weekend {
+      background-color: #3B1D2A !important;
+      color: #FDA4AF !important;
+    }
+    html.dark .theme-mobile-active {
+      background-color: color-mix(in srgb, var(--theme-primary) 28%, #1E293B) !important;
+      color: #F8FAFC !important;
+    }
+
+    /* Scrollbar & Utilities */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #F3F4F8;
+      background: transparent;
     }
     ::-webkit-scrollbar-thumb {
       background: #CBD5E1;
       border-radius: 9999px;
+    }
+    html.dark ::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
     .whitespace-pre-line-wrap {
       white-space: pre-line;
@@ -118,6 +209,13 @@
       left: 0;
       z-index: 10;
     }
+    @keyframes undoShrink {
+      from { width: 100%; }
+      to { width: 0%; }
+    }
+    .undo-progress-animate {
+      animation: undoShrink 5s linear forwards;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -127,35 +225,25 @@
   <!-- ========================================================= -->
   <div id="main-app-shell" class="flex-1 flex flex-col">
 
-    <!-- Top Header (Pastel Blue Theme Default) -->
+    <!-- Top Header -->
     <header class="theme-surface shadow-sm safe-top-header transition-colors duration-200 border-b border-black/10">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 pb-6">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <div class="flex flex-wrap items-center gap-2">
-              <h1 class="text-xl sm:text-2xl font-bold tracking-tight leading-snug" style="color: var(--theme-text);">Homework List</h1>
-              <button onclick="switchTab('profile')" id="header-user-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/55 hover:bg-white/80 text-[#14213D] text-xs font-bold transition shadow-2xs">
-                <span>🎨</span>
-                <span>ธีมสีพาสเทล</span>
-              </button>
-              <button onclick="switchTab('profile')" id="header-cloud-status" title="คลิกเพื่อจัดการรหัสซิงก์ข้ามอุปกรณ์" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 hover:bg-white text-[#14213D] text-xs font-bold transition shadow-2xs border border-black/10">
+              <h1 class="text-xl sm:text-2xl font-bold tracking-tight leading-snug">Homework List</h1>
+              <button onclick="switchTab('sync')" id="header-cloud-status" title="คลิกเพื่อจัดการรหัสซิงก์ข้ามอุปกรณ์" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 hover:bg-white text-[#14213D] text-xs font-bold transition shadow-2xs border border-black/10">
                 <span>⏳</span>
                 <span>กำลังเชื่อมต่อคลาวด์...</span>
               </button>
             </div>
-            <p id="header-date-text" class="text-xs sm:text-sm font-semibold mt-0.5 opacity-85" style="color: var(--theme-subtext);">กำลังโหลดวันที่...</p>
+            <p id="header-date-text" class="text-xs sm:text-sm font-semibold mt-0.5 opacity-85">กำลังโหลดวันที่...</p>
           </div>
 
-          <!-- Action Buttons -->
-          <div class="flex flex-wrap items-center gap-2">
-            <button id="btn-header-notif" onclick="openNotifSettingsModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/75 hover:bg-white text-[#14213D] border border-black/10 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95">
-              <span>🔔 แจ้งเตือน</span>
-            </button>
-            <button onclick="openInstallModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0F766E] hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95">
-              <span>📲 ติดตั้งแอป</span>
-            </button>
-            <button onclick="openTransferModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/75 hover:bg-white text-[#14213D] text-xs sm:text-sm font-bold border border-black/10 shadow-2xs transition active:scale-95">
-              <span>🔄 ซิงก์ (.txt)</span>
+          <!-- Cleaned Header Action: Only Clear Notification Button -->
+          <div class="flex items-center gap-2 self-start sm:self-auto">
+            <button id="btn-header-notif" onclick="openNotifSettingsModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/80 hover:bg-white text-[#14213D] border border-black/10 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95">
+              <span>🔔 ตั้งค่าแจ้งเตือน</span>
             </button>
           </div>
         </div>
@@ -173,15 +261,15 @@
           <div class="bg-white/95 text-[#14213D] rounded-[14px] p-3.5 sm:p-4 border border-black/10 shadow-xs flex items-center justify-between">
             <div>
               <div class="text-xs font-semibold text-muted">งานด่วน (ใน 7 วัน)</div>
-              <div id="stat-urgent" class="text-2xl sm:text-3xl font-bold text-[#92400E] mt-0.5">0</div>
+              <div id="stat-urgent" class="text-2xl sm:text-3xl font-bold text-[#92400E] dark:text-amber-400 mt-0.5">0</div>
             </div>
             <div class="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#92400E] flex items-center justify-center font-bold text-lg">⏳</div>
           </div>
 
           <div class="bg-white/95 text-[#14213D] rounded-[14px] p-3.5 sm:p-4 border border-black/10 shadow-xs flex items-center justify-between">
             <div>
-              <div class="text-xs font-semibold text-muted">ส่งวันนี้ / พรุ่งนี้</div>
-              <div id="stat-today" class="text-2xl sm:text-3xl font-bold text-[#8B1230] mt-0.5">0</div>
+              <div class="text-xs font-semibold text-muted">เลยกำหนด / วันนี้-พรุ่งนี้</div>
+              <div id="stat-today" class="text-2xl sm:text-3xl font-bold text-[#8B1230] dark:text-rose-400 mt-0.5">0</div>
             </div>
             <div class="w-10 h-10 rounded-xl bg-[#FBE4E8] text-[#8B1230] flex items-center justify-center font-bold text-lg">🔥</div>
           </div>
@@ -189,7 +277,7 @@
           <div class="bg-white/95 text-[#14213D] rounded-[14px] p-3.5 sm:p-4 border border-black/10 shadow-xs flex items-center justify-between">
             <div>
               <div class="text-xs font-semibold text-muted">ส่งเสร็จแล้ว</div>
-              <div id="stat-done" class="text-2xl sm:text-3xl font-bold text-teal-700 mt-0.5">0</div>
+              <div id="stat-done" class="text-2xl sm:text-3xl font-bold text-teal-700 dark:text-teal-400 mt-0.5">0</div>
             </div>
             <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-lg">✅</div>
           </div>
@@ -197,44 +285,51 @@
       </div>
     </header>
 
-    <!-- Desktop / Tablet Top Pill Navigation -->
+    <!-- Desktop / Tablet Top Pill Navigation (4 Tabs) -->
     <nav class="hidden md:block bg-white border-b border-cardBorder sticky top-0 z-20">
       <div class="max-w-6xl mx-auto px-6 py-2.5 flex items-center justify-between gap-2 overflow-x-auto">
-        <div class="flex items-center gap-1.5">
-          <button data-tab="list" onclick="switchTab('list')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+        <div class="flex items-center gap-2">
+          <button data-tab="list" onclick="switchTab('list')" class="tab-btn-desktop px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
             <span>📋 รายการงาน</span>
-            <span id="badge-list-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/80 text-[#14213D]">0</span>
+            <span id="badge-list-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/85 text-[#14213D]">0</span>
           </button>
-          <button data-tab="subjects" onclick="switchTab('subjects')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
-            <span>🗂️ รายวิชา</span>
-            <span id="badge-subjects-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/80 text-[#14213D]">0</span>
-          </button>
-          <button data-tab="schedule" onclick="switchTab('schedule')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+          <button data-tab="schedule" onclick="switchTab('schedule')" class="tab-btn-desktop px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
             <span>📅 ตารางเรียน</span>
+            <span id="badge-courses-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/85 text-[#14213D]">0</span>
           </button>
-          <button data-tab="courses" onclick="switchTab('courses')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
-            <span>⚙️ จัดการวิชา</span>
-            <span id="badge-courses-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/80 text-[#14213D]">0</span>
+          <button data-tab="sync" onclick="switchTab('sync')" class="tab-btn-desktop px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+            <span>☁️ ซิงก์ข้อมูล</span>
           </button>
-          <button data-tab="history" onclick="switchTab('history')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
-            <span>🕒 ประวัติ</span>
-            <span id="badge-history-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/80 text-[#14213D]">0</span>
-          </button>
-          <button data-tab="profile" onclick="switchTab('profile')" class="tab-btn-desktop px-3.5 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
-            <span>🎨 ธีม & ตั้งค่า</span>
+          <button data-tab="settings" onclick="switchTab('settings')" class="tab-btn-desktop px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+            <span>⚙️ ตั้งค่า</span>
           </button>
         </div>
       </div>
     </nav>
 
     <!-- Main Content Area -->
-    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-5">
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-5 space-y-5">
 
       <!-- ========================================================= -->
-      <!-- VIEW 1: รายการงาน (Tasks + Google Calendar Button)        -->
+      <!-- VIEW 1: รายการงาน (Subject Filter + Overdue + Tasks)      -->
       <!-- ========================================================= -->
-      <section id="view-list" class="tab-view space-y-6">
-        
+      <section id="view-list" class="tab-view space-y-5">
+
+        <!-- Top Subject Filter Bar -->
+        <div class="bg-white rounded-[14px] border border-cardBorder p-3 sm:p-3.5 shadow-xs space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-muted flex items-center gap-1.5">
+              <span>🗂️ กรองดูตามรายวิชา:</span>
+            </span>
+            <button type="button" onclick="switchTab('schedule')" class="text-[11px] font-bold text-teal-700 dark:text-teal-400 hover:underline">
+              + จัดการรายวิชา
+            </button>
+          </div>
+          <div id="subject-filter-bar" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
         <!-- Add / Edit Task Card -->
         <div id="add-form-container" class="hidden md:block bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs">
           <div class="flex items-center justify-between mb-3">
@@ -248,10 +343,18 @@
           </div>
 
           <form id="hw-form" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
+            <!-- Category Tag Selector -->
+            <div class="md:col-span-12">
+              <label class="block text-xs font-bold text-muted mb-1.5">ประเภทงาน</label>
+              <div id="task-category-pills" class="flex flex-wrap items-center gap-2">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
             <div class="md:col-span-3">
               <div class="flex items-center justify-between mb-1.5">
                 <label class="block text-xs font-bold text-muted">วันส่ง</label>
-                <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-teal-700 cursor-pointer select-none">
+                <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-teal-700 dark:text-teal-400 cursor-pointer select-none">
                   <input type="checkbox" id="inp-no-due" onchange="toggleNoDueDate()" class="w-3.5 h-3.5 accent-[#0F766E] rounded cursor-pointer" />
                   <span>ยังไม่กำหนดวัน</span>
                 </label>
@@ -266,8 +369,8 @@
             </div>
 
             <div class="md:col-span-5">
-              <label class="block text-xs font-bold text-muted mb-1.5">รายละเอียดการบ้าน</label>
-              <textarea id="inp-task" rows="2" placeholder="กรอกรายละเอียดการบ้าน..." required class="w-full p-2.5 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] text-sm focus:outline-none focus:ring-2 focus:ring-navy resize-y"></textarea>
+              <label class="block text-xs font-bold text-muted mb-1.5">รายละเอียดงาน</label>
+              <textarea id="inp-task" rows="2" placeholder="กรอกรายละเอียดการบ้าน / ขอบเขตสอบ / หัวข้อแล็บ..." required class="w-full p-2.5 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] text-sm focus:outline-none focus:ring-2 focus:ring-navy resize-y"></textarea>
             </div>
 
             <div class="md:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
@@ -288,23 +391,35 @@
         <!-- Empty State -->
         <div id="hw-empty-state" class="hidden bg-white rounded-[14px] border border-cardBorder p-10 text-center">
           <div class="text-4xl mb-3">🎉</div>
-          <h3 class="text-lg font-bold text-[#14213D]">ไม่มีการบ้านค้างส่งแล้ว!</h3>
-          <p class="text-sm text-muted mt-1">กดปุ่ม "+ เพิ่มงาน" เพื่อจดรายการการบ้านใหม่ (หรือเพิ่มรายวิชาที่แท็บ <button onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button>)</p>
+          <h3 id="hw-empty-title" class="text-lg font-bold text-[#14213D]">ไม่มีการบ้านค้างส่งแล้ว!</h3>
+          <p id="hw-empty-desc" class="text-sm text-muted mt-1">กดปุ่ม "+ เพิ่มงาน" เพื่อจดรายการงานใหม่ (หรือเพิ่มรายวิชาที่แท็บ <button onclick="switchTab('schedule')" class="text-teal-700 dark:text-teal-400 font-bold underline">ตารางเรียน</button>)</p>
         </div>
 
-        <!-- Urgent Section (<= 7 days) -->
+        <!-- 1. OVERDUE SECTION (แยกกลุ่มงานเลยกำหนด สีแดงด้านบนสุด) -->
+        <div id="section-overdue" class="hidden rounded-2xl border-2 border-[#F43F5E]/45 bg-[#FFF1F2] dark:bg-rose-950/30 p-3.5 sm:p-4 space-y-3 shadow-xs">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base sm:text-lg font-bold text-[#9F1239] dark:text-rose-300 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse"></span>
+              <span>🚨 งานเลยกำหนดส่ง (Overdue)</span>
+            </h3>
+            <span id="count-overdue-label" class="text-xs font-bold px-2.5 py-1 rounded-full bg-[#FFE4E6] text-[#9F1239] dark:bg-rose-900/70 dark:text-rose-200 border border-rose-300 dark:border-rose-700">0 งาน</span>
+          </div>
+          <div id="list-overdue" class="space-y-3"></div>
+        </div>
+
+        <!-- 2. Urgent Section (0 to 7 days) -->
         <div id="section-urgent" class="hidden space-y-3">
           <div class="flex items-center justify-between">
             <h3 class="text-base sm:text-lg font-bold text-[#14213D] flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              <span>งานด่วน (ภายใน 7 วัน)</span>
+              <span>งานด่วน (วันนี้ – 7 วัน)</span>
             </h3>
             <span id="count-urgent-label" class="text-xs font-bold px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]">0 งาน</span>
           </div>
           <div id="list-urgent" class="space-y-3"></div>
         </div>
 
-        <!-- Later Section (> 7 days) -->
+        <!-- 3. Later Section (> 7 days) -->
         <div id="section-later" class="hidden space-y-3">
           <div class="flex items-center justify-between">
             <h3 class="text-base sm:text-lg font-bold text-[#14213D] flex items-center gap-2">
@@ -316,7 +431,7 @@
           <div id="list-later" class="space-y-3"></div>
         </div>
 
-        <!-- Pending / No-Deadline Section (ไม่กำหนดวัน) -->
+        <!-- 4. Pending / No-Deadline Section -->
         <div id="section-pending" class="hidden space-y-3">
           <div class="flex items-center justify-between">
             <h3 class="text-base sm:text-lg font-bold text-[#14213D] flex items-center gap-2">
@@ -327,28 +442,38 @@
           </div>
           <div id="list-pending" class="space-y-3"></div>
         </div>
-      </section>
 
-      <!-- ========================================================= -->
-      <!-- VIEW 2: รายวิชา (By Subject)                              -->
-      <!-- ========================================================= -->
-      <section id="view-subjects" class="tab-view hidden space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2.5">
-              <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">การบ้านแยกตามรายวิชา</h2>
-              <span id="subjects-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EEF0F6] text-[#14213D]">0 รายวิชา</span>
+        <!-- Collapsible Completed History Drawer inside Tasks Tab -->
+        <div class="bg-white rounded-[14px] border border-cardBorder overflow-hidden shadow-xs">
+          <button type="button" onclick="toggleHistoryDrawer()" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-pageBg/60 transition">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🕒</span>
+              <span class="text-sm font-bold text-[#14213D]">ประวัติงานที่ส่งเสร็จแล้ว</span>
+              <span id="badge-history-inline" class="px-2 py-0.5 rounded-full text-xs font-bold bg-teal-50 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300">0</span>
             </div>
-            <p class="text-xs sm:text-sm text-muted mt-0.5">กดปุ่ม <span class="font-bold text-[#14213D]">+ เพิ่ม</span> ที่การ์ดวิชาเพื่อจดงานวิชานั้นทันที หรือไปที่แท็บ <button onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button></p>
+            <span id="history-drawer-arrow" class="text-xs font-bold text-muted">แสดงรายการ ▼</span>
+          </button>
+
+          <div id="history-drawer-body" class="hidden border-t border-cardBorder p-4 space-y-3 bg-pageBg/40">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-muted">รายการที่ติ๊ก "เสร็จแล้ว" สามารถกดกู้คืนกลับไปเป็นงานค้างได้</span>
+              <button id="btn-clear-history" onclick="clearAllHistory()" class="hidden px-3 py-1.5 rounded-lg border border-[#8B1230] bg-white text-[#8B1230] text-xs font-bold hover:bg-[#FBE4E8] transition">
+                ล้างประวัติทั้งหมด
+              </button>
+            </div>
+            <div id="history-empty-state" class="text-center py-6 text-xs text-muted">
+              ยังไม่มีประวัติการส่งงานย้อนหลัง
+            </div>
+            <div id="list-history" class="space-y-2.5"></div>
           </div>
         </div>
-        <div id="subjects-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </section>
 
       <!-- ========================================================= -->
-      <!-- VIEW 3: ตารางเรียน + Export .JPG & .ics Google Calendar    -->
+      <!-- VIEW 2: ตารางเรียน (Timetable + Course Manager)            -->
       <!-- ========================================================= -->
       <section id="view-schedule" class="tab-view hidden space-y-6">
+        <!-- Weekly Timetable Visual Grid -->
         <div class="space-y-2.5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ตารางเรียนประจำสัปดาห์</h2>
@@ -357,9 +482,9 @@
                 <span>🖼️ ดาวน์โหลดตารางเรียน (.JPG)</span>
               </button>
               <button onclick="downloadFullCalendarICS()" class="theme-btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs border border-black/10 active:scale-95">
-                <span>📅 ส่งออกตารางเรียน & เดดไลน์ลง Google / Apple Calendar (.ics)</span>
+                <span>📅 ส่งออกลงปฏิทิน (.ics)</span>
               </button>
-              <span class="md:hidden text-[11px] font-semibold text-muted">← เลื่อนซ้าย-ขวา →</span>
+              <span class="md:hidden text-[11px] font-semibold text-muted">← ถ่างนิ้วซูม / เลื่อนซ้าย-ขวา →</span>
             </div>
           </div>
 
@@ -368,218 +493,198 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-[14px] border border-cardBorder overflow-hidden shadow-xs">
-          <div class="theme-surface px-5 py-3.5 flex items-center justify-between border-b border-black/10">
-            <h2 class="text-base sm:text-lg font-bold">ข้อมูลรายวิชา ห้องเรียน และช่องทางส่งงาน</h2>
-            <span id="schedule-count-badge" class="text-xs font-semibold opacity-85">0 รายวิชา</span>
+        <!-- Combined Course Management Section -->
+        <div class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base sm:text-lg font-bold text-[#14213D]">จัดการรายวิชา</h3>
+              <p class="text-xs text-muted">เพิ่มรายวิชาเองทีละวิชา หรือนำเข้าชุดวิชาจากรหัสแชร์ของเพื่อน</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="toggleBulkPastePanel()" id="btn-toggle-bulk-paste" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-white hover:bg-pageBg text-[#14213D] text-xs font-bold shadow-2xs transition flex items-center gap-1.5">
+                <span>✨ ตัวเลือกเสริม: วางหลายวิชาพร้อมกัน</span>
+                <span id="bulk-paste-arrow">▼</span>
+              </button>
+              <button type="button" onclick="confirmClearAllCourses()" class="px-3.5 py-2 rounded-xl border border-[#8B1230] bg-white hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
+                🗑️ ล้างวิชาทั้งหมด
+              </button>
+            </div>
           </div>
-          <div id="course-info-table" class="divide-y divide-cardBorder"></div>
-        </div>
-      </section>
 
-      <!-- ========================================================= -->
-      <!-- VIEW 4: จัดการวิชา (Full Course Manager)                  -->
-      <!-- ========================================================= -->
-      <section id="view-courses" class="tab-view hidden space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">จัดการรายวิชา (เพิ่ม / ลด / วางตารางเรียนทีเดียว)</h2>
-            <p class="text-xs sm:text-sm text-muted">เพิ่มรายวิชาทีละวิชา นำเข้าตารางเรียนจากรูปภาพผ่าน AI หรือแชร์ชุดวิชาให้เพื่อน</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <button onclick="confirmClearAllCourses()" class="px-3.5 py-2 rounded-xl border border-[#8B1230] bg-white hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
-              🗑️ ล้างวิชาทั้งหมด
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <!-- Single Add/Edit Course -->
-          <div class="lg:col-span-5 bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3.5">
+          <!-- Hidden Optional Panel: Bulk Paste / AI Import -->
+          <div id="bulk-paste-panel" class="hidden bg-white rounded-[14px] border-2 border-dashed border-teal-600/40 p-4 sm:p-5 shadow-xs space-y-3">
             <div class="flex items-center justify-between">
-              <h3 id="course-form-title" class="text-base font-bold text-[#14213D] flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span>
-                <span>เพิ่มรายวิชาใหม่</span>
-              </h3>
-              <button type="button" id="btn-cancel-course-edit" onclick="cancelCourseEdit()" class="hidden text-xs font-bold text-muted hover:text-[#14213D]">ยกเลิกแก้ไข</button>
+              <h4 class="text-sm sm:text-base font-bold text-[#14213D] flex items-center gap-2">
+                <span>📋</span>
+                <span>วางหลายวิชาพร้อมกัน (Bulk Paste / แปลงจากรูปด้วย AI)</span>
+              </h4>
+              <button type="button" onclick="toggleBulkPastePanel(false)" class="text-xs font-bold text-muted hover:text-[#14213D]">ปิด ✕</button>
             </div>
 
-            <form id="single-course-form" onsubmit="handleSaveCourse(event)" class="space-y-3">
-              <div class="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label class="block text-xs font-bold text-muted mb-1">รหัสวิชา</label>
-                  <input type="text" id="c-inp-code" placeholder="กรอกรหัสวิชา" required class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+            <div class="rounded-xl bg-pageBg border border-cardBorder p-3.5 space-y-2.5">
+              <div class="text-xs font-bold text-[#14213D]">วิธีนำเข้าจากรูปตารางเรียนด้วย AI:</div>
+              <ol class="text-xs text-muted space-y-1 list-decimal list-inside leading-relaxed">
+                <li>แคปภาพตารางเรียน แล้วส่งแนบรูปให้ AI (เช่น Gemini, ChatGPT) พร้อมคำสั่งด้านล่าง</li>
+                <li>นำข้อความผลลัพธ์ที่ได้จาก AI มาวางลงในช่องด้านล่าง แล้วกดปุ่มนำเข้า</li>
+              </ol>
+              <div class="bg-white rounded-xl border border-cardBorder p-2.5 space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-bold text-teal-700 dark:text-teal-400">คำสั่ง (Prompt) สำหรับส่งให้ AI:</span>
+                  <button type="button" onclick="copyAiPrompt()" class="shrink-0 px-2.5 py-1 rounded-lg bg-[#0F766E] hover:bg-teal-800 text-white text-[11px] font-bold transition active:scale-95">
+                    📋 คัดลอก Prompt
+                  </button>
                 </div>
-                <div>
-                  <label class="block text-xs font-bold text-muted mb-1">วันที่เรียน</label>
-                  <select id="c-inp-dow" class="w-full h-10 px-3 rounded-xl theme-soft-input border text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy transition-colors">
-                    <option value="1">จันทร์</option>
-                    <option value="2">อังคาร</option>
-                    <option value="3">พุธ</option>
-                    <option value="4">พฤหัสบดี</option>
-                    <option value="5">ศุกร์</option>
-                    <option value="6">เสาร์</option>
-                    <option value="0">อาทิตย์</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold text-muted mb-1">ชื่อวิชา</label>
-                <input type="text" id="c-inp-name" placeholder="กรอกชื่อวิชา" required class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
-              </div>
-
-              <div class="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label class="block text-xs font-bold text-muted mb-1">เวลาเรียน</label>
-                  <input type="text" id="c-inp-time" placeholder="09:00-12:00" required class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-muted mb-1">ชุดสีป้ายวิชา</label>
-                  <select id="c-inp-theme" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy"></select>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold text-muted mb-1">ห้องเรียน (แสดงในช่องตารางเรียน)</label>
-                <input type="text" id="c-inp-room" placeholder="ระบุห้องเรียน (ถ้าไม่มีจะใส่เป็น ห้อง N/A)" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold text-muted mb-1">ช่องทางส่งงาน (LINE / Teams)</label>
-                <input type="text" id="c-inp-info" placeholder="ระบุกลุ่ม LINE หรือ Teams (ไม่บังคับ)" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
-              </div>
-
-              <button type="submit" id="btn-save-course" class="w-full py-2.5 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white font-bold text-sm transition active:scale-95">
-                + บันทึกรายวิชา
-              </button>
-            </form>
-          </div>
-
-          <!-- Bulk Paste & Preset Share -->
-          <div class="lg:col-span-7 space-y-4">
-            <div class="bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3">
-              <h3 class="text-base font-bold text-[#14213D] flex items-center gap-2">
-                <span class="text-lg">📋</span>
-                <span>วางตารางเรียนทีเดียว (Bulk Paste)</span>
-              </h3>
-
-              <div class="rounded-xl bg-pageBg border border-cardBorder p-3.5 space-y-2.5">
-                <div class="text-xs sm:text-sm font-bold text-[#14213D]">วิธีนำเข้าจากรูปตารางเรียนด้วย AI:</div>
-                <ol class="text-xs text-muted space-y-1 list-decimal list-inside leading-relaxed">
-                  <li>แคปภาพตารางเรียนของตัวเอง แล้วส่งแนบรูปให้ AI (เช่น Gemini, ChatGPT, Claude)</li>
-                  <li>คัดลอกคำสั่ง (Prompt) ด้านล่างนี้ส่งไปพร้อมรูปภาพเพื่อให้ AI แปลงเป็นข้อความตามรูปแบบที่ระบบรองรับ</li>
-                  <li>นำข้อความผลลัพธ์ที่ได้จาก AI มาวางลงในช่องด้านล่าง แล้วกดปุ่มนำเข้า</li>
-                </ol>
-                <div class="bg-white rounded-xl border border-cardBorder p-2.5 space-y-2">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="text-[11px] font-bold text-teal-700">คำสั่ง (Prompt) สำหรับส่งให้ AI พร้อมรูปตารางเรียน:</span>
-                    <button type="button" onclick="copyAiPrompt()" class="shrink-0 px-2.5 py-1 rounded-lg bg-[#0F766E] hover:bg-teal-800 text-white text-[11px] font-bold transition active:scale-95">
-                      📋 คัดลอก Prompt
-                    </button>
-                  </div>
-                  <pre id="ai-prompt-text" class="text-[11px] sm:text-xs text-[#14213D] bg-pageBg/70 rounded-lg p-2.5 whitespace-pre-wrap font-sans leading-relaxed select-all">แปลงตารางเรียนจากรูปภาพนี้ให้อยู่ในรูปแบบข้อความบรรทัดละ 1 คาบเรียน ตามรูปแบบนี้เท่านั้น ไม่ต้องมีคำอธิบายเพิ่ม:
+                <pre id="ai-prompt-text" class="text-[11px] sm:text-xs text-[#14213D] bg-pageBg/70 rounded-lg p-2.5 whitespace-pre-wrap font-sans leading-relaxed select-all">แปลงตารางเรียนจากรูปภาพนี้ให้อยู่ในรูปแบบข้อความบรรทัดละ 1 คาบเรียน ตามรูปแบบนี้เท่านั้น ไม่ต้องมีคำอธิบายเพิ่ม:
 รหัสวิชา | ชื่อวิชา | วัน | เวลาเริ่ม-เวลาเลิก | ห้องเรียน
 
 เงื่อนไข:
 - วัน: จันทร์, อังคาร, พุธ, พฤหัสบดี, ศุกร์, เสาร์, อาทิตย์
 - ใช้เวลาแบบ 24 ชั่วโมง คั่นด้วยขีดกลาง (เช่น 09:00-12:00)
 - หากในรูปไม่ระบุห้องเรียน ให้ใส่คำว่า ห้อง N/A</pre>
-                </div>
-              </div>
-
-              <textarea id="bulk-paste-area" rows="4" placeholder="วางข้อความตารางเรียนที่ได้จาก AI ที่นี่..." class="w-full p-3 rounded-xl bg-pageBg border border-cardBorder text-xs sm:text-sm text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy"></textarea>
-              <div class="flex flex-wrap items-center justify-end gap-2">
-                <button type="button" onclick="parseAndImportBulkCourses(false)" class="px-4 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-[#14213D] text-xs sm:text-sm font-bold transition">
-                  + เพิ่มต่อจากวิชาเดิม
-                </button>
-                <button type="button" onclick="parseAndImportBulkCourses(true)" class="theme-btn-primary px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border border-black/10">
-                  แทนที่วิชาทั้งหมดด้วยชุดนี้
-                </button>
               </div>
             </div>
 
-            <div class="bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3">
-              <h3 class="text-base font-bold text-[#14213D] flex items-center gap-2">
-                <span class="text-lg">🤝</span>
-                <span>แชร์ชุดวิชาให้เพื่อนร่วมเซค / รุ่นน้อง</span>
-              </h3>
-              <p class="text-xs text-muted">
-                จัดวิชาเสร็จ 1 คน แล้วกดคัดลอกโค้ดส่งเข้ากลุ่ม LINE ให้เพื่อนกดวาง เพื่อใช้ตารางเรียนและช่องทางส่งงานชุดเดียวกันทันที
-              </p>
-              <div class="flex flex-col sm:flex-row gap-2">
-                <button type="button" onclick="copyCoursePresetCode()" class="shrink-0 px-4 py-2.5 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold transition">
-                  📤 คัดลอกโค้ดชุดวิชาของฉัน
+            <textarea id="bulk-paste-area" rows="4" placeholder="วางข้อความตารางเรียนที่ได้จาก AI ที่นี่..." class="w-full p-3 rounded-xl bg-pageBg border border-cardBorder text-xs sm:text-sm text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy"></textarea>
+            <div class="flex flex-wrap items-center justify-end gap-2">
+              <button type="button" onclick="parseAndImportBulkCourses(false)" class="px-4 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-[#14213D] text-xs sm:text-sm font-bold transition">
+                + เพิ่มต่อจากวิชาเดิม
+              </button>
+              <button type="button" onclick="parseAndImportBulkCourses(true)" class="theme-btn-primary px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border border-black/10">
+                แทนที่วิชาทั้งหมดด้วยชุดนี้
+              </button>
+            </div>
+          </div>
+
+          <!-- Paired Side-by-Side: "เพิ่มวิชาเอง" & "นำเข้าจากรหัสแชร์" -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            <!-- Left: เพิ่มวิชาเอง -->
+            <div class="lg:col-span-7 bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3.5">
+              <div class="flex items-center justify-between">
+                <h4 id="course-form-title" class="text-base font-bold text-[#14213D] flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span>
+                  <span>➕ เพิ่มวิชาเอง</span>
+                </h4>
+                <button type="button" id="btn-cancel-course-edit" onclick="cancelCourseEdit()" class="hidden text-xs font-bold text-muted hover:text-[#14213D]">ยกเลิกแก้ไข</button>
+              </div>
+
+              <form id="single-course-form" onsubmit="handleSaveCourse(event)" class="space-y-3">
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-xs font-bold text-muted mb-1">รหัสวิชา</label>
+                    <input type="text" id="c-inp-code" placeholder="เช่น 04313201" required class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-muted mb-1">วันที่เรียน</label>
+                    <select id="c-inp-dow" class="w-full h-10 px-3 rounded-xl theme-soft-input border text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy transition-colors">
+                      <option value="1">จันทร์</option>
+                      <option value="2">อังคาร</option>
+                      <option value="3">พุธ</option>
+                      <option value="4">พฤหัสบดี</option>
+                      <option value="5">ศุกร์</option>
+                      <option value="6">เสาร์</option>
+                      <option value="0">อาทิตย์</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-muted mb-1">ชื่อวิชา</label>
+                  <input type="text" id="c-inp-name" placeholder="กรอกชื่อวิชา" required class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-xs font-bold text-muted mb-1">เวลาเรียน</label>
+                    <input type="text" id="c-inp-time" placeholder="09:00-12:00" required class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-muted mb-1">ชุดสีป้ายวิชา</label>
+                    <select id="c-inp-theme" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-navy"></select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-xs font-bold text-muted mb-1">ห้องเรียน</label>
+                    <input type="text" id="c-inp-room" placeholder="ระบุห้องเรียน (ไม่บังคับ)" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-muted mb-1">ช่องทางส่งงาน (LINE / Teams)</label>
+                    <input type="text" id="c-inp-info" placeholder="เช่น กลุ่ม LINE วิชา (ไม่บังคับ)" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-[#14213D] text-sm focus:outline-none focus:ring-2 focus:ring-navy" />
+                  </div>
+                </div>
+
+                <button type="submit" id="btn-save-course" class="w-full py-2.5 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white font-bold text-sm transition active:scale-95">
+                  + บันทึกรายวิชา
                 </button>
-                <div class="flex-1 flex gap-2">
-                  <input type="text" id="preset-code-input" placeholder="วางโค้ดชุดวิชาจากเพื่อนที่นี่..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-pageBg border border-cardBorder text-xs text-[#14213D] focus:outline-none" />
-                  <button type="button" onclick="importCoursePresetCode()" class="theme-btn-primary shrink-0 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border border-black/10">
+              </form>
+            </div>
+
+            <!-- Right: นำเข้าจากรหัสแชร์ -->
+            <div class="lg:col-span-5 bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3.5">
+              <h4 class="text-base font-bold text-[#14213D] flex items-center gap-2">
+                <span>🤝</span>
+                <span>นำเข้าจากรหัสแชร์ / แชร์ชุดวิชา</span>
+              </h4>
+              <p class="text-xs text-muted leading-relaxed">
+                จัดวิชาเสร็จ 1 คน แล้วกดคัดลอกรหัสส่งเข้ากลุ่ม LINE ให้เพื่อนกดวาง เพื่อใช้ตารางเรียนและช่องทางส่งงานชุดเดียวกันทันที
+              </p>
+
+              <div class="space-y-2 pt-1">
+                <label class="block text-xs font-bold text-muted">วางรหัสชุดวิชาจากเพื่อน (HW2569:...):</label>
+                <div class="flex gap-2">
+                  <input type="text" id="preset-code-input" placeholder="วางรหัสชุดวิชาที่นี่..." class="flex-1 min-w-0 h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-xs text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
+                  <button type="button" onclick="importCoursePresetCode()" class="theme-btn-primary shrink-0 px-4 h-10 rounded-xl text-xs sm:text-sm font-bold border border-black/10 active:scale-95">
                     นำเข้า
                   </button>
                 </div>
               </div>
+
+              <div class="pt-2 border-t border-cardBorder">
+                <button type="button" onclick="copyCoursePresetCode()" class="w-full py-2.5 px-4 rounded-xl border border-teal-600/40 bg-teal-50/70 dark:bg-teal-950/40 hover:bg-teal-100 text-teal-800 dark:text-teal-300 text-xs sm:text-sm font-bold transition active:scale-95">
+                  📤 คัดลอกรหัสชุดวิชาของฉันส่งให้เพื่อน
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="bg-white rounded-[14px] border border-cardBorder overflow-hidden shadow-xs">
-          <div class="theme-surface px-5 py-3.5 flex items-center justify-between border-b border-black/10">
-            <h3 class="text-base font-bold">รายวิชาที่ใช้งานอยู่ตอนนี้</h3>
-            <span id="manage-course-total" class="text-xs font-semibold opacity-85">0 รายวิชา</span>
+          <!-- Active Courses List (Edit / Delete) -->
+          <div class="bg-white rounded-[14px] border border-cardBorder overflow-hidden shadow-xs">
+            <div class="theme-surface px-5 py-3.5 flex items-center justify-between border-b border-black/10">
+              <h3 class="text-base font-bold">รายวิชาที่ใช้งานอยู่ตอนนี้</h3>
+              <span id="manage-course-total" class="text-xs font-semibold opacity-85">0 รายวิชา</span>
+            </div>
+            <div id="manage-courses-list" class="divide-y divide-cardBorder"></div>
           </div>
-          <div id="manage-courses-list" class="divide-y divide-cardBorder"></div>
         </div>
       </section>
 
       <!-- ========================================================= -->
-      <!-- VIEW 5: ประวัติส่งงาน (Submission History)                  -->
+      <!-- VIEW 3: ซิงก์ข้อมูล (Sync ID + JSON + Advanced Settings)   -->
       <!-- ========================================================= -->
-      <section id="view-history" class="tab-view hidden space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ประวัติการส่งงานย้อนหลัง</h2>
-            <p class="text-xs sm:text-sm text-muted">รายการที่กด "✓ เสร็จแล้ว" จะถูกบันทึกวันที่ส่งจริงไว้ที่นี่</p>
-          </div>
-          <button id="btn-clear-history" onclick="clearAllHistory()" class="hidden px-3.5 py-2 rounded-xl border border-[#8B1230] bg-white text-[#8B1230] text-xs sm:text-sm font-bold hover:bg-[#FBE4E8] transition">
-            ล้างประวัติทั้งหมด
-          </button>
-        </div>
-
-        <div id="history-empty-state" class="hidden bg-white rounded-[14px] border border-cardBorder p-10 text-center">
-          <div class="text-4xl mb-3">📂</div>
-          <h3 class="text-base font-bold text-[#14213D]">ยังไม่มีประวัติการส่งงานย้อนหลัง</h3>
-          <p class="text-xs sm:text-sm text-muted mt-1">เมื่อกดปุ่ม "✓ เสร็จแล้ว" ในหน้ารายการงาน ข้อมูลจะมาเก็บไว้ที่นี่</p>
-        </div>
-
-        <div id="list-history" class="space-y-3"></div>
-      </section>
-
-      <!-- ========================================================= -->
-      <!-- VIEW 6: ตั้งค่าธีมสี Pastel / ซิงก์คลาวด์ / แจ้งเตือน     -->
-      <!-- ========================================================= -->
-      <section id="view-profile" class="tab-view hidden space-y-6">
+      <section id="view-sync" class="tab-view hidden space-y-5">
         <div>
-          <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ตั้งค่าซิงก์คลาวด์ สีธีมระบบ & การแจ้งเตือน</h2>
-          <p class="text-xs sm:text-sm text-muted">เชื่อมต่อรหัสซิงก์ส่วนตัวเพื่ออัปเดตข้อมูลเรียลไทม์ระหว่าง PC มือถือ และแท็บเล็ต</p>
+          <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ซิงก์ข้อมูลข้ามอุปกรณ์ & สำรองไฟล์</h2>
+          <p class="text-xs sm:text-sm text-muted">เชื่อมต่อรหัส Sync ID เพื่ออัปเดตข้อมูลอัตโนมัติ หรือสำรอง/กู้คืนเป็นไฟล์ JSON</p>
         </div>
 
-        <!-- Cloud Realtime Sync Card (PC <-> Mobile <-> Tablet) -->
+        <!-- 1. Cloud Realtime Sync ID Card -->
         <div class="bg-white rounded-[14px] border-2 border-teal-600/40 p-5 shadow-xs space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-cardBorder pb-3">
             <div class="flex items-center gap-2">
               <span class="text-xl">☁️</span>
-              <h3 class="text-base font-bold text-[#14213D]">ซิงก์ข้อมูลคลาวด์อัตโนมัติ (PC ↔ มือถือ ↔ แท็บเล็ต)</h3>
+              <h3 class="text-base font-bold text-[#14213D]">ซิงก์ข้อมูลคลาวด์อัตโนมัติ (Sync ID)</h3>
             </div>
             <div class="flex items-center gap-2">
               <span id="profile-cloud-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E]">กำลังเชื่อมต่อ...</span>
-              <button type="button" onclick="window.cloudSync && window.cloudSync.reconnect()" class="px-2.5 py-0.5 rounded-lg bg-pageBg hover:bg-slate-200 border border-cardBorder text-[11px] font-bold text-[#14213D] transition">
+              <button type="button" onclick="window.cloudSync && window.cloudSync.reconnect()" class="px-2.5 py-1 rounded-lg bg-pageBg hover:bg-slate-200 border border-cardBorder text-[11px] font-bold text-[#14213D] transition">
                 🔄 รีเฟรชการเชื่อมต่อ
               </button>
             </div>
           </div>
 
           <p class="text-xs sm:text-sm text-muted leading-relaxed">
-            ข้อมูลการบ้าน ตารางเรียน และประวัติทั้งหมดของรหัสนี้จะอัปเดตตรงกันแบบเรียลไทม์อัตโนมัติ เพียงนำ <strong>รหัสซิงก์ส่วนตัว (Sync ID)</strong> ไปกรอกในหน้าตั้งค่าของอุปกรณ์อื่น (PC, มือถือ, แท็บเล็ต)
+            นำ <strong>รหัสซิงก์ส่วนตัว (Sync ID)</strong> ด้านล่างไปกรอกในหน้าซิงก์ข้อมูลของอุปกรณ์อื่น (PC, มือถือ, แท็บเล็ต) เพื่อซิงก์การบ้าน ตารางเรียน และประวัติให้ตรงกันทันที
           </p>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-end">
@@ -607,36 +712,151 @@
           <div id="cloud-error-hint" class="hidden rounded-xl bg-[#FBE4E8] border border-[#8B1230]/30 p-3 text-xs text-[#8B1230] leading-relaxed"></div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <!-- Left: Pastel Theme Color Picker ONLY (10 Pastel Colors, Blue Default) -->
+        <!-- 2. JSON File Backup & Restore Card -->
+        <div class="bg-white rounded-[14px] border border-cardBorder p-5 shadow-xs space-y-3.5">
+          <div class="flex items-center gap-2 border-b border-cardBorder pb-3">
+            <span class="text-xl">💾</span>
+            <h3 class="text-base font-bold text-[#14213D]">สำรองและกู้คืนไฟล์ JSON</h3>
+          </div>
+          <p class="text-xs sm:text-sm text-muted">
+            ดาวน์โหลดข้อมูลทั้งหมดเก็บเป็นไฟล์ <code class="font-bold">.json</code> หรือเลือกไฟล์สำรองเดิมเพื่อกู้คืนข้อมูลเข้าเครื่องนี้
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button type="button" onclick="exportBackupData()" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95">
+              <span>📥 ดาวน์โหลดไฟล์สำรอง (.json)</span>
+            </button>
+            <label class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-[#14213D] text-xs sm:text-sm font-bold cursor-pointer transition active:scale-95">
+              <span>📤 เลือกไฟล์ .json กู้คืนข้อมูล</span>
+              <input type="file" accept=".json,application/json" onchange="importBackupData(event)" class="hidden" />
+            </label>
+          </div>
+        </div>
+
+        <!-- 3. Hidden Advanced Settings (HWSYNC Code & .txt File Sync) -->
+        <div class="bg-white rounded-[14px] border border-cardBorder overflow-hidden shadow-xs">
+          <button type="button" onclick="toggleAdvancedSyncPanel()" class="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-pageBg/60 transition">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🛠️</span>
+              <span class="text-sm font-bold text-[#14213D]">ตั้งค่าขั้นสูง (รหัสออฟไลน์ HWSYNC & ไฟล์ .txt)</span>
+            </div>
+            <span id="advanced-sync-arrow" class="text-xs font-bold text-muted">แสดงตัวเลือก ▼</span>
+          </button>
+
+          <div id="advanced-sync-panel" class="hidden border-t border-cardBorder p-5 space-y-5 bg-pageBg/30">
+            <!-- Sub-option A: HWSYNC Offline Code -->
+            <div class="bg-white rounded-xl border border-cardBorder p-4 space-y-2.5">
+              <div class="text-xs sm:text-sm font-bold text-[#14213D]">📱 ย้ายข้อมูลด้วยรหัสข้อความออฟไลน์ (HWSYNC)</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button type="button" onclick="shareFullSyncCode()" class="theme-btn-primary flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold shadow-xs border border-black/10 active:scale-95">
+                  <span>📤 แชร์รหัสสำรองข้อมูล</span>
+                </button>
+                <button type="button" onclick="copyFullSyncCode()" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-[#14213D] text-xs font-bold transition active:scale-95">
+                  <span>📋 คัดลอกรหัสสำรองข้อมูล</span>
+                </button>
+              </div>
+              <div class="flex gap-2 pt-1">
+                <input type="text" id="full-sync-code-input" placeholder="วางรหัสสำรอง (HWSYNC:...) ที่นี่..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-pageBg border border-cardBorder text-xs text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
+                <button type="button" onclick="importFullSyncCode()" class="shrink-0 px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs font-bold transition active:scale-95">
+                  นำเข้า
+                </button>
+              </div>
+            </div>
+
+            <!-- Sub-option B: homework.txt Sync -->
+            <div class="bg-white rounded-xl border border-cardBorder p-4 space-y-2.5">
+              <div class="text-xs sm:text-sm font-bold text-[#14213D]">📄 ซิงก์ข้อมูลกับไฟล์ข้อความ (homework.txt)</div>
+              <p class="text-xs text-muted">
+                รูปแบบ <code class="px-1.5 py-0.5 rounded bg-pageBg font-semibold">DD/MM/YYYY | วิชา | รายละเอียด</code> สำหรับใช้งานร่วมกับสคริปต์บน PC
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button type="button" onclick="downloadHomeworkTxt()" class="theme-btn-primary flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs border border-black/10">
+                  <span>⬇️ ดาวน์โหลด homework.txt</span>
+                </button>
+                <label class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] font-bold text-xs hover:bg-slate-200 cursor-pointer transition">
+                  <span>⬆️ นำเข้าไฟล์ .txt</span>
+                  <input type="file" accept=".txt" onchange="importHomeworkTxtFile(event)" class="hidden" />
+                </label>
+              </div>
+              <div class="pt-1">
+                <div class="flex items-center justify-between mb-1">
+                  <label class="text-xs font-bold text-muted">ข้อความรูปแบบ homework.txt</label>
+                  <button type="button" onclick="copyTxtToClipboard()" class="text-xs font-bold text-teal-700 dark:text-teal-400 hover:underline">คัดลอกข้อความ</button>
+                </div>
+                <textarea id="txt-sync-area" rows="4" class="w-full p-2.5 rounded-xl bg-pageBg border border-cardBorder text-xs font-mono text-[#14213D] focus:outline-none"></textarea>
+                <div class="flex justify-end mt-2">
+                  <button type="button" onclick="applyTextImport()" class="px-4 py-2 rounded-xl bg-[#0F766E] text-white text-xs font-bold hover:bg-teal-800 transition">
+                    นำเข้าจากข้อความด้านบน
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 4: ตั้งค่า (Notifications + Dark Mode + Theme + PWA)  -->
+      <!-- ========================================================= -->
+      <section id="view-settings" class="tab-view hidden space-y-5">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">ตั้งค่าระบบ การแจ้งเตือน & ธีมสี</h2>
+          <p class="text-xs sm:text-sm text-muted">ปรับโหมดมืด เลือกสีธีม ตั้งเวลาแจ้งเตือน และดูวิธีติดตั้งแอปลงมือถือ</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          <!-- Left: Dark Mode & Pastel Theme Picker -->
           <div class="lg:col-span-6 bg-white rounded-[14px] border border-cardBorder p-5 shadow-xs space-y-4">
             <div class="flex items-center justify-between border-b border-cardBorder pb-3">
-              <h3 class="text-base font-bold text-[#14213D]">🎨 ปรับสีธีมหลักของแอป (โทน Pastel)</h3>
+              <h3 class="text-base font-bold text-[#14213D]">🎨 โหมดแสดงผล & สีธีม</h3>
               <span id="current-theme-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold border border-black/10" style="background: var(--theme-soft); color: #14213D;">น้ำเงินพาสเทล</span>
             </div>
 
-            <p class="text-xs text-muted leading-relaxed">
-              แตะเลือกสีพาสเทลที่ต้องการ ระบบจะเปลี่ยนสีแถบด้านบน ปุ่มหลัก และตารางเรียนทันทีโดยอัตโนมัติ (ซิงก์สีธีมข้ามเครื่องด้วย)
-            </p>
+            <!-- Dark Mode Toggle Switch -->
+            <label class="flex items-center justify-between p-3.5 rounded-xl border border-cardBorder bg-pageBg/70 cursor-pointer select-none">
+              <div class="flex items-center gap-3">
+                <span class="text-xl">🌙</span>
+                <div>
+                  <div class="text-sm font-bold text-[#14213D]">โหมดมืด (Dark Mode)</div>
+                  <div class="text-xs text-muted">ถนอมสายตาเมื่อใช้งานช่วงกลางคืนหรือในที่แสงน้อย</div>
+                </div>
+              </div>
+              <input type="checkbox" id="chk-dark-mode" onchange="toggleDarkMode(this.checked)" class="w-5 h-5 accent-[#0F766E] rounded cursor-pointer" />
+            </label>
 
-            <!-- 10 Pastel Swatch Grid -->
-            <div id="theme-swatch-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
-              <!-- Populated by JS -->
+            <div>
+              <div class="text-xs font-bold text-muted mb-2">เลือกสีธีมหลักของแอป (โทน Pastel):</div>
+              <div id="theme-swatch-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                <!-- Populated by JS -->
+              </div>
             </div>
           </div>
 
-          <!-- Right: Mobile Notification Schedule & Google Calendar Sync -->
+          <!-- Right: Notification Settings & App Install -->
           <div class="lg:col-span-6 space-y-4">
-            <!-- Mobile Notification Card -->
             <div class="bg-white rounded-[14px] border border-cardBorder p-5 shadow-xs space-y-3.5">
               <div class="flex items-center justify-between border-b border-cardBorder pb-3">
-                <h3 class="text-base font-bold text-[#14213D]">🔔 การแจ้งเตือนบนมือถือ (Service Worker)</h3>
-                <span id="prof-sw-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-[#14213D]">ตรวจสอบ SW...</span>
+                <h3 class="text-base font-bold text-[#14213D]">🔔 การแจ้งเตือนกำหนดส่งงาน</h3>
+                <span id="prof-sw-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-[#14213D]">ตรวจสอบระบบ...</span>
               </div>
 
-              <p class="text-xs text-muted leading-relaxed">
-                เชื่อมต่อผ่าน Service Worker ของอุปกรณ์โดยตรง เพื่อรองรับการเด้งแจ้งเตือนบนแถบสถานะของ Android และ iPhone (เมื่อเพิ่มลงหน้าจอโฮม) <em>หมายเหตุ: การเตือนตามเวลาเช้า/ค่ำจะทำงานขณะเปิดแอปค้างไว้ หากต้องการเตือนแม้ปิดแอปแนะนำให้ส่งออกลง Google Calendar (.ics) ควบคู่กัน</em>
-              </p>
+              <!-- Notification Toggle Switch with Required Explicit Note -->
+              <label class="flex items-start justify-between gap-3 p-3.5 rounded-xl border-2 border-amber-400/50 bg-[#FFFBEB] dark:bg-amber-950/30 cursor-pointer select-none">
+                <div class="space-y-1">
+                  <div class="text-xs sm:text-sm font-bold text-[#14213D]">เปิดการแจ้งเตือนกำหนดส่งงาน</div>
+                  <div class="text-xs font-bold text-[#92400E] dark:text-amber-300">
+                    ⚠️ แจ้งเตือนเฉพาะตอนเปิดหน้าเว็บนี้ค้างไว้เท่านั้น
+                  </div>
+                </div>
+                <input type="checkbox" id="chk-settings-notif-enable" onchange="handleMasterNotifSwitch(this.checked)" class="w-5 h-5 mt-0.5 accent-[#0F766E] rounded cursor-pointer shrink-0" />
+              </label>
+
+              <label class="flex items-center justify-between p-3 rounded-xl border border-cardBorder bg-pageBg/50 cursor-pointer select-none">
+                <div>
+                  <div class="text-xs sm:text-sm font-bold text-[#14213D]">เสียงกระดิ่งแจ้งเตือน (Web Audio Chime)</div>
+                  <div class="text-[11px] text-muted">เล่นเสียงเตือนนุ่มๆ เมื่อมีหน้าต่างแจ้งเตือนเด้งขึ้น</div>
+                </div>
+                <input type="checkbox" id="chk-settings-notif-sound" onchange="saveSettingsNotifSound(this.checked)" class="w-5 h-5 accent-[#0F766E] rounded cursor-pointer" />
+              </label>
 
               <div class="grid grid-cols-2 gap-2.5">
                 <div>
@@ -651,7 +871,7 @@
 
               <div class="flex flex-col sm:flex-row gap-2 pt-1">
                 <button type="button" onclick="requestSystemNotifPermission()" class="flex-1 py-2.5 px-3 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold transition active:scale-95">
-                  เปิดสิทธิ์แจ้งเตือนมือถือ
+                  เปิดสิทธิ์แจ้งเตือนบนอุปกรณ์
                 </button>
                 <button type="button" onclick="triggerUrgentAlert(false, true)" class="flex-1 py-2.5 px-3 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-[#14213D] text-xs sm:text-sm font-bold transition">
                   ทดสอบเด้งแจ้งเตือนทันที
@@ -659,64 +879,20 @@
               </div>
             </div>
 
-            <!-- Google Calendar Integration Card -->
+            <!-- PWA Install & Calendar Export Card (Moved from Header) -->
             <div class="bg-white rounded-[14px] border border-cardBorder p-5 shadow-xs space-y-3">
-              <div class="flex items-center justify-between border-b border-cardBorder pb-3">
-                <h3 class="text-base font-bold text-[#14213D]">📅 เชื่อมต่อ Google Calendar</h3>
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#DCFCE7] text-[#166534]">พร้อมใช้งาน</span>
-              </div>
+              <h3 class="text-base font-bold text-[#14213D]">📲 ติดตั้งแอปลงมือถือ & ปฏิทิน</h3>
               <p class="text-xs text-muted leading-relaxed">
-                คุณสามารถกดปุ่ม <strong>"📅 Google Calendar"</strong> ที่การ์ดงานแต่ละชิ้นเพื่อเพิ่มเดดไลน์เข้าแอป Google Calendar ทันที หรือดาวน์โหลดไฟล์ปฏิทินทั้งเทอม (.ics) ด้านล่าง:
+                ติดตั้ง Homework List ลงหน้าจอโฮมของ iPhone / Android เพื่อใช้งานเต็มหน้าจอ หรือส่งออกตารางเรียนลง Google Calendar
               </p>
-              <button type="button" onclick="downloadFullCalendarICS()" class="theme-btn-primary w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold border border-black/10 active:scale-95">
-                📥 ดาวน์โหลดปฏิทินตารางเรียน & การบ้านทั้งหมด (.ics)
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Offline Device Transfer & JSON Backup -->
-        <div class="bg-[#FFFBEB] rounded-[14px] border border-[#FCD34D] p-5 shadow-xs space-y-4">
-          <div class="flex items-start gap-2.5">
-            <span class="text-xl leading-none mt-0.5">💾</span>
-            <div class="space-y-1">
-              <h3 class="text-sm sm:text-base font-bold text-[#92400E]">สำรองข้อมูลออฟไลน์ & ย้ายเครื่องแบบไม่ใช้อินเทอร์เน็ต</h3>
-              <p class="text-xs sm:text-sm text-[#92400E]/95 leading-relaxed">
-                นอกจากระบบซิงก์คลาวด์อัตโนมัติด้านบน คุณยังสามารถสำรองข้อมูลเป็นรหัสข้อความหรือไฟล์ <code class="font-bold">.json</code> เก็บไว้ในเครื่องได้ตลอดเวลา:
-              </p>
-            </div>
-          </div>
-
-          <!-- Method 1: Quick Sync Code -->
-          <div class="bg-white rounded-xl border border-amber-200 p-3.5 space-y-2.5">
-            <div class="text-xs sm:text-sm font-bold text-[#14213D]">📱 วิธีที่ 1: ย้ายด้วยรหัสข้อความออฟไลน์ (HWSYNC)</div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button type="button" onclick="shareFullSyncCode()" class="theme-btn-primary flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold shadow-xs border border-black/10 active:scale-95">
-                <span>📤 แชร์รหัสสำรองข้อมูล</span>
-              </button>
-              <button type="button" onclick="copyFullSyncCode()" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-[#14213D] text-xs font-bold transition active:scale-95">
-                <span>📋 คัดลอกรหัสสำรองข้อมูล</span>
-              </button>
-            </div>
-            <div class="flex gap-2 pt-0.5">
-              <input type="text" id="full-sync-code-input" placeholder="วางรหัสสำรอง (HWSYNC:...) ที่นี่..." class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-pageBg border border-cardBorder text-xs text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
-              <button type="button" onclick="importFullSyncCode()" class="shrink-0 px-4 py-2 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs font-bold transition active:scale-95">
-                นำเข้า
-              </button>
-            </div>
-          </div>
-
-          <!-- Method 2: JSON File Backup & Restore -->
-          <div class="bg-white/80 rounded-xl border border-amber-200/80 p-3.5 space-y-2.5">
-            <div class="text-xs sm:text-sm font-bold text-[#14213D]">💾 วิธีที่ 2: สำรองและกู้คืนเป็นไฟล์ (.json)</div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button type="button" onclick="exportBackupData()" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs font-bold shadow-xs transition active:scale-95">
-                <span>📥 ดาวน์โหลดไฟล์สำรอง (.json)</span>
-              </button>
-              <label class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-amber-300 bg-white hover:bg-amber-100/60 text-[#14213D] text-xs font-bold cursor-pointer transition active:scale-95">
-                <span>📤 เลือกไฟล์ .json กู้คืนข้อมูล</span>
-                <input type="file" accept=".json,application/json" onchange="importBackupData(event)" class="hidden" />
-              </label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button type="button" onclick="openInstallModal()" class="py-2.5 px-4 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95">
+                  📲 วิธีติดตั้งแอปลงมือถือ
+                </button>
+                <button type="button" onclick="downloadFullCalendarICS()" class="theme-btn-primary py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold border border-black/10 active:scale-95">
+                  📅 ดาวน์โหลดปฏิทิน (.ics)
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -730,38 +906,70 @@
       <span>เพิ่มงาน</span>
     </button>
 
-    <!-- Mobile Sticky Bottom Navigation Bar -->
-    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-cardBorder z-30 px-1 pt-1.5 safe-bottom-nav shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-      <div class="grid grid-cols-6 gap-0.5">
-        <button data-tab="list" onclick="switchTab('list')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition relative">
+    <!-- Mobile Sticky Bottom Navigation Bar (4 Tabs - Same Names as Desktop) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-cardBorder z-30 px-2 pt-1.5 safe-bottom-nav shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
+      <div class="grid grid-cols-4 gap-1">
+        <button data-tab="list" onclick="switchTab('list')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[11px] font-bold transition relative">
           <span class="text-base leading-tight">📋</span>
-          <span class="mt-0.5">งาน</span>
-          <span id="badge-list-mobile" class="absolute top-0.5 right-1 px-1.5 py-0.2 text-[9px] rounded-full bg-[#8B1230] text-white font-bold">0</span>
+          <span class="mt-0.5">รายการงาน</span>
+          <span id="badge-list-mobile" class="absolute top-0.5 right-3 px-1.5 py-0.2 text-[9px] rounded-full bg-[#8B1230] text-white font-bold">0</span>
         </button>
-        <button data-tab="subjects" onclick="switchTab('subjects')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition relative">
-          <span class="text-base leading-tight">🗂️</span>
-          <span class="mt-0.5">รายวิชา</span>
-          <span id="badge-subjects-mobile" class="hidden absolute top-0.5 right-1 px-1.5 py-0.2 text-[9px] rounded-full bg-[#14213D] text-white font-bold">0</span>
-        </button>
-        <button data-tab="schedule" onclick="switchTab('schedule')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
+        <button data-tab="schedule" onclick="switchTab('schedule')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[11px] font-bold transition">
           <span class="text-base leading-tight">📅</span>
-          <span class="mt-0.5">ตาราง</span>
+          <span class="mt-0.5">ตารางเรียน</span>
         </button>
-        <button data-tab="courses" onclick="switchTab('courses')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
+        <button data-tab="sync" onclick="switchTab('sync')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[11px] font-bold transition">
+          <span class="text-base leading-tight">☁️</span>
+          <span class="mt-0.5">ซิงก์ข้อมูล</span>
+        </button>
+        <button data-tab="settings" onclick="switchTab('settings')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[11px] font-bold transition">
           <span class="text-base leading-tight">⚙️</span>
-          <span class="mt-0.5">จัดการ</span>
-        </button>
-        <button data-tab="history" onclick="switchTab('history')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition relative">
-          <span class="text-base leading-tight">🕒</span>
-          <span class="mt-0.5">ประวัติ</span>
-          <span id="badge-history-mobile" class="hidden absolute top-0.5 right-1 px-1.5 py-0.2 text-[9px] rounded-full bg-teal-700 text-white font-bold">0</span>
-        </button>
-        <button data-tab="profile" onclick="switchTab('profile')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
-          <span class="text-base leading-tight">🎨</span>
-          <span class="mt-0.5">ซิงก์/ธีม</span>
+          <span class="mt-0.5">ตั้งค่า</span>
         </button>
       </div>
     </nav>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- FLOATING 5-SECOND UNDO BAR                                -->
+  <!-- ========================================================= -->
+  <div id="undo-snackbar" class="hidden fixed inset-x-0 z-40 px-4 flex justify-center pointer-events-none" style="bottom: calc(5.25rem + env(safe-area-inset-bottom));">
+    <div class="pointer-events-auto max-w-md w-full bg-[#14213D] dark:bg-slate-800 text-white rounded-2xl shadow-2xl border border-slate-600 overflow-hidden">
+      <div class="px-4 py-3 flex items-center justify-between gap-3">
+        <span id="undo-message" class="text-xs sm:text-sm font-semibold truncate">ดำเนินการเรียบร้อย</span>
+        <button type="button" onclick="performUndo()" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#14213D] text-xs sm:text-sm font-bold transition active:scale-95">
+          ↩ เลิกทำ
+        </button>
+      </div>
+      <div class="h-1 w-full bg-white/15">
+        <div id="undo-progress-bar" class="h-full bg-amber-400"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL: Cloud Connection Error with Retry Button           -->
+  <!-- ========================================================= -->
+  <div id="cloud-error-modal" class="hidden fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border-2 border-[#8B1230]/40 max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-[#FBE4E8] text-[#8B1230] flex items-center justify-center text-xl shrink-0">⚠️</div>
+        <div>
+          <h3 id="cloud-error-modal-title" class="text-base sm:text-lg font-bold text-[#14213D]">เชื่อมต่อคลาวด์ไม่สำเร็จ</h3>
+          <p id="cloud-error-modal-desc" class="text-xs sm:text-sm text-muted mt-1 leading-relaxed">
+            ไม่สามารถเชื่อมต่อฐานข้อมูลคลาวด์ได้ในขณะนี้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วกดลองใหม่
+          </p>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row items-center justify-end gap-2 pt-2 border-t border-cardBorder">
+        <button type="button" onclick="closeCloudErrorModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] text-xs sm:text-sm font-bold">
+          ใช้งานแบบออฟไลน์ไปก่อน
+        </button>
+        <button type="button" onclick="retryCloudConnection()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95">
+          🔄 ลองใหม่
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ========================================================= -->
@@ -775,7 +983,7 @@
       </div>
 
       <p class="text-xs sm:text-sm text-muted">
-        เพิ่มเป็นแอปเต็มหน้าจอบนอุปกรณ์ เพื่อให้ระบบ Service Worker แจ้งเตือนบนมือถือได้อย่างสมบูรณ์:
+        เพิ่มเป็นแอปเต็มหน้าจอบนอุปกรณ์ เพื่อให้เข้าถึงได้สะดวกและรองรับการแจ้งเตือนบนมือถือ:
       </p>
 
       <div class="rounded-xl bg-pageBg border border-cardBorder p-4 space-y-2">
@@ -783,7 +991,7 @@
         <ol class="text-xs sm:text-sm text-[#14213D]/90 space-y-1.5 list-decimal list-inside leading-relaxed">
           <li>เปิดหน้าเว็บนี้ด้วยเบราว์เซอร์ <strong>Safari</strong></li>
           <li>แตะปุ่ม <strong>แชร์ (Share)</strong> แล้วเลือก <strong>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</strong></li>
-          <li>เปิดแอปจากไอคอนบนหน้าจอโฮม แล้วกด <strong>"เปิดสิทธิ์แจ้งเตือนมือถือ"</strong> ในหน้าธีม & ตั้งค่า</li>
+          <li>เปิดแอปจากไอคอนบนหน้าจอโฮม แล้วเปิดสิทธิ์แจ้งเตือนในหน้าตั้งค่า</li>
         </ol>
       </div>
 
@@ -798,45 +1006,6 @@
 
       <div class="flex justify-end pt-1">
         <button onclick="closeInstallModal()" class="theme-btn-primary px-5 py-2.5 rounded-xl text-sm font-bold border border-black/10">เข้าใจแล้ว</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================= -->
-  <!-- MODAL 2: Sync / Import / Export homework.txt              -->
-  <!-- ========================================================= -->
-  <div id="transfer-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-cardBorder max-w-lg w-full p-5 sm:p-6 shadow-xl space-y-4">
-      <div class="flex items-center justify-between border-b border-cardBorder pb-3">
-        <h3 class="text-lg font-bold text-[#14213D]">🔄 ซิงก์ข้อมูลกับไฟล์ PC (homework.txt)</h3>
-        <button onclick="closeTransferModal()" class="w-8 h-8 rounded-lg bg-pageBg text-muted hover:text-[#14213D] font-bold">✕</button>
-      </div>
-
-      <p class="text-xs sm:text-sm text-muted leading-relaxed">
-        นำเข้าหรือส่งออกข้อมูลในรูปแบบ <code class="px-1.5 py-0.5 rounded bg-pageBg text-[#14213D] font-semibold">DD/MM/YYYY | วิชา | รายละเอียด</code> เพื่อใช้งานร่วมกับสคริปต์บน Windows ได้ทันที
-      </p>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        <button onclick="downloadHomeworkTxt()" class="theme-btn-primary flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm border border-black/10">
-          <span>⬇️ ดาวน์โหลด homework.txt</span>
-        </button>
-        <label class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] font-bold text-sm hover:bg-slate-200 cursor-pointer transition">
-          <span>⬆️ นำเข้าไฟล์ .txt</span>
-          <input type="file" accept=".txt" onchange="importHomeworkTxtFile(event)" class="hidden" />
-        </label>
-      </div>
-
-      <div>
-        <div class="flex items-center justify-between mb-1.5">
-          <label class="text-xs font-bold text-muted">ข้อความรูปแบบ homework.txt</label>
-          <button onclick="copyTxtToClipboard()" class="text-xs font-bold text-teal-700 hover:underline">คัดลอกข้อความ</button>
-        </div>
-        <textarea id="txt-sync-area" rows="6" class="w-full p-3 rounded-xl bg-pageBg border border-cardBorder text-xs font-mono text-[#14213D] focus:outline-none"></textarea>
-        <div class="flex justify-end mt-2">
-          <button onclick="applyTextImport()" class="px-4 py-2 rounded-xl bg-[#0F766E] text-white text-xs font-bold hover:bg-teal-800 transition">
-            นำเข้าจากข้อความด้านบน
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -896,24 +1065,21 @@
 
       <div class="rounded-xl bg-pageBg border border-cardBorder p-3.5 space-y-2.5">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-xs sm:text-sm font-bold text-[#14213D]">การแจ้งเตือนระดับอุปกรณ์ (Mobile SW)</span>
+          <span class="text-xs sm:text-sm font-bold text-[#14213D]">สิทธิ์แจ้งเตือนบนอุปกรณ์ (Mobile SW)</span>
           <span id="notif-perm-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-[#14213D]">กำลังตรวจสอบ...</span>
         </div>
-        <p class="text-xs text-muted leading-relaxed">
-          ส่ง Notification ผ่าน Service Worker เพื่อให้แสดงผลบนแถบแจ้งเตือนของ Android และ iOS ได้จริง
-        </p>
         <button id="btn-req-notif-perm" onclick="requestSystemNotifPermission()" class="w-full py-2 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold transition active:scale-95">
           อนุญาตการแจ้งเตือนบนอุปกรณ์
         </button>
       </div>
 
       <div class="space-y-2.5">
-        <label class="flex items-center justify-between p-3 rounded-xl border border-cardBorder bg-white cursor-pointer">
-          <div>
-            <div class="text-xs sm:text-sm font-bold text-[#14213D]">เด้งสรุปงานด่วนอัตโนมัติเมื่อเข้าแอป</div>
-            <div class="text-[11px] text-muted">แจ้งเตือนเมื่อมีงานเลยกำหนด ส่งวันนี้ หรือส่งพรุ่งนี้</div>
+        <label class="flex items-start justify-between gap-3 p-3.5 rounded-xl border-2 border-amber-400/50 bg-[#FFFBEB] dark:bg-amber-950/30 cursor-pointer">
+          <div class="space-y-0.5">
+            <div class="text-xs sm:text-sm font-bold text-[#14213D]">เปิดการแจ้งเตือนสรุปงานด่วน</div>
+            <div class="text-xs font-bold text-[#92400E] dark:text-amber-300">แจ้งเตือนเฉพาะตอนเปิดหน้าเว็บนี้ค้างไว้เท่านั้น</div>
           </div>
-          <input type="checkbox" id="chk-notif-auto" onchange="saveNotifPrefs()" class="w-5 h-5 accent-[#0F766E] rounded cursor-pointer" />
+          <input type="checkbox" id="chk-notif-auto" onchange="saveNotifPrefs()" class="w-5 h-5 mt-0.5 accent-[#0F766E] rounded cursor-pointer shrink-0" />
         </label>
 
         <label class="flex items-center justify-between p-3 rounded-xl border border-cardBorder bg-white cursor-pointer">
@@ -925,8 +1091,8 @@
         </label>
       </div>
 
-      <div class="rounded-xl bg-amber-50/70 border border-amber-200 p-3.5 space-y-2">
-        <div class="text-xs font-bold text-[#92400E]">🧪 ทดสอบระบบแจ้งเตือนทันที</div>
+      <div class="rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 p-3.5 space-y-2">
+        <div class="text-xs font-bold text-[#92400E] dark:text-amber-300">🧪 ทดสอบระบบแจ้งเตือนทันที</div>
         <div class="grid grid-cols-1 gap-2">
           <button onclick="closeNotifSettingsModal(); triggerUrgentAlert(false, true);" class="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-amber-100/70 border border-amber-300 text-[#14213D] text-xs font-bold transition text-left flex items-center justify-between">
             <span>1. ทดสอบแจ้งเตือนเข้ามือถือ + หน้าต่างสรุปงาน</span>
@@ -964,14 +1130,14 @@
         } catch (err) {
           const badge = document.getElementById('prof-sw-badge');
           if (badge) {
-            badge.textContent = 'ใช้งานโหมดหน้าเว็บ';
+            badge.textContent = 'โหมดหน้าเว็บปกติ';
           }
         }
       }
     }
 
     // =========================================================================
-    // 2. 10 Pastel System Themes & Pastel Subject Badges
+    // 2. Themes, Categories & Constants
     // =========================================================================
     const APP_THEMES = [
       { id: 'pastel-blue',     name: 'น้ำเงินพาสเทล',   primary: '#8AB4F8', secondary: '#6EA0F2', soft: '#E4EEFF', text: '#14213D', subtext: '#263B5E' },
@@ -999,6 +1165,13 @@
       { label: 'เทา slate (Slate)', bg: '#E3E6EC', fg: '#2B3240', dot: '#475569' }
     ];
 
+    const TASK_CATEGORIES = [
+      { id: 'homework', label: 'การบ้าน', icon: '📝', badgeClass: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 border-blue-200 dark:border-blue-700' },
+      { id: 'exam',     label: 'สอบ',     icon: '📖', badgeClass: 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200 border-rose-200 dark:border-rose-700' },
+      { id: 'lab',      label: 'แล็บ',    icon: '🧪', badgeClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200 border-emerald-200 dark:border-emerald-700' },
+      { id: 'project',  label: 'โปรเจกต์', icon: '🚀', badgeClass: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border-purple-200 dark:border-purple-700' }
+    ];
+
     const THAI_DOW = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
     const THAI_MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
@@ -1016,12 +1189,18 @@
     let editingTaskId = null;
     let editingCourseId = null;
     let currentTab = 'list';
+    let selectedSubjectFilter = 'ALL';
+    let selectedTaskCategory = 'homework';
     let notifPrefs = { autoPopup: true, sound: true };
     let activeDateYMD = '';
     let midnightTimeoutId = null;
     let isMidnightAlertMode = false;
     let lastScheduledNotifKey = '';
     let startupAlertShownForDate = '';
+
+    // Undo state
+    let lastUndoSnapshot = null;
+    let undoTimerId = null;
 
     function safeSetStorage(key, value) {
       try {
@@ -1051,6 +1230,23 @@
       return `hwlist_data_local_${suffix}`;
     }
 
+    // =========================================================================
+    // 3. Dark Mode & Pastel Theme Management
+    // =========================================================================
+    function applyDarkMode(isDark) {
+      document.documentElement.classList.toggle('dark', Boolean(isDark));
+      const chk = document.getElementById('chk-dark-mode');
+      if (chk) chk.checked = Boolean(isDark);
+    }
+
+    function toggleDarkMode(isDark) {
+      if (!currentUser) currentUser = getDefaultProfile();
+      currentUser.darkMode = Boolean(isDark);
+      applyDarkMode(currentUser.darkMode);
+      persistCurrentUser();
+      showToast(isDark ? '🌙 เปิดโหมดมืดเรียบร้อยแล้ว' : '☀️ สลับกลับเป็นโหมดสว่างแล้ว');
+    }
+
     function applyAppTheme(themeId) {
       const found = APP_THEMES.find(t => t.id === themeId) || APP_THEMES[0];
       document.documentElement.style.setProperty('--theme-primary', found.primary);
@@ -1075,7 +1271,7 @@
       container.innerHTML = APP_THEMES.map(t => {
         const selected = t.id === activeId;
         return `
-          <button type="button" onclick="selectAppTheme('${t.id}')" class="p-2.5 rounded-xl border ${selected ? 'border-2 border-[#14213D] shadow-xs' : 'border-cardBorder bg-white hover:bg-pageBg'} flex flex-col items-center gap-1.5 transition active:scale-95" style="${selected ? `background:${t.soft};` : ''}">
+          <button type="button" onclick="selectAppTheme('${t.id}')" class="p-2.5 rounded-xl border ${selected ? 'border-2 border-[#14213D] dark:border-white shadow-xs' : 'border-cardBorder bg-white hover:bg-pageBg'} flex flex-col items-center gap-1.5 transition active:scale-95" style="${selected && !document.documentElement.classList.contains('dark') ? `background:${t.soft};` : ''}">
             <span class="w-7 h-7 rounded-full border border-black/15 shadow-2xs" style="background:${t.primary};"></span>
             <span class="text-[11px] font-bold text-[#14213D] leading-tight text-center">${t.name}</span>
           </button>
@@ -1092,12 +1288,10 @@
       showToast(`เปลี่ยนสีธีมเป็น "${found ? found.name : ''}" เรียบร้อยแล้ว`);
     }
 
-    // =========================================================================
-    // 3. Local Settings Management
-    // =========================================================================
     function getDefaultProfile() {
       return {
         themeId: 'pastel-blue',
+        darkMode: false,
         morningTime: '08:00',
         nightTime: '21:00'
       };
@@ -1144,6 +1338,7 @@
       currentUser.themeId = validTheme;
       document.getElementById('prof-time-morning').value = currentUser.morningTime || '08:00';
       document.getElementById('prof-time-night').value = currentUser.nightTime || '21:00';
+      applyDarkMode(Boolean(currentUser.darkMode));
       applyAppTheme(validTheme);
     }
 
@@ -1202,6 +1397,7 @@
           scrollX: 0,
           scrollY: 0,
           onclone: (clonedDoc) => {
+            clonedDoc.documentElement.classList.remove('dark');
             Object.entries(themeVars).forEach(([k, v]) => {
               clonedDoc.documentElement.style.setProperty(k, v);
             });
@@ -1273,9 +1469,10 @@
       const item = activeItems.find(x => x.id === taskId);
       if (!item) return;
       const course = getCourseByName(item.subject);
+      const catObj = getCategoryObj(item.category);
 
       const effectiveDue = item.due || toYMD(getTodayDate());
-      const title = `[${course.code}] ${item.subject} — ${item.due ? 'ส่งการบ้าน' : 'การบ้าน (ไม่กำหนดวัน)'}`;
+      const title = `[${course.code}] ${item.subject} — ${catObj.label}`;
       const ymdClean = effectiveDue.replace(/-/g, '');
       const dueDateObj = parseYMD(effectiveDue);
       const nextDayObj = new Date(dueDateObj);
@@ -1283,6 +1480,7 @@
       const nextYmdClean = toYMD(nextDayObj).replace(/-/g, '');
 
       const detailsLines = [
+        `ประเภท: ${catObj.label}`,
         `วิชา: ${item.subject} (${course.code})`,
         `รายละเอียดงาน: ${item.task}`,
         course.room && course.room !== 'ห้อง N/A' ? `ห้องเรียน: ${course.room}` : '',
@@ -1359,13 +1557,14 @@
 
       activeItems.filter(it => Boolean(it.due)).forEach((it, idx) => {
         const course = getCourseByName(it.subject);
+        const catObj = getCategoryObj(it.category);
         const ymd = it.due.replace(/-/g, '');
         lines.push('BEGIN:VEVENT');
         lines.push(`UID:hw-${it.id}-${idx}@homeworklist`);
         lines.push(`DTSTAMP:${nowStamp}`);
         lines.push(`DTSTART;TZID=Asia/Bangkok:${ymd}T083000`);
         lines.push(`DTEND;TZID=Asia/Bangkok:${ymd}T093000`);
-        lines.push(`SUMMARY:${escapeICS(`ส่งงาน [${course.code}] ${it.subject}`)}`);
+        lines.push(`SUMMARY:${escapeICS(`[${catObj.label}] [${course.code}] ${it.subject}`)}`);
         lines.push(`DESCRIPTION:${escapeICS(it.task)}`);
         lines.push(`LOCATION:${escapeICS(course.info || course.room || '')}`);
         lines.push('BEGIN:VALARM');
@@ -1385,12 +1584,16 @@
       a.download = 'Homework-List-Calendar.ics';
       a.click();
       URL.revokeObjectURL(url);
-      showToast('ดาวน์โหลดไฟล์ปฏิทิน (.ics) แล้ว! เปิดไฟล์เพื่อนำเข้า Google / Apple Calendar ได้ทันที');
+      showToast('ดาวน์โหลดไฟล์ปฏิทิน (.ics) เรียบร้อยแล้ว');
     }
 
     // =========================================================================
     // 5. Helpers & Data Persistence
     // =========================================================================
+    function getCategoryObj(catId) {
+      return TASK_CATEGORIES.find(c => c.id === catId) || TASK_CATEGORIES[0];
+    }
+
     function getCourseByName(name) {
       const found = courses.find(c => c.name === name);
       if (found) return found;
@@ -1526,6 +1729,56 @@
       }, 2800);
     }
 
+    // =========================================================================
+    // 5.5 5-Second Undo System
+    // =========================================================================
+    function triggerUndoSnackbar(message, prevActive, prevHistory) {
+      lastUndoSnapshot = {
+        activeItems: JSON.parse(JSON.stringify(prevActive)),
+        historyItems: JSON.parse(JSON.stringify(prevHistory))
+      };
+
+      const bar = document.getElementById('undo-snackbar');
+      const msgEl = document.getElementById('undo-message');
+      const progEl = document.getElementById('undo-progress-bar');
+
+      msgEl.textContent = message;
+      bar.classList.remove('hidden');
+
+      // Restart 5s CSS animation
+      progEl.classList.remove('undo-progress-animate');
+      void progEl.offsetWidth;
+      progEl.classList.add('undo-progress-animate');
+
+      if (undoTimerId) clearTimeout(undoTimerId);
+      undoTimerId = setTimeout(() => {
+        hideUndoSnackbar();
+      }, 5000);
+    }
+
+    function hideUndoSnackbar() {
+      const bar = document.getElementById('undo-snackbar');
+      if (bar) bar.classList.add('hidden');
+      lastUndoSnapshot = null;
+      if (undoTimerId) {
+        clearTimeout(undoTimerId);
+        undoTimerId = null;
+      }
+    }
+
+    function performUndo() {
+      if (!lastUndoSnapshot) return;
+      activeItems = lastUndoSnapshot.activeItems;
+      historyItems = lastUndoSnapshot.historyItems;
+      hideUndoSnackbar();
+      saveData();
+      renderAll();
+      if (!document.getElementById('urgent-alert-modal').classList.contains('hidden')) {
+        renderUrgentAlertModalContent(isMidnightAlertMode);
+      }
+      showToast('↩ ยกเลิกการทำรายการเรียบร้อยแล้ว');
+    }
+
     let _confirmCallback = null;
     function openConfirmModal(title, desc, onConfirm) {
       document.getElementById('confirm-modal-title').textContent = title;
@@ -1568,12 +1821,13 @@
     }
 
     // =========================================================================
-    // 6. Navigation & Form Controls
+    // 6. Navigation, Subject Filter, Category Tags & Form Controls
     // =========================================================================
     function switchTab(tabName) {
       currentTab = tabName;
       document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`view-${tabName}`).classList.remove('hidden');
+      const targetView = document.getElementById(`view-${tabName}`);
+      if (targetView) targetView.classList.remove('hidden');
 
       document.querySelectorAll('.tab-btn-desktop').forEach(btn => {
         if (btn.dataset.tab === tabName) {
@@ -1601,6 +1855,94 @@
       } else {
         fab.classList.add('hidden');
       }
+
+      if (tabName === 'sync') {
+        const txtArea = document.getElementById('txt-sync-area');
+        if (txtArea) txtArea.value = generateHomeworkTxtString();
+      }
+    }
+
+    function setSubjectFilter(subjName) {
+      selectedSubjectFilter = subjName;
+      if (subjName !== 'ALL' && !editingTaskId) {
+        const sel = document.getElementById('inp-subject');
+        if (sel && Array.from(sel.options).some(o => o.value === subjName)) {
+          sel.value = subjName;
+          onSubjectChange();
+        }
+      }
+      renderAll();
+    }
+
+    function renderSubjectFilterBar() {
+      const bar = document.getElementById('subject-filter-bar');
+      if (!bar) return;
+
+      const uniqueCourses = getUniqueCoursesByName();
+      const extraSubjects = [];
+      activeItems.forEach(it => {
+        if (!uniqueCourses.some(c => c.name === it.subject) && !extraSubjects.includes(it.subject)) {
+          extraSubjects.push(it.subject);
+        }
+      });
+
+      if (selectedSubjectFilter !== 'ALL') {
+        const exists = uniqueCourses.some(c => c.name === selectedSubjectFilter) || extraSubjects.includes(selectedSubjectFilter);
+        if (!exists) selectedSubjectFilter = 'ALL';
+      }
+
+      const allCount = activeItems.length;
+      const isAllActive = selectedSubjectFilter === 'ALL';
+      let html = `
+        <button type="button" onclick="setSubjectFilter('ALL')" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 ${isAllActive ? 'theme-pill-active border-black/15 shadow-2xs' : 'bg-pageBg border-cardBorder text-[#14213D] hover:bg-slate-200/70'}">
+          <span>ทั้งหมด</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[11px] bg-white/80 text-[#14213D]">${allCount}</span>
+        </button>
+      `;
+
+      uniqueCourses.forEach(c => {
+        const count = activeItems.filter(it => it.subject === c.name).length;
+        const active = selectedSubjectFilter === c.name;
+        html += `
+          <button type="button" data-subj="${escapeHTML(c.name)}" onclick="setSubjectFilter(this.dataset.subj)" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 ${active ? 'ring-2 ring-[#14213D] dark:ring-white shadow-2xs' : 'opacity-90 hover:opacity-100'}" style="background:${c.bg}; color:${c.fg}; border-color:${c.dot}40;">
+            <span class="w-2 h-2 rounded-full shrink-0" style="background:${c.dot};"></span>
+            <span class="max-w-[140px] truncate">${escapeHTML(c.name)}</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[11px] bg-white/85 text-[#14213D]">${count}</span>
+          </button>
+        `;
+      });
+
+      extraSubjects.forEach(name => {
+        const count = activeItems.filter(it => it.subject === name).length;
+        const active = selectedSubjectFilter === name;
+        html += `
+          <button type="button" data-subj="${escapeHTML(name)}" onclick="setSubjectFilter(this.dataset.subj)" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 ${active ? 'theme-pill-active border-black/15' : 'bg-pageBg border-cardBorder text-[#14213D]'}">
+            <span class="max-w-[140px] truncate">${escapeHTML(name)}</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[11px] bg-white/85 text-[#14213D]">${count}</span>
+          </button>
+        `;
+      });
+
+      bar.innerHTML = html;
+    }
+
+    function renderCategoryPills() {
+      const container = document.getElementById('task-category-pills');
+      if (!container) return;
+      container.innerHTML = TASK_CATEGORIES.map(cat => {
+        const isSelected = selectedTaskCategory === cat.id;
+        return `
+          <button type="button" onclick="selectTaskCategory('${cat.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 ${isSelected ? `${cat.badgeClass} ring-2 ring-[#14213D]/40 dark:ring-white/60 shadow-2xs` : 'bg-pageBg border-cardBorder text-muted hover:text-[#14213D]'}">
+            <span>${cat.icon}</span>
+            <span>${cat.label}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectTaskCategory(catId) {
+      selectedTaskCategory = catId;
+      renderCategoryPills();
     }
 
     function toggleMobileForm(show) {
@@ -1613,6 +1955,48 @@
       }
     }
 
+    function toggleHistoryDrawer() {
+      const body = document.getElementById('history-drawer-body');
+      const arrow = document.getElementById('history-drawer-arrow');
+      const isHidden = body.classList.contains('hidden');
+      if (isHidden) {
+        body.classList.remove('hidden');
+        arrow.textContent = 'ซ่อนรายการ ▲';
+      } else {
+        body.classList.add('hidden');
+        arrow.textContent = 'แสดงรายการ ▼';
+      }
+    }
+
+    function toggleBulkPastePanel(forceState) {
+      const panel = document.getElementById('bulk-paste-panel');
+      const arrow = document.getElementById('bulk-paste-arrow');
+      const shouldShow = typeof forceState === 'boolean' ? forceState : panel.classList.contains('hidden');
+      if (shouldShow) {
+        panel.classList.remove('hidden');
+        if (arrow) arrow.textContent = '▲';
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        panel.classList.add('hidden');
+        if (arrow) arrow.textContent = '▼';
+      }
+    }
+
+    function toggleAdvancedSyncPanel() {
+      const panel = document.getElementById('advanced-sync-panel');
+      const arrow = document.getElementById('advanced-sync-arrow');
+      const isHidden = panel.classList.contains('hidden');
+      if (isHidden) {
+        panel.classList.remove('hidden');
+        arrow.textContent = 'ซ่อนตัวเลือก ▲';
+        const txtArea = document.getElementById('txt-sync-area');
+        if (txtArea) txtArea.value = generateHomeworkTxtString();
+      } else {
+        panel.classList.add('hidden');
+        arrow.textContent = 'แสดงตัวเลือก ▼';
+      }
+    }
+
     function syncSubjectDropdown() {
       const sel = document.getElementById('inp-subject');
       const prevVal = sel.value;
@@ -1622,7 +2006,7 @@
       });
 
       if (allNames.length === 0) {
-        sel.innerHTML = `<option value="" style="background:#F3F4F8; color:#14213D;">-- กรุณาเพิ่มรายวิชาที่แท็บจัดการวิชาก่อน --</option>`;
+        sel.innerHTML = `<option value="" style="background:#F3F4F8; color:#14213D;">-- กรุณาเพิ่มรายวิชาที่แท็บตารางเรียนก่อน --</option>`;
         document.getElementById('inp-due').value = toYMD(getTodayDate());
       } else {
         sel.innerHTML = allNames.map(name => {
@@ -1634,6 +2018,8 @@
 
       if (prevVal && allNames.includes(prevVal)) {
         sel.value = prevVal;
+      } else if (selectedSubjectFilter !== 'ALL' && allNames.includes(selectedSubjectFilter)) {
+        sel.value = selectedSubjectFilter;
       }
       onSubjectChange();
     }
@@ -1665,12 +2051,12 @@
         selEl.style.backgroundColor = '';
         selEl.style.color = '';
         selEl.style.borderColor = '';
-        hintBox.innerHTML = `<span class="text-muted">ยังไม่มีรายวิชา — ไปที่แท็บ <button type="button" onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button> เพื่อเพิ่มรายวิชา</span>`;
+        hintBox.innerHTML = `<span class="text-muted">ยังไม่มีรายวิชา — ไปที่แท็บ <button type="button" onclick="switchTab('schedule')" class="text-teal-700 dark:text-teal-400 font-bold underline">ตารางเรียน</button> เพื่อเพิ่มรายวิชา</span>`;
       }
     }
 
     // =========================================================================
-    // 7. Task & Course CRUD
+    // 7. Task & Course CRUD (with Undo Support)
     // =========================================================================
     function toggleNoDueDate() {
       const noDueEl = document.getElementById('inp-no-due');
@@ -1694,16 +2080,17 @@
       const due = isNoDue ? '' : document.getElementById('inp-due').value;
       const subject = document.getElementById('inp-subject').value.trim();
       const task = document.getElementById('inp-task').value.trim();
+      const category = selectedTaskCategory || 'homework';
 
       if ((!isNoDue && !due) || !subject || !task) {
-        showToast('กรุณาเลือกวิชา และกรอกรายละเอียดการบ้าน');
+        showToast('กรุณาเลือกวิชา และกรอกรายละเอียดงาน');
         return;
       }
 
       if (editingTaskId) {
         const idx = activeItems.findIndex(x => x.id === editingTaskId);
         if (idx !== -1) {
-          activeItems[idx] = { ...activeItems[idx], due, subject, task };
+          activeItems[idx] = { ...activeItems[idx], due, subject, task, category };
         }
         showToast('บันทึกการแก้ไขเรียบร้อยแล้ว');
         cancelEdit();
@@ -1712,14 +2099,16 @@
           id: 'hw-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
           due,
           subject,
-          task
+          task,
+          category
         });
         document.getElementById('inp-task').value = '';
         if (isNoDue) {
           document.getElementById('inp-no-due').checked = false;
           toggleNoDueDate();
         }
-        showToast(isNoDue ? 'เพิ่มงานสถานะ "ไม่กำหนดวัน" เรียบร้อยแล้ว' : 'เพิ่มการบ้านเรียบร้อยแล้ว');
+        const catObj = getCategoryObj(category);
+        showToast(`เพิ่มรายการ [${catObj.label}] เรียบร้อยแล้ว`);
         if (window.innerWidth < 768) toggleMobileForm(false);
       }
 
@@ -1738,8 +2127,10 @@
 
       document.getElementById('form-mode-title').innerHTML = `
         <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-        <span class="text-blue-700">กำลังแก้ไขรายการการบ้าน</span>
+        <span class="text-blue-700 dark:text-blue-400">กำลังแก้ไขรายการงาน</span>
       `;
+      selectTaskCategory(item.category || 'homework');
+
       const noDueEl = document.getElementById('inp-no-due');
       const dueEl = document.getElementById('inp-due');
       if (!item.due) {
@@ -1769,6 +2160,7 @@
 
     function cancelEdit() {
       editingTaskId = null;
+      selectTaskCategory('homework');
       document.getElementById('form-mode-title').innerHTML = `
         <span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span>
         <span>เพิ่มการบ้านใหม่</span>
@@ -1789,17 +2181,6 @@
       onSubjectChange();
     }
 
-    function quickAddForSubject(subjectName) {
-      cancelEdit();
-      switchTab('list');
-      document.getElementById('inp-subject').value = subjectName;
-      onSubjectChange();
-      const container = document.getElementById('add-form-container');
-      container.classList.remove('hidden');
-      container.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      document.getElementById('inp-task').focus();
-    }
-
     function toggleReadyToSubmit(id) {
       const item = activeItems.find(x => x.id === id);
       if (!item) return;
@@ -1811,7 +2192,7 @@
       }
       showToast(item.readyToSubmit
         ? '📦 ตั้งสถานะเป็น "รอส่ง" (ทำเสร็จแล้ว รอส่งงาน)'
-        : '↩ ยกเลิกสถานะ "รอส่ง" กลับเป็นกำลังดำเนินการ');
+        : '↩ ยกเลิกสถานะ "รอส่ง"');
     }
 
     function completeItem(id) {
@@ -1819,12 +2200,16 @@
       if (!item) return;
       if (editingTaskId === id) cancelEdit();
 
+      const prevActive = [...activeItems];
+      const prevHistory = [...historyItems];
+
       historyItems.unshift({
         id: 'hist-' + Date.now(),
         doneDate: toYMD(getTodayDate()),
         due: item.due,
         subject: item.subject,
-        task: item.task
+        task: item.task,
+        category: item.category || 'homework'
       });
 
       activeItems = activeItems.filter(x => x.id !== id);
@@ -1833,13 +2218,36 @@
       if (!document.getElementById('urgent-alert-modal').classList.contains('hidden')) {
         renderUrgentAlertModalContent(isMidnightAlertMode);
       }
-      showToast('✓ บันทึกส่งงานเข้าประวัติเรียบร้อย');
+      triggerUndoSnackbar(`✓ ส่งงาน "${item.subject}" เสร็จแล้ว`, prevActive, prevHistory);
+    }
+
+    function deleteActiveItem(id) {
+      const item = activeItems.find(x => x.id === id);
+      if (!item) return;
+      if (editingTaskId === id) cancelEdit();
+
+      const prevActive = [...activeItems];
+      const prevHistory = [...historyItems];
+
+      activeItems = activeItems.filter(x => x.id !== id);
+      saveData();
+      renderAll();
+      if (!document.getElementById('urgent-alert-modal').classList.contains('hidden')) {
+        renderUrgentAlertModalContent(isMidnightAlertMode);
+      }
+      triggerUndoSnackbar(`🗑️ ลบงาน "${item.subject}" แล้ว`, prevActive, prevHistory);
     }
 
     function restoreHistoryItem(id) {
       const h = historyItems.find(x => x.id === id);
       if (!h) return;
-      activeItems.push({ id: 'hw-' + Date.now(), due: h.due, subject: h.subject, task: h.task });
+      activeItems.push({
+        id: 'hw-' + Date.now(),
+        due: h.due,
+        subject: h.subject,
+        task: h.task,
+        category: h.category || 'homework'
+      });
       historyItems = historyItems.filter(x => x.id !== id);
       saveData();
       renderAll();
@@ -1847,10 +2255,14 @@
     }
 
     function deleteHistoryItem(id) {
+      const h = historyItems.find(x => x.id === id);
+      if (!h) return;
+      const prevActive = [...activeItems];
+      const prevHistory = [...historyItems];
       historyItems = historyItems.filter(x => x.id !== id);
       saveData();
       renderAll();
-      showToast('ลบรายการประวัติแล้ว');
+      triggerUndoSnackbar(`🗑️ ลบประวัติ "${h.subject}" แล้ว`, prevActive, prevHistory);
     }
 
     function clearAllHistory() {
@@ -1937,7 +2349,7 @@
       const c = courses.find(x => x.id === id);
       if (!c) return;
       editingCourseId = id;
-      document.getElementById('course-form-title').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span><span class="text-blue-700">แก้ไขรายวิชา</span>`;
+      document.getElementById('course-form-title').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span><span class="text-blue-700 dark:text-blue-400">แก้ไขรายวิชา</span>`;
       document.getElementById('btn-cancel-course-edit').classList.remove('hidden');
       document.getElementById('c-inp-code').value = c.code;
       document.getElementById('c-inp-name').value = c.name;
@@ -1956,7 +2368,7 @@
 
     function cancelCourseEdit() {
       editingCourseId = null;
-      document.getElementById('course-form-title').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span><span>เพิ่มรายวิชาใหม่</span>`;
+      document.getElementById('course-form-title').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span><span>➕ เพิ่มวิชาเอง</span>`;
       document.getElementById('btn-cancel-course-edit').classList.add('hidden');
       document.getElementById('single-course-form').reset();
       const btn = document.getElementById('btn-save-course');
@@ -2071,6 +2483,7 @@
       courses = replaceAll ? parsedCourses : [...courses, ...parsedCourses];
       const uniqueCount = getUniqueCoursesByName().length;
       document.getElementById('bulk-paste-area').value = '';
+      toggleBulkPastePanel(false);
       saveData();
       syncSubjectDropdown();
       renderAll();
@@ -2093,19 +2506,19 @@
 
     function copyCoursePresetCode() {
       if (courses.length === 0) {
-        showToast('ยังไม่มีรายวิชาสำหรับสร้างโค้ดแชร์');
+        showToast('ยังไม่มีรายวิชาสำหรับสร้างรหัสแชร์');
         return;
       }
       const uniqueCount = getUniqueCoursesByName().length;
       const compact = courses.map(c => [c.code, c.name, c.dow, c.time, c.room || 'ห้อง N/A', c.info, c.bg, c.fg, c.dot]);
       const codeStr = 'HW2569:' + encodeUnicodeBase64(JSON.stringify(compact));
-      copyTextToClipboardUniversal(codeStr, `คัดลอกโค้ดชุดวิชา (${uniqueCount} รายวิชา) แล้ว! ส่งเข้า LINE ให้เพื่อนได้เลย`);
+      copyTextToClipboardUniversal(codeStr, `คัดลอกรหัสชุดวิชา (${uniqueCount} รายวิชา) แล้ว! ส่งเข้า LINE ให้เพื่อนได้เลย`);
     }
 
     function importCoursePresetCode() {
       const raw = document.getElementById('preset-code-input').value.trim();
       if (!raw) {
-        showToast('กรุณาวางโค้ดชุดวิชาจากเพื่อนก่อน');
+        showToast('กรุณาวางรหัสชุดวิชาจากเพื่อนก่อน');
         return;
       }
       try {
@@ -2140,7 +2553,7 @@
           showToast(`โหลดชุดวิชาสำเร็จ ${uniqueImportedCount} รายวิชา!`);
         });
       } catch {
-        showToast('โค้ดชุดวิชาไม่ถูกต้อง กรุณาคัดลอกมาให้ครบถ้วน');
+        showToast('รหัสชุดวิชาไม่ถูกต้อง กรุณาคัดลอกมาให้ครบถ้วน');
       }
     }
 
@@ -2176,7 +2589,7 @@
         { dow: 0, name: 'อาทิตย์', isWeekend: true }
       ];
 
-      let html = `<div id="schedule-capture-area" style="background: #ffffff; display: inline-block; min-width: 100%;"><table class="timetable-table"><thead><tr class="theme-surface text-[11px] sm:text-xs font-bold">`;
+      let html = `<div id="schedule-capture-area" style="display: inline-block; min-width: 100%;"><table class="timetable-table"><thead><tr class="theme-surface text-[11px] sm:text-xs font-bold">`;
       html += `<th class="timetable-sticky-col theme-surface w-[92px] py-3 px-2 text-center border-black/15">วัน / เวลา</th>`;
       for (const h of hours) {
         const h1 = String(h).padStart(2, '0') + ':00';
@@ -2193,8 +2606,8 @@
           .sort((a, b) => a.range.startH - b.range.startH);
 
         const isToday = (todayDow === dObj.dow);
-        const rowBg = dObj.isWeekend ? 'bg-[#FFF5F7]' : 'bg-white';
-        const dayCellBg = dObj.isWeekend ? 'bg-[#FBE4E8] text-[#8B1230]' : 'bg-[#F8FAFC] text-[#14213D]';
+        const rowBg = dObj.isWeekend ? 'bg-[#FFF5F7] tt-row-weekend' : 'bg-white tt-row-weekday';
+        const dayCellBg = dObj.isWeekend ? 'bg-[#FBE4E8] text-[#8B1230] tt-day-weekend' : 'bg-[#F8FAFC] text-[#14213D] tt-day-weekday';
         const todayRing = isToday ? 'ring-2 ring-inset ring-blue-400' : '';
 
         html += `<tr class="${rowBg}">`;
@@ -2234,21 +2647,26 @@
       container.innerHTML = html;
     }
 
-    function createHomeworkCardHTML(item, isUrgent) {
+    function createHomeworkCardHTML(item, tier) {
       const days = calcDaysDiff(item.due);
       const course = getCourseByName(item.subject);
+      const catObj = getCategoryObj(item.category);
       const isReady = Boolean(item.readyToSubmit);
 
       let tileBg, tileFg, borderStyle;
-      if (days === null) {
+      if (tier === 'overdue') {
+        tileBg = '#FECDD3';
+        tileFg = '#881337';
+        borderStyle = 'border-rose-400 dark:border-rose-700';
+      } else if (days === null) {
         tileBg = '#E0E7FF';
         tileFg = '#3730A3';
         borderStyle = isReady ? 'border-amber-400' : 'border-indigo-200';
-      } else if (days <= 0) {
+      } else if (days === 0) {
         tileBg = '#FBE4E8';
         tileFg = '#8B1230';
         borderStyle = 'border-[#8B1230]/60';
-      } else if (isUrgent) {
+      } else if (tier === 'urgent') {
         tileBg = '#FEF3C7';
         tileFg = '#92400E';
         borderStyle = isReady ? 'border-amber-400' : 'border-cardBorder';
@@ -2260,14 +2678,15 @@
 
       const tileTitleClass = days === null ? 'text-sm sm:text-lg font-bold leading-tight' : 'text-base sm:text-xl font-bold leading-tight';
       const channelSubtitle = course.info ? `<div class="text-[11px] text-muted mt-0.5 truncate">📍 ${escapeHTML(course.info)}</div>` : '';
+      const catBadgeHTML = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${catObj.badgeClass}">${catObj.icon} ${catObj.label}</span>`;
       const readyBadgeHTML = isReady
-        ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E] border border-amber-300">📦 รอส่ง (ทำเสร็จแล้ว)</span>`
+        ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E] border border-amber-300">📦 รอส่ง</span>`
         : '';
       const readyBtnHTML = isReady
-        ? `<button onclick="toggleReadyToSubmit('${escapeHTML(item.id)}')" title="ทำเสร็จแล้ว แต่ยังไม่ได้ส่งงาน (กดอีกครั้งเพื่อยกเลิกสถานะรอส่ง)" class="px-3.5 py-2 rounded-xl border border-amber-500 bg-[#FEF3C7] hover:bg-amber-200 text-[#92400E] text-xs font-bold shadow-2xs transition active:scale-95">
-            ✓ รอส่ง (ทำเสร็จแล้ว)
+        ? `<button onclick="toggleReadyToSubmit('${escapeHTML(item.id)}')" title="ทำเสร็จแล้ว แต่ยังไม่ได้ส่งงาน" class="px-3 py-2 rounded-xl border border-amber-500 bg-[#FEF3C7] hover:bg-amber-200 text-[#92400E] text-xs font-bold shadow-2xs transition active:scale-95">
+            ✓ รอส่ง
           </button>`
-        : `<button onclick="toggleReadyToSubmit('${escapeHTML(item.id)}')" title="กดเมื่อทำเสร็จแล้ว แต่ยังไม่ได้ส่งงาน (รอส่ง)" class="px-3.5 py-2 rounded-xl border border-amber-300 bg-[#FFFBEB] hover:bg-[#FEF3C7] text-[#92400E] text-xs font-bold transition active:scale-95">
+        : `<button onclick="toggleReadyToSubmit('${escapeHTML(item.id)}')" title="กดเมื่อทำเสร็จแล้ว แต่ยังไม่ได้ส่งงาน" class="px-3 py-2 rounded-xl border border-amber-300 bg-[#FFFBEB] hover:bg-[#FEF3C7] text-[#92400E] text-xs font-bold transition active:scale-95">
             📦 รอส่ง
           </button>`;
 
@@ -2280,7 +2699,8 @@
             </div>
 
             <div class="flex-1 min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
+              <div class="flex flex-wrap items-center gap-1.5">
+                ${catBadgeHTML}
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold" style="background:${course.bg}; color:${course.fg};">
                   <span class="w-2 h-2 rounded-full" style="background:${course.dot};"></span>
                   ${escapeHTML(course.code)}
@@ -2293,16 +2713,19 @@
             </div>
           </div>
 
-          <div class="flex flex-wrap items-center justify-end gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 shrink-0">
-            <button onclick="openGoogleCalendarForTask('${escapeHTML(item.id)}')" title="เพิ่มลง Google Calendar" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-amber-50 text-[#14213D] text-xs font-bold transition active:scale-95">
-              📅 Google Calendar
+          <div class="flex flex-wrap items-center justify-end gap-1.5 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 shrink-0">
+            <button onclick="openGoogleCalendarForTask('${escapeHTML(item.id)}')" title="เพิ่มลง Google Calendar" class="px-2.5 py-2 rounded-xl border border-cardBorder bg-white hover:bg-amber-50 text-[#14213D] text-xs font-bold transition active:scale-95">
+              📅 ปฏิทิน
             </button>
-            <button onclick="startEdit('${escapeHTML(item.id)}')" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition active:scale-95">
+            <button onclick="startEdit('${escapeHTML(item.id)}')" class="px-2.5 py-2 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 dark:text-blue-400 text-xs font-bold transition active:scale-95">
               ✎ แก้ไข
             </button>
             ${readyBtnHTML}
-            <button onclick="completeItem('${escapeHTML(item.id)}')" title="ส่งงานเรียบร้อยแล้ว (ย้ายเข้าประวัติ)" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-teal-50 hover:border-teal-300 text-[#14213D] hover:text-teal-800 text-xs font-bold transition active:scale-95">
+            <button onclick="completeItem('${escapeHTML(item.id)}')" title="ส่งงานเรียบร้อยแล้ว" class="px-3.5 py-2 rounded-xl border border-teal-300 bg-teal-50 hover:bg-teal-600 text-teal-800 hover:text-white text-xs font-bold transition active:scale-95">
               ✓ เสร็จแล้ว
+            </button>
+            <button onclick="deleteActiveItem('${escapeHTML(item.id)}')" title="ลบรายการนี้" class="px-2.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] dark:text-rose-400 text-xs font-bold transition active:scale-95">
+              🗑️
             </button>
           </div>
         </div>
@@ -2320,201 +2743,95 @@
         return a.due.localeCompare(b.due);
       });
 
-      const urgentItems = activeItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d <= 7; });
-      const laterItems = activeItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d > 7; });
-      const pendingItems = activeItems.filter(it => !it.due);
-      const dueSoonCount = activeItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d <= 1; }).length;
+      renderSubjectFilterBar();
+      renderCategoryPills();
+
+      // Overall counts for top summary cards
+      const allUrgentCount = activeItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d >= 0 && d <= 7; }).length;
+      const allOverdueOrSoonCount = activeItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d <= 1; }).length;
       const uniqueCourses = getUniqueCoursesByName();
 
       document.getElementById('stat-total').textContent = activeItems.length;
-      document.getElementById('stat-urgent').textContent = urgentItems.length;
-      document.getElementById('stat-today').textContent = dueSoonCount;
+      document.getElementById('stat-urgent').textContent = allUrgentCount;
+      document.getElementById('stat-today').textContent = allOverdueOrSoonCount;
       document.getElementById('stat-done').textContent = historyItems.length;
 
       document.getElementById('badge-list-desktop').textContent = activeItems.length;
-      document.getElementById('badge-subjects-desktop').textContent = uniqueCourses.length;
       document.getElementById('badge-courses-desktop').textContent = uniqueCourses.length;
-      document.getElementById('badge-history-desktop').textContent = historyItems.length;
       document.getElementById('badge-list-mobile').textContent = activeItems.length;
+      document.getElementById('badge-history-inline').textContent = historyItems.length;
 
-      const mSubjBadge = document.getElementById('badge-subjects-mobile');
-      if (uniqueCourses.length > 0) {
-        mSubjBadge.textContent = uniqueCourses.length;
-        mSubjBadge.classList.remove('hidden');
-      } else {
-        mSubjBadge.classList.add('hidden');
-      }
+      // Apply Subject Filter to Tasks View
+      const visibleItems = selectedSubjectFilter === 'ALL'
+        ? activeItems
+        : activeItems.filter(it => it.subject === selectedSubjectFilter);
 
-      const mHistBadge = document.getElementById('badge-history-mobile');
-      if (historyItems.length > 0) {
-        mHistBadge.textContent = historyItems.length;
-        mHistBadge.classList.remove('hidden');
-      } else {
-        mHistBadge.classList.add('hidden');
-      }
+      const overdueItems = visibleItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d < 0; });
+      const urgentItems  = visibleItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d >= 0 && d <= 7; });
+      const laterItems   = visibleItems.filter(it => { const d = calcDaysDiff(it.due); return d !== null && d > 7; });
+      const pendingItems = visibleItems.filter(it => !it.due);
 
-      // 1. Tasks View
-      const emptyEl = document.getElementById('hw-empty-state');
-      const secUrgent = document.getElementById('section-urgent');
-      const secLater = document.getElementById('section-later');
+      const emptyEl    = document.getElementById('hw-empty-state');
+      const secOverdue = document.getElementById('section-overdue');
+      const secUrgent  = document.getElementById('section-urgent');
+      const secLater   = document.getElementById('section-later');
       const secPending = document.getElementById('section-pending');
 
-      if (activeItems.length === 0) {
+      if (visibleItems.length === 0) {
         emptyEl.classList.remove('hidden');
+        secOverdue.classList.add('hidden');
         secUrgent.classList.add('hidden');
         secLater.classList.add('hidden');
         secPending.classList.add('hidden');
+
+        const titleEl = document.getElementById('hw-empty-title');
+        const descEl = document.getElementById('hw-empty-desc');
+        if (selectedSubjectFilter !== 'ALL') {
+          titleEl.textContent = `ไม่มีงานค้างในวิชา "${selectedSubjectFilter}"`;
+          descEl.innerHTML = `กดปุ่ม "+ เพิ่มงาน" ด้านบนเพื่อจดงานใหม่ในวิชานี้ หรือ <button type="button" onclick="setSubjectFilter('ALL')" class="text-teal-700 dark:text-teal-400 font-bold underline">ดูงานทั้งหมด</button>`;
+        } else {
+          titleEl.textContent = 'ไม่มีการบ้านค้างส่งแล้ว!';
+          descEl.innerHTML = `กดปุ่ม "+ เพิ่มงาน" เพื่อจดรายการงานใหม่ (หรือเพิ่มรายวิชาที่แท็บ <button type="button" onclick="switchTab('schedule')" class="text-teal-700 dark:text-teal-400 font-bold underline">ตารางเรียน</button>)`;
+        }
       } else {
         emptyEl.classList.add('hidden');
+
+        if (overdueItems.length > 0) {
+          secOverdue.classList.remove('hidden');
+          document.getElementById('count-overdue-label').textContent = `${overdueItems.length} งาน`;
+          document.getElementById('list-overdue').innerHTML = overdueItems.map(it => createHomeworkCardHTML(it, 'overdue')).join('');
+        } else {
+          secOverdue.classList.add('hidden');
+        }
+
         if (urgentItems.length > 0) {
           secUrgent.classList.remove('hidden');
           document.getElementById('count-urgent-label').textContent = `${urgentItems.length} งาน`;
-          document.getElementById('list-urgent').innerHTML = urgentItems.map(it => createHomeworkCardHTML(it, true)).join('');
+          document.getElementById('list-urgent').innerHTML = urgentItems.map(it => createHomeworkCardHTML(it, 'urgent')).join('');
         } else {
           secUrgent.classList.add('hidden');
         }
+
         if (laterItems.length > 0) {
           secLater.classList.remove('hidden');
           document.getElementById('count-later-label').textContent = `${laterItems.length} งาน`;
-          document.getElementById('list-later').innerHTML = laterItems.map(it => createHomeworkCardHTML(it, false)).join('');
+          document.getElementById('list-later').innerHTML = laterItems.map(it => createHomeworkCardHTML(it, 'later')).join('');
         } else {
           secLater.classList.add('hidden');
         }
+
         if (pendingItems.length > 0) {
           secPending.classList.remove('hidden');
           document.getElementById('count-pending-label').textContent = `${pendingItems.length} งาน`;
-          document.getElementById('list-pending').innerHTML = pendingItems.map(it => createHomeworkCardHTML(it, false)).join('');
+          document.getElementById('list-pending').innerHTML = pendingItems.map(it => createHomeworkCardHTML(it, 'pending')).join('');
         } else {
           secPending.classList.add('hidden');
         }
       }
 
-      // 2. Subjects View
-      document.getElementById('subjects-count-badge').textContent = `${uniqueCourses.length} รายวิชา`;
-      const subjGrid = document.getElementById('subjects-grid');
-      if (uniqueCourses.length === 0) {
-        subjGrid.innerHTML = `
-          <div class="md:col-span-2 bg-white rounded-[14px] border border-cardBorder p-8 text-center space-y-2">
-            <div class="text-3xl">📚</div>
-            <div class="text-sm font-bold text-[#14213D]">ยังไม่มีรายวิชาในระบบ (0 รายวิชา)</div>
-            <p class="text-xs sm:text-sm text-muted">กดไปที่แท็บ <button onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button> เพื่อเพิ่มรายวิชาทีละวิชา หรือวางตารางเรียนที่แปลงจาก AI</p>
-          </div>
-        `;
-      } else {
-        subjGrid.innerHTML = uniqueCourses.map(c => {
-          const courseTasks = activeItems.filter(it => it.subject === c.name);
-          const sameSubjectSlots = courses.filter(x => x.code === c.code && x.name === c.name);
-          const scheduleSummary = sameSubjectSlots.map(s => `${THAI_DOW[s.dow]} ${s.time}`).join(', ');
-          const subLine = [scheduleSummary, c.info].filter(Boolean).join(' · ');
-
-          let tasksInnerHTML = courseTasks.length === 0
-            ? `<div class="text-xs text-muted py-2 text-center">ไม่มีงานค้าง</div>`
-            : `<div class="space-y-2">` + courseTasks.map(t => {
-                const d = calcDaysDiff(t.due);
-                const isReady = Boolean(t.readyToSubmit);
-                const tagColor = d === null ? 'text-[#3730A3] bg-[#E0E7FF]' : (d <= 0 ? 'text-[#8B1230] bg-[#FBE4E8]' : (d <= 7 ? 'text-[#92400E] bg-[#FEF3C7]' : 'text-[#14213D] bg-white'));
-                const dueLabelText = d === null ? 'ไม่กำหนดวัน' : `${getTileLabel(d)} (${formatThaiShort(t.due)})`;
-                const readyPill = isReady ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#FEF3C7] text-[#92400E] border border-amber-300">📦 รอส่ง</span>` : '';
-                const readySubBtn = isReady
-                  ? `<button onclick="toggleReadyToSubmit('${escapeHTML(t.id)}')" title="ทำเสร็จแล้ว รอส่งงาน (กดเพื่อยกเลิก)" class="shrink-0 px-2 h-7 rounded-lg bg-[#FEF3C7] border border-amber-400 text-[#92400E] font-bold text-[11px] flex items-center justify-center transition">📦 รอส่ง</button>`
-                  : `<button onclick="toggleReadyToSubmit('${escapeHTML(t.id)}')" title="ตั้งสถานะทำเสร็จแล้ว รอส่งงาน" class="shrink-0 px-2 h-7 rounded-lg bg-[#FFFBEB] border border-amber-200 hover:bg-[#FEF3C7] text-[#92400E] font-bold text-[11px] flex items-center justify-center transition">รอส่ง</button>`;
-                return `
-                  <div class="bg-white rounded-xl p-2.5 border ${isReady ? 'border-amber-300' : 'border-cardBorder/80'} flex items-start justify-between gap-2">
-                    <div class="min-w-0 flex-1">
-                      <div class="flex flex-wrap items-center gap-1.5 mb-1">
-                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${tagColor}">${dueLabelText}</span>
-                        ${readyPill}
-                      </div>
-                      <p class="text-xs sm:text-sm text-[#14213D] font-medium whitespace-pre-line-wrap">${escapeHTML(t.task)}</p>
-                    </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                      ${readySubBtn}
-                      <button onclick="completeItem('${escapeHTML(t.id)}')" title="เสร็จแล้ว (ส่งงานเรียบร้อย)" class="shrink-0 w-7 h-7 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs flex items-center justify-center transition">
-                        ✓
-                      </button>
-                    </div>
-                  </div>
-                `;
-              }).join('') + `</div>`;
-
-          return `
-            <div class="bg-white rounded-[14px] border border-cardBorder p-4 shadow-xs flex flex-col justify-between">
-              <div>
-                <div class="flex items-start justify-between gap-2 mb-3">
-                  <div class="min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold" style="background:${c.bg}; color:${c.fg};">
-                        <span class="w-2 h-2 rounded-full" style="background:${c.dot};"></span>
-                        ${escapeHTML(c.code)}
-                      </span>
-                      <h3 class="text-sm sm:text-base font-bold text-[#14213D]">${escapeHTML(c.name)}</h3>
-                    </div>
-                    <p class="text-xs text-muted mt-1">${escapeHTML(subLine)}</p>
-                  </div>
-                  <button data-subject="${escapeHTML(c.name)}" onclick="quickAddForSubject(this.dataset.subject)" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-pageBg hover:bg-[#14213D] hover:text-white text-[#14213D] text-xs font-bold transition">
-                    + เพิ่ม
-                  </button>
-                </div>
-              </div>
-              <div class="bg-pageBg rounded-xl p-3 border border-slate-200/60">
-                ${tasksInnerHTML}
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      // 3. Schedule View
+      // 2. Schedule & Manage Courses View
       renderWeeklyGridTimetable(today.getDay());
-      document.getElementById('schedule-count-badge').textContent = `${uniqueCourses.length} รายวิชา`;
 
-      const courseInfoTableEl = document.getElementById('course-info-table');
-      if (uniqueCourses.length === 0) {
-        courseInfoTableEl.innerHTML = `<div class="p-8 text-center text-sm text-muted">ยังไม่มีรายวิชา กดไปที่แท็บ <button onclick="switchTab('courses')" class="text-teal-700 font-bold underline">จัดการวิชา</button> เพื่อเพิ่มรายวิชา</div>`;
-      } else {
-        const rowsHTML = uniqueCourses.map(c => {
-          const roomText = c.room || 'ห้อง N/A';
-          const channelText = (c.info && c.info !== c.room && c.info !== 'ห้อง N/A') ? c.info : '-';
-          return `
-            <tr class="hover:bg-slate-50/80 transition-colors">
-              <td class="px-4 py-3 border-r border-cardBorder align-middle">
-                <div class="flex items-center gap-2.5 flex-wrap">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold shrink-0" style="background:${c.bg}; color:${c.fg};">
-                    <span class="w-2 h-2 rounded-full" style="background:${c.dot};"></span>
-                    ${escapeHTML(c.code)}
-                  </span>
-                  <span class="font-bold text-xs sm:text-sm text-[#14213D]">${escapeHTML(c.name)}</span>
-                </div>
-              </td>
-              <td class="px-4 py-3 border-r border-cardBorder text-xs sm:text-sm font-semibold text-[#14213D] align-middle">
-                ${escapeHTML(roomText)}
-              </td>
-              <td class="px-4 py-3 text-xs sm:text-sm text-muted align-middle">
-                ${escapeHTML(channelText)}
-              </td>
-            </tr>
-          `;
-        }).join('');
-
-        courseInfoTableEl.innerHTML = `
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr class="bg-pageBg/80 border-b border-cardBorder text-xs font-bold text-[#14213D]">
-                  <th class="px-4 py-2.5 border-r border-cardBorder w-[52%]">ข้อมูลวิชา</th>
-                  <th class="px-4 py-2.5 border-r border-cardBorder w-[24%]">ห้องเรียน</th>
-                  <th class="px-4 py-2.5 w-[24%]">ช่องทางส่งงาน</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-cardBorder">
-                ${rowsHTML}
-              </tbody>
-            </table>
-          </div>
-        `;
-      }
-
-      // 4. Manage Courses View
       const countText = uniqueCourses.length === courses.length
         ? `${uniqueCourses.length} รายวิชา`
         : `${uniqueCourses.length} รายวิชา (${courses.length} คาบเรียน)`;
@@ -2522,10 +2839,10 @@
 
       const manageListEl = document.getElementById('manage-courses-list');
       if (courses.length === 0) {
-        manageListEl.innerHTML = `<div class="p-8 text-center text-sm text-muted">ไม่มีรายวิชาในรายการ สามารถเพิ่มทีละวิชาหรือวางตารางเรียนด้านบนได้เลย</div>`;
+        manageListEl.innerHTML = `<div class="p-8 text-center text-sm text-muted">ยังไม่มีรายวิชาในตาราง สามารถเพิ่มวิชาเองหรือนำเข้าจากรหัสแชร์ด้านบนได้เลย</div>`;
       } else {
         manageListEl.innerHTML = courses.map(c => `
-          <div class="px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/60">
+          <div class="px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-pageBg/50">
             <div class="space-y-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold" style="background:${c.bg}; color:${c.fg};">
@@ -2539,10 +2856,10 @@
               </div>
             </div>
             <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
-              <button onclick="startEditCourse('${escapeHTML(c.id)}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition">
+              <button onclick="startEditCourse('${escapeHTML(c.id)}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 dark:text-blue-400 text-xs font-bold transition">
                 ✎ แก้ไข
               </button>
-              <button onclick="deleteCourse('${escapeHTML(c.id)}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
+              <button onclick="deleteCourse('${escapeHTML(c.id)}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] dark:text-rose-400 text-xs font-bold transition">
                 ลบ / ถอน
               </button>
             </div>
@@ -2550,7 +2867,7 @@
         `).join('');
       }
 
-      // 5. History View
+      // 3. History Drawer inside Tasks View
       const histEmpty = document.getElementById('history-empty-state');
       const histList = document.getElementById('list-history');
       const btnClearHist = document.getElementById('btn-clear-history');
@@ -2564,30 +2881,32 @@
         btnClearHist.classList.remove('hidden');
         histList.innerHTML = historyItems.map(h => {
           const course = getCourseByName(h.subject);
+          const catObj = getCategoryObj(h.category);
           const isLate = Boolean(h.due) && h.doneDate > h.due;
           const dueNote = h.due ? `กำหนด ${formatThaiShort(h.due)}${isLate ? ' · ช้า' : ''}` : 'ไม่กำหนดวัน';
           const statusBadge = isLate
-            ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-[#FBE4E8] text-[#8B1230]">ส่งเมื่อ ${toDMY(parseYMD(h.doneDate))} (${dueNote})</span>`
-            : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-[#DCFCE7] text-[#166534]">✓ ส่งเมื่อ ${toDMY(parseYMD(h.doneDate))} (${dueNote})</span>`;
+            ? `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FBE4E8] text-[#8B1230]">ส่งเมื่อ ${toDMY(parseYMD(h.doneDate))} (${dueNote})</span>`
+            : `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#DCFCE7] text-[#166534]">✓ ส่งเมื่อ ${toDMY(parseYMD(h.doneDate))} (${dueNote})</span>`;
 
           return `
-            <div class="bg-white rounded-[14px] border border-cardBorder p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div class="space-y-1.5 min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold" style="background:${course.bg}; color:${course.fg};">
-                    <span class="w-2 h-2 rounded-full" style="background:${course.dot};"></span>
+            <div class="bg-white rounded-xl border border-cardBorder p-3.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="space-y-1 min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${catObj.badgeClass}">${catObj.icon} ${catObj.label}</span>
+                  <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold" style="background:${course.bg}; color:${course.fg};">
+                    <span class="w-1.5 h-1.5 rounded-full" style="background:${course.dot};"></span>
                     ${escapeHTML(course.code)}
                   </span>
                   ${statusBadge}
                 </div>
-                <h4 class="text-sm sm:text-base font-bold text-[#14213D]">${escapeHTML(h.subject)}</h4>
-                <p class="text-xs sm:text-sm text-muted whitespace-pre-line-wrap">${escapeHTML(h.task)}</p>
+                <h4 class="text-sm font-bold text-[#14213D]">${escapeHTML(h.subject)}</h4>
+                <p class="text-xs text-muted whitespace-pre-line-wrap">${escapeHTML(h.task)}</p>
               </div>
               <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
-                <button onclick="restoreHistoryItem('${escapeHTML(h.id)}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 text-xs font-bold transition">
+                <button onclick="restoreHistoryItem('${escapeHTML(h.id)}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-white hover:bg-blue-50 text-blue-700 dark:text-blue-400 text-xs font-bold transition">
                   ↩ กู้คืน
                 </button>
-                <button onclick="deleteHistoryItem('${escapeHTML(h.id)}')" class="px-3.5 py-2 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
+                <button onclick="deleteHistoryItem('${escapeHTML(h.id)}')" class="px-3 py-1.5 rounded-xl border border-cardBorder bg-pageBg hover:bg-[#FBE4E8] text-[#8B1230] dark:text-rose-400 text-xs font-bold transition">
                   ลบ
                 </button>
               </div>
@@ -2598,7 +2917,7 @@
     }
 
     // =========================================================================
-    // 9. Install Modal & PC homework.txt Sync
+    // 9. Install Modal & homework.txt Sync
     // =========================================================================
     function openInstallModal() { document.getElementById('install-modal').classList.remove('hidden'); }
     function closeInstallModal() { document.getElementById('install-modal').classList.add('hidden'); }
@@ -2613,12 +2932,6 @@
       });
       return lines.join('\n');
     }
-
-    function openTransferModal() {
-      document.getElementById('txt-sync-area').value = generateHomeworkTxtString();
-      document.getElementById('transfer-modal').classList.remove('hidden');
-    }
-    function closeTransferModal() { document.getElementById('transfer-modal').classList.add('hidden'); }
 
     function downloadHomeworkTxt() {
       const content = generateHomeworkTxtString();
@@ -2676,6 +2989,7 @@
           due: dueVal,
           subject: subj,
           task: taskRaw,
+          category: 'homework',
           readyToSubmit: isReady
         });
       }
@@ -2693,7 +3007,6 @@
       saveData();
       syncSubjectDropdown();
       renderAll();
-      closeTransferModal();
       showToast(`นำเข้าข้อมูลสำเร็จ ${imported.length} รายการ`);
     }
 
@@ -2710,7 +3023,7 @@
     }
 
     // =========================================================================
-    // 10. Real Mobile Service Worker Notifications & Scheduled/Midnight Checks
+    // 10. Notifications & Scheduled/Midnight Checks
     // =========================================================================
     function loadNotifPrefs() {
       try {
@@ -2738,35 +3051,69 @@
       showToast('บันทึกการตั้งค่าแจ้งเตือนแล้ว');
     }
 
+    function handleMasterNotifSwitch(checked) {
+      notifPrefs.autoPopup = Boolean(checked);
+      safeSetStorage(STORAGE_NOTIF_PREF, JSON.stringify(notifPrefs));
+      markLocalDataChanged();
+      if (window.cloudSync) window.cloudSync.push();
+      if (checked && ('Notification' in window) && Notification.permission === 'default') {
+        requestSystemNotifPermission();
+      } else {
+        updateNotifStatusUI();
+        showToast(checked
+          ? 'เปิดการแจ้งเตือนแล้ว (แจ้งเตือนเฉพาะตอนเปิดหน้าเว็บนี้ค้างไว้เท่านั้น)'
+          : 'ปิดการแจ้งเตือนอัตโนมัติแล้ว');
+      }
+    }
+
+    function saveSettingsNotifSound(checked) {
+      notifPrefs.sound = Boolean(checked);
+      safeSetStorage(STORAGE_NOTIF_PREF, JSON.stringify(notifPrefs));
+      markLocalDataChanged();
+      if (window.cloudSync) window.cloudSync.push();
+      updateNotifStatusUI();
+      showToast(checked ? 'เปิดเสียงกระดิ่งแจ้งเตือนแล้ว' : 'ปิดเสียงกระดิ่งแจ้งเตือนแล้ว');
+    }
+
     function updateNotifStatusUI() {
       const headerBtn = document.getElementById('btn-header-notif');
       const permBadge = document.getElementById('notif-perm-badge');
       const reqBtn = document.getElementById('btn-req-notif-perm');
+      const settingsEnableChk = document.getElementById('chk-settings-notif-enable');
+      const settingsSoundChk = document.getElementById('chk-settings-notif-sound');
+
+      if (settingsEnableChk) settingsEnableChk.checked = Boolean(notifPrefs.autoPopup);
+      if (settingsSoundChk) settingsSoundChk.checked = Boolean(notifPrefs.sound);
 
       const hasNotifAPI = ('Notification' in window);
       const perm = hasNotifAPI ? Notification.permission : 'unsupported';
 
+      if (!notifPrefs.autoPopup) {
+        headerBtn.innerHTML = '<span>🔕 ปิดแจ้งเตือนอยู่</span>';
+        headerBtn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/80 hover:bg-white text-muted border border-black/10 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95';
+      } else if (perm === 'granted') {
+        headerBtn.innerHTML = '<span>🔔 แจ้งเตือนเปิดอยู่</span>';
+        headerBtn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white text-teal-800 border border-teal-600/30 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95';
+      } else {
+        headerBtn.innerHTML = '<span>🔔 ตั้งค่าแจ้งเตือน</span>';
+        headerBtn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/85 hover:bg-white text-[#14213D] border border-black/10 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95';
+      }
+
       if (perm === 'granted') {
-        headerBtn.innerHTML = '<span>🔔 แจ้งเตือนทำงาน</span>';
-        headerBtn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/85 hover:bg-white text-teal-800 border border-teal-600/30 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95';
         if (permBadge) {
           permBadge.textContent = 'อนุญาตแล้ว ✓';
           permBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#DCFCE7] text-[#166534]';
         }
         if (reqBtn) {
-          reqBtn.textContent = '✓ เปิดใช้งานการแจ้งเตือนบนอุปกรณ์เรียบร้อย';
+          reqBtn.textContent = '✓ เปิดสิทธิ์แจ้งเตือนบนอุปกรณ์เรียบร้อย';
           reqBtn.className = 'w-full py-2 rounded-xl bg-slate-200 text-[#14213D] text-xs sm:text-sm font-bold';
         }
       } else if (perm === 'denied') {
-        headerBtn.innerHTML = '<span>🔕 แจ้งเตือนถูกปิด</span>';
-        headerBtn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/85 hover:bg-white text-[#8B1230] border border-[#8B1230]/30 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95';
         if (permBadge) {
           permBadge.textContent = 'ถูกบล็อกในเบราว์เซอร์';
           permBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FBE4E8] text-[#8B1230]';
         }
       } else {
-        headerBtn.innerHTML = '<span>🔔 เปิดแจ้งเตือน</span>';
-        headerBtn.className = 'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/80 hover:bg-white text-[#14213D] border border-black/10 text-xs sm:text-sm font-bold shadow-2xs transition active:scale-95';
         if (permBadge) {
           permBadge.textContent = hasNotifAPI ? 'ยังไม่เปิดสิทธิ์ OS' : 'แจ้งเตือนภายในแอป';
           permBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FEF3C7] text-[#92400E]';
@@ -2831,10 +3178,10 @@
           playNotificationChime(false);
           sendOSNotification(
             'Homework List — เปิดแจ้งเตือนสำเร็จ!',
-            'ระบบเชื่อมต่อ Service Worker เรียบร้อย พร้อมแจ้งเตือนกำหนดส่งงานบนมือถือของคุณ',
+            'แจ้งเตือนเฉพาะตอนเปิดหน้าเว็บนี้ค้างไว้เท่านั้น',
             'hw-test-grant'
           );
-          showToast('เปิดสิทธิ์การแจ้งเตือนบนมือถือเรียบร้อยแล้ว');
+          showToast('เปิดสิทธิ์การแจ้งเตือนบนอุปกรณ์เรียบร้อยแล้ว');
         } else {
           showToast('ไม่ได้รับสิทธิ์แจ้งเตือนระดับอุปกรณ์ (ยังแจ้งเตือนในแอปได้ตามปกติ)');
         }
@@ -2888,11 +3235,11 @@
         badge.innerHTML = '🕛 ผ่านเที่ยงคืน (00:00 น.) · เข้าสู่วันใหม่แล้ว';
         title.textContent = `อัปเดตกำหนดส่งงาน (${formatThaiFull(getTodayDate())})`;
         subtitle.textContent = dueList.length > 0
-          ? 'ตรวจสอบรายการที่ถึงกำหนดส่งวันนี้และพรุ่งนี้ด้านล่าง'
+          ? 'ตรวจสอบรายการที่เลยกำหนด ส่งวันนี้ และส่งพรุ่งนี้ด้านล่าง'
           : 'เข้าสู่วันใหม่เรียบร้อย วันนี้และพรุ่งนี้ยังไม่มีงานที่ครบกำหนดส่ง';
       } else {
         banner.className = 'bg-[#8B1230] text-white px-5 py-4 flex items-start justify-between gap-3';
-        badge.innerHTML = '🔥 แจ้งเตือนกำหนดส่งงาน (วันนี้ / พรุ่งนี้)';
+        badge.innerHTML = '🔥 แจ้งเตือนกำหนดส่งงาน (เลยกำหนด / วันนี้ / พรุ่งนี้)';
         title.textContent = dueList.length > 0
           ? `มีงานต้องส่ง ${dueList.length} รายการ!`
           : 'ไม่มีงานค้างส่งสำหรับวันนี้และพรุ่งนี้';
@@ -2925,7 +3272,7 @@
           else { statusLabel = 'ส่งพรุ่งนี้'; statusClass = 'bg-[#FEF3C7] text-[#92400E]'; }
 
           const isReady = Boolean(it.readyToSubmit);
-          const readyPill = isReady ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FEF3C7] text-[#92400E] border border-amber-300">📦 รอส่ง (ทำเสร็จแล้ว)</span>` : '';
+          const readyPill = isReady ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#FEF3C7] text-[#92400E] border border-amber-300">📦 รอส่ง</span>` : '';
           const readyBtn = isReady
             ? `<button onclick="toggleReadyToSubmit('${escapeHTML(it.id)}')" class="px-2.5 py-2 rounded-xl bg-[#FEF3C7] border border-amber-400 text-[#92400E] text-xs font-bold transition active:scale-95">✓ รอส่ง</button>`
             : `<button onclick="toggleReadyToSubmit('${escapeHTML(it.id)}')" class="px-2.5 py-2 rounded-xl bg-[#FFFBEB] border border-amber-200 hover:bg-[#FEF3C7] text-[#92400E] text-xs font-bold transition active:scale-95">📦 รอส่ง</button>`;
@@ -3020,7 +3367,7 @@
         return;
       }
 
-      if (currentUser) {
+      if (currentUser && notifPrefs.autoPopup) {
         const hhmm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         const schedKey = `${currentYMD}_${hhmm}`;
         if ((hhmm === currentUser.morningTime || hhmm === currentUser.nightTime) && lastScheduledNotifKey !== schedKey) {
@@ -3032,12 +3379,12 @@
     }
 
     // =========================================================================
-    // 10.5 Manual Device Transfer (Full Sync Code & JSON Backup / Restore)
+    // 10.5 Backup & Offline Sync Code Helpers
     // =========================================================================
     function buildFullBackupPayload() {
       return {
         app: 'HomeworkListPWA',
-        version: 3,
+        version: 4,
         exportedAt: new Date().toISOString(),
         profile: currentUser || getDefaultProfile(),
         courses: courses,
@@ -3053,6 +3400,9 @@
         if (!currentUser) currentUser = getDefaultProfile();
         if (srcProfile.themeId && APP_THEMES.some(t => t.id === srcProfile.themeId)) {
           currentUser.themeId = srcProfile.themeId;
+        }
+        if (typeof srcProfile.darkMode === 'boolean') {
+          currentUser.darkMode = srcProfile.darkMode;
         }
         currentUser.morningTime = srcProfile.morningTime || currentUser.morningTime;
         currentUser.nightTime = srcProfile.nightTime || currentUser.nightTime;
@@ -3070,6 +3420,7 @@
           sound: parsed.notifPrefs.sound !== false
         };
         safeSetStorage(STORAGE_NOTIF_PREF, JSON.stringify(notifPrefs));
+        updateNotifStatusUI();
       }
 
       syncProfileUI();
@@ -3224,8 +3575,28 @@
     }
 
     // =========================================================================
-    // 11. Firebase Realtime Database Cloud Sync (Compat SDK)
+    // 11. Firebase Realtime Database Cloud Sync + Error Modal with Retry
     // =========================================================================
+    function openCloudErrorModal(title, desc) {
+      const modal = document.getElementById('cloud-error-modal');
+      if (!modal) return;
+      document.getElementById('cloud-error-modal-title').textContent = title || 'เชื่อมต่อคลาวด์ไม่สำเร็จ';
+      document.getElementById('cloud-error-modal-desc').textContent = desc || 'ไม่สามารถเชื่อมต่อฐานข้อมูลคลาวด์ได้ กรุณากดปุ่มลองใหม่';
+      modal.classList.remove('hidden');
+    }
+
+    function closeCloudErrorModal() {
+      const modal = document.getElementById('cloud-error-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function retryCloudConnection() {
+      closeCloudErrorModal();
+      if (window.cloudSync) {
+        window.cloudSync.reconnect();
+      }
+    }
+
     (function setupFirebaseCloudSync() {
       const firebaseConfig = {
         apiKey: "AIzaSyAZWRzAYC6urDjUkuM2nEdoLlOInZFGzpQ",
@@ -3283,18 +3654,19 @@
         if (state === "synced") {
           clearTimeout(connectTimeoutTimer);
           showCloudErrorHint("");
+          closeCloudErrorModal();
         }
 
         if (headerPill) {
           if (state === "synced") {
             headerPill.innerHTML = `<span>☁️</span><span>ซิงก์แล้ว (${escapeHTML(syncId)})</span>`;
-            headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-teal-800 text-xs font-bold transition shadow-2xs border border-teal-600/30";
+            headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/85 hover:bg-white text-teal-800 text-xs font-bold transition shadow-2xs border border-teal-600/30";
           } else if (state === "syncing") {
             headerPill.innerHTML = `<span>⏳</span><span>กำลังซิงก์...</span>`;
-            headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 text-[#92400E] text-xs font-bold transition shadow-2xs border border-amber-400/40";
+            headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 text-[#92400E] text-xs font-bold transition shadow-2xs border border-amber-400/40";
           } else {
-            headerPill.innerHTML = `<span>⚠️</span><span>${escapeHTML(label || "ออฟไลน์")}</span>`;
-            headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/75 text-[#8B1230] text-xs font-bold transition shadow-2xs border border-red-400/40";
+            headerPill.innerHTML = `<span>⚠️</span><span>${escapeHTML(label || "เชื่อมต่อไม่สำเร็จ")}</span>`;
+            headerPill.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/85 text-[#8B1230] text-xs font-bold transition shadow-2xs border border-red-400/40";
           }
         }
 
@@ -3315,8 +3687,10 @@
       function ensureFirebaseReady() {
         if (db) return true;
         if (typeof window.firebase === "undefined") {
+          const msg = "ไม่สามารถโหลดสคริปต์ Firebase จากอินเทอร์เน็ตได้ กรุณาตรวจสอบสัญญาณอินเทอร์เน็ตแล้วกดปุ่มลองใหม่";
           updateCloudBadge("error", "โหลด SDK ไม่สำเร็จ");
-          showCloudErrorHint("ไม่สามารถโหลดสคริปต์ Firebase จากอินเทอร์เน็ตได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วกดปุ่มรีเฟรชการเชื่อมต่อ");
+          showCloudErrorHint(msg);
+          openCloudErrorModal("เชื่อมต่อคลาวด์ไม่สำเร็จ", msg);
           return false;
         }
         try {
@@ -3336,8 +3710,10 @@
           return true;
         } catch (err) {
           console.error("Firebase init exception:", err);
+          const msg = "เกิดข้อผิดพลาดในการเริ่มต้นระบบซิงก์: " + (err.message || err);
           updateCloudBadge("error", "ตั้งค่าผิดพลาด");
-          showCloudErrorHint("เกิดข้อผิดพลาดในการเริ่มต้น Firebase: " + (err.message || err));
+          showCloudErrorHint(msg);
+          openCloudErrorModal("เชื่อมต่อคลาวด์ไม่สำเร็จ", msg);
           return false;
         }
       }
@@ -3368,10 +3744,12 @@
           console.error("Firebase push error:", err);
           const isPermDenied = String(err.message || "").toLowerCase().includes("permission");
           if (!isPermDenied) hasPendingOfflinePush = true;
+          const msg = isPermDenied
+            ? "Firebase ปฏิเสธสิทธิ์การเขียนข้อมูล (Permission Denied) — กรุณาตรวจสอบใน Firebase Console > Realtime Database > Rules"
+            : "ไม่สามารถส่งข้อมูลขึ้นคลาวด์ได้: " + (err.message || "ตรวจสอบอินเทอร์เน็ต");
           updateCloudBadge("error", isPermDenied ? "ติดสิทธิ์ Rules" : "ซิงก์ไม่สำเร็จ");
-          showCloudErrorHint(isPermDenied
-            ? "Firebase ปฏิเสธสิทธิ์การเขียนข้อมูล (Permission Denied) — กรุณาตรวจสอบใน Firebase Console > Realtime Database > Rules ว่าตั้งค่า .read และ .write ถูกต้อง"
-            : "ไม่สามารถส่งข้อมูลขึ้นคลาวด์ได้: " + (err.message || "ตรวจสอบอินเทอร์เน็ต"));
+          showCloudErrorHint(msg);
+          openCloudErrorModal("ซิงก์ข้อมูลขึ้นคลาวด์ไม่สำเร็จ", msg);
         }
       }
 
@@ -3400,8 +3778,10 @@
           }
         }, (err) => {
           console.error("Firebase listener error:", err);
+          const msg = "ไม่สามารถรับข้อมูลเรียลไทม์ได้: " + (err.message || "Permission denied");
           updateCloudBadge("error", "ติดสิทธิ์ Rules");
-          showCloudErrorHint("ไม่สามารถรับข้อมูลเรียลไทม์ได้: " + (err.message || "Permission denied"));
+          showCloudErrorHint(msg);
+          openCloudErrorModal("เชื่อมต่อคลาวด์ไม่สำเร็จ", msg);
         });
       }
 
@@ -3409,18 +3789,29 @@
         renderSyncIdBox();
         if (!ensureFirebaseReady()) return;
 
+        if (!navigator.onLine) {
+          const msg = "อุปกรณ์ของคุณไม่ได้เชื่อมต่ออินเทอร์เน็ต ระบบจะเก็บข้อมูลไว้ในเครื่องชั่วคราว";
+          updateCloudBadge("error", "ออฟไลน์");
+          showCloudErrorHint(msg);
+          openCloudErrorModal("ไม่มีการเชื่อมต่ออินเทอร์เน็ต", msg);
+          return;
+        }
+
         updateCloudBadge("syncing");
         clearTimeout(connectTimeoutTimer);
         connectTimeoutTimer = setTimeout(() => {
           const badge = document.getElementById("profile-cloud-badge");
           if (badge && badge.textContent.includes("กำลัง")) {
+            const msg = "เชื่อมต่อฐานข้อมูลคลาวด์ใช้เวลานานเกินกำหนด กรุณาตรวจสอบอินเทอร์เน็ตแล้วกดปุ่มลองใหม่";
             updateCloudBadge("error", "หมดเวลาเชื่อมต่อ");
-            showCloudErrorHint("เชื่อมต่อ Firebase ใช้เวลานานเกินไป — กรุณาตรวจสอบอินเทอร์เน็ต หรือตรวจสอบ URL ของ Realtime Database ใน Firebase Console");
+            showCloudErrorHint(msg);
+            openCloudErrorModal("เชื่อมต่อคลาวด์ไม่สำเร็จ (หมดเวลา)", msg);
           }
-        }, 12000);
+        }, 10000);
 
         try {
           const snap = await db.ref(`users/${syncId}`).once("value");
+          clearTimeout(connectTimeoutTimer);
           const localChangeTs = Number(localStorage.getItem(LS_LOCAL_CHANGE_TS) || 0);
           const lastSyncedTs = Number(localStorage.getItem(LS_LAST_SYNCED_TS) || 0);
           const hasUnsyncedLocalEdits = localChangeTs > lastSyncedTs && (courses.length > 0 || activeItems.length > 0 || historyItems.length > 0);
@@ -3445,12 +3836,15 @@
           }
           attachRealtimeListener();
         } catch (err) {
+          clearTimeout(connectTimeoutTimer);
           console.error("Firebase init sync error:", err);
           const isPermDenied = String(err.message || "").toLowerCase().includes("permission");
-          updateCloudBadge("error", isPermDenied ? "ติดสิทธิ์ Rules" : "ออฟไลน์");
-          showCloudErrorHint(isPermDenied
+          const msg = isPermDenied
             ? "Firebase ปฏิเสธสิทธิ์การเข้าถึง (Permission Denied) — กรุณาตรวจสอบ Rules ของ Realtime Database"
-            : "เชื่อมต่อคลาวด์ไม่สำเร็จ: " + (err.message || "ตรวจสอบอินเทอร์เน็ต"));
+            : "เชื่อมต่อคลาวด์ไม่สำเร็จ: " + (err.message || "ตรวจสอบอินเทอร์เน็ต");
+          updateCloudBadge("error", isPermDenied ? "ติดสิทธิ์ Rules" : "เชื่อมต่อไม่สำเร็จ");
+          showCloudErrorHint(msg);
+          openCloudErrorModal("เชื่อมต่อคลาวด์ไม่สำเร็จ", msg);
         }
       }
 
@@ -3496,9 +3890,10 @@
           attachRealtimeListener();
         } catch (err) {
           console.error("Switch sync ID error:", err);
+          const msg = "เปลี่ยนรหัสซิงก์ไม่สำเร็จ: " + (err.message || "ตรวจสอบอินเทอร์เน็ตหรือ Rules");
           updateCloudBadge("error", "เชื่อมต่อไม่สำเร็จ");
-          showCloudErrorHint("เปลี่ยนรหัสซิงก์ไม่สำเร็จ: " + (err.message || "ตรวจสอบอินเทอร์เน็ตหรือ Rules"));
-          showToast("เชื่อมต่อไม่สำเร็จ กรุณาตรวจสอบข้อความแจ้งเตือนด้านล่าง");
+          showCloudErrorHint(msg);
+          openCloudErrorModal("เชื่อมต่อรหัสซิงก์ไม่สำเร็จ", msg);
         }
       }
 
@@ -3521,7 +3916,7 @@
     })();
 
     // =========================================================================
-    // 12. Boot Application Directly
+    // 12. Boot Application
     // =========================================================================
     function bootApp() {
       try {

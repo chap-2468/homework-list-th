@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homework-list-cache-v9';
+const CACHE_NAME = 'homework-list-cache-v10';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -73,7 +73,6 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Handle Push Events from Server (FCM / OneSignal / Web Push)
 self.addEventListener('push', (event) => {
   let payload = {
     title: 'Homework List — แจ้งเตือนกำหนดส่งงาน',
@@ -103,7 +102,6 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Handle Messages from Main App (Client -> SW showNotification for Android & iOS PWA)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
     const { title, body, tag } = event.data;
@@ -121,7 +119,6 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Focus or Open App when Notification is tapped
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const relPath = (event.notification.data && event.notification.data.url) || './index.html';
