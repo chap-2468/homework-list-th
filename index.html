@@ -443,6 +443,38 @@
           <div id="list-pending" class="space-y-3"></div>
         </div>
 
+        <!-- Share / Import Homework Card (HW + 5 digits) -->
+        <div class="bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm sm:text-base font-bold text-[#14213D] flex items-center gap-2">
+              <span>📤</span>
+              <span>แชร์ / นำเข้าการบ้าน (รหัส HW + ตัวเลข 5 หลัก)</span>
+            </h3>
+            <span id="hw-share-eligible-count" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300 border border-teal-600/25">
+              พร้อมส่งออก 0 รายการ
+            </span>
+          </div>
+          <p class="text-xs text-muted leading-relaxed">
+            สร้างรหัสแชร์การบ้านเฉพาะรายการที่ <strong>ยังไม่ถึงกำหนดส่ง</strong> (รวมทั้งงานที่ส่งแล้วและยังไม่ส่ง) หรือวางรหัส <code class="px-1.5 py-0.5 rounded bg-pageBg font-mono font-bold text-[#14213D]">HWxxxxx</code> จากเพื่อนเพื่อนำเข้าทันที
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end pt-1">
+            <div class="md:col-span-6">
+              <button type="button" id="btn-copy-hw-preset" onclick="copyHomeworkPresetCode()" class="w-full h-10 px-4 rounded-xl border border-teal-600/40 bg-teal-50/80 dark:bg-teal-950/40 hover:bg-teal-100 text-teal-800 dark:text-teal-300 text-xs sm:text-sm font-bold transition active:scale-95 flex items-center justify-center gap-1.5">
+                <span>📤 สร้างและคัดลอกรหัสการบ้าน (HW + 5 หลัก)</span>
+              </button>
+            </div>
+            <div class="md:col-span-6">
+              <div class="flex gap-2">
+                <input type="text" id="hw-preset-code-input" maxlength="12" onkeydown="if(event.key==='Enter'){event.preventDefault();importHomeworkPresetCode();}" placeholder="วางรหัสการบ้าน เช่น HW12345" class="flex-1 min-w-0 h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-xs font-mono text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
+                <button type="button" id="btn-import-hw-preset" onclick="importHomeworkPresetCode()" class="theme-btn-primary shrink-0 px-4 h-10 rounded-xl text-xs sm:text-sm font-bold border border-black/10 active:scale-95">
+                  นำเข้า
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Collapsible Completed History Drawer inside Tasks Tab -->
         <div class="bg-white rounded-[14px] border border-cardBorder overflow-hidden shadow-xs">
           <button type="button" onclick="toggleHistoryDrawer()" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-pageBg/60 transition">
@@ -631,18 +663,18 @@
               </p>
 
               <div class="space-y-2 pt-1">
-                <label class="block text-xs font-bold text-muted">วางรหัสชุดวิชาจากเพื่อน (HW2569:...):</label>
+                <label class="block text-xs font-bold text-muted">วางรหัสชุดวิชาจากเพื่อน (เช่น cld12345):</label>
                 <div class="flex gap-2">
-                  <input type="text" id="preset-code-input" placeholder="วางรหัสชุดวิชาที่นี่..." class="flex-1 min-w-0 h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-xs text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
-                  <button type="button" onclick="importCoursePresetCode()" class="theme-btn-primary shrink-0 px-4 h-10 rounded-xl text-xs sm:text-sm font-bold border border-black/10 active:scale-95">
+                  <input type="text" id="preset-code-input" maxlength="20" onkeydown="if(event.key==='Enter'){event.preventDefault();importCoursePresetCode();}" placeholder="เช่น cld12345" class="flex-1 min-w-0 h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-xs font-mono text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
+                  <button type="button" id="btn-import-preset" onclick="importCoursePresetCode()" class="theme-btn-primary shrink-0 px-4 h-10 rounded-xl text-xs sm:text-sm font-bold border border-black/10 active:scale-95">
                     นำเข้า
                   </button>
                 </div>
               </div>
 
               <div class="pt-2 border-t border-cardBorder">
-                <button type="button" onclick="copyCoursePresetCode()" class="w-full py-2.5 px-4 rounded-xl border border-teal-600/40 bg-teal-50/70 dark:bg-teal-950/40 hover:bg-teal-100 text-teal-800 dark:text-teal-300 text-xs sm:text-sm font-bold transition active:scale-95">
-                  📤 คัดลอกรหัสชุดวิชาของฉันส่งให้เพื่อน
+                <button type="button" id="btn-copy-preset" onclick="copyCoursePresetCode()" class="w-full py-2.5 px-4 rounded-xl border border-teal-600/40 bg-teal-50/70 dark:bg-teal-950/40 hover:bg-teal-100 text-teal-800 dark:text-teal-300 text-xs sm:text-sm font-bold transition active:scale-95">
+                  📤 สร้างและคัดลอกรหัสชุดวิชา (cld + ตัวเลข 5 หลัก)
                 </button>
               </div>
             </div>
@@ -1018,6 +1050,31 @@
       <div class="flex items-center justify-end gap-2 pt-2">
         <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] text-xs sm:text-sm font-bold">ยกเลิก</button>
         <button id="confirm-modal-ok" class="px-4 py-2 rounded-xl bg-[#8B1230] text-white text-xs sm:text-sm font-bold">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Homework Preset Import Modal (HW + 5 digits) -->
+  <div id="hw-import-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-cardBorder max-w-md w-full p-5 shadow-xl space-y-4 max-h-[88vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-cardBorder pb-2.5">
+        <h3 id="hw-import-modal-title" class="text-base font-bold text-[#14213D]">นำเข้าการบ้านจากรหัสแชร์</h3>
+        <button type="button" onclick="closeHwImportModal()" class="w-8 h-8 rounded-lg bg-pageBg text-muted hover:text-[#14213D] font-bold">✕</button>
+      </div>
+      <p id="hw-import-modal-desc" class="text-xs sm:text-sm text-muted leading-relaxed"></p>
+      <div id="hw-import-preview-list" class="space-y-2 overflow-y-auto max-h-56 pr-1"></div>
+      <div class="flex flex-col gap-2 pt-2 border-t border-cardBorder">
+        <button type="button" id="btn-hw-import-merge" onclick="confirmHwImportMode('merge')" class="w-full py-2.5 px-4 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold transition active:scale-95 disabled:opacity-45 disabled:pointer-events-none">
+          + เพิ่มเฉพาะงานใหม่เข้าลิสต์
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" id="btn-hw-import-replace" onclick="confirmHwImportMode('replace')" class="theme-btn-primary flex-1 py-2 px-3 rounded-xl text-xs font-bold border border-black/10 transition active:scale-95">
+            แทนที่งานค้างทั้งหมด
+          </button>
+          <button type="button" onclick="closeHwImportModal()" class="px-4 py-2 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] text-xs font-bold">
+            ยกเลิก
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -2504,23 +2561,164 @@
       return new TextDecoder().decode(bytes);
     }
 
-    function copyCoursePresetCode() {
+    function generateRandomDigits(len) {
+      let digits = '';
+      for (let i = 0; i < len; i++) {
+        digits += Math.floor(Math.random() * 10);
+      }
+      return digits;
+    }
+
+    function generateShortCourseCode() {
+      return 'cld' + generateRandomDigits(5);
+    }
+
+    function generateShortHomeworkCode() {
+      return 'HW' + generateRandomDigits(5);
+    }
+
+    async function copyCoursePresetCode() {
       if (courses.length === 0) {
         showToast('ยังไม่มีรายวิชาสำหรับสร้างรหัสแชร์');
         return;
       }
-      const uniqueCount = getUniqueCoursesByName().length;
-      const compact = courses.map(c => [c.code, c.name, c.dow, c.time, c.room || 'ห้อง N/A', c.info, c.bg, c.fg, c.dot]);
-      const codeStr = 'HW2569:' + encodeUnicodeBase64(JSON.stringify(compact));
-      copyTextToClipboardUniversal(codeStr, `คัดลอกรหัสชุดวิชา (${uniqueCount} รายวิชา) แล้ว! ส่งเข้า LINE ให้เพื่อนได้เลย`);
+      if (!navigator.onLine) {
+        showToast('กรุณาเชื่อมต่ออินเทอร์เน็ตก่อนสร้างรหัสชุดวิชา');
+        return;
+      }
+      if (!window.cloudSync || !window.cloudSync.savePreset) {
+        showToast('ระบบคลาวด์ยังไม่พร้อม กรุณารอสักครู่แล้วลองใหม่');
+        return;
+      }
+
+      const btn = document.getElementById('btn-copy-preset');
+      const oldText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ กำลังสร้างรหัสชุดวิชา...';
+      }
+
+      try {
+        const uniqueCount = getUniqueCoursesByName().length;
+        const cleanCourses = JSON.parse(JSON.stringify(courses));
+
+        const snapshotHash = JSON.stringify(cleanCourses.map(c => [c.code, c.name, c.dow, c.time, c.room, c.info, c.bg, c.fg, c.dot]));
+        let shortCode = '';
+        try {
+          const cached = JSON.parse(localStorage.getItem('hw_last_course_preset_cache') || 'null');
+          if (cached && cached.hash === snapshotHash && /^cld\d{5}$/.test(cached.code)) {
+            shortCode = cached.code;
+          }
+        } catch (e) {}
+
+        if (!shortCode) {
+          for (let attempt = 0; attempt < 8; attempt++) {
+            const candidate = generateShortCourseCode();
+            const exists = await window.cloudSync.checkPresetExists(candidate);
+            if (!exists) {
+              shortCode = candidate;
+              break;
+            }
+          }
+          if (!shortCode) shortCode = generateShortCourseCode();
+        }
+
+        await window.cloudSync.savePreset(shortCode, cleanCourses);
+        try {
+          localStorage.setItem('hw_last_course_preset_cache', JSON.stringify({ hash: snapshotHash, code: shortCode }));
+        } catch (e) {}
+
+        copyTextToClipboardUniversal(
+          shortCode,
+          `คัดลอกรหัสชุดวิชา "${shortCode}" (${uniqueCount} รายวิชา) แล้ว! ส่งให้เพื่อนได้เลย`
+        );
+      } catch (err) {
+        console.error('Save course preset error:', err);
+        showToast('สร้างรหัสชุดวิชาไม่สำเร็จ: ' + (err.message || 'ตรวจสอบอินเทอร์เน็ตหรือ Firebase Rules'));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = oldText;
+        }
+      }
     }
 
-    function importCoursePresetCode() {
-      const raw = document.getElementById('preset-code-input').value.trim();
+    async function importCoursePresetCode() {
+      const inputEl = document.getElementById('preset-code-input');
+      const raw = inputEl ? inputEl.value.trim() : '';
       if (!raw) {
         showToast('กรุณาวางรหัสชุดวิชาจากเพื่อนก่อน');
         return;
       }
+
+      // 1. รหัสสั้นแบบใหม่: cld ตามด้วยตัวเลข 5 หลัก (เช่น cld12345)
+      if (/^cld\d{5}$/i.test(raw)) {
+        const shortCode = 'cld' + raw.slice(3);
+        if (!navigator.onLine) {
+          showToast('กรุณาเชื่อมต่ออินเทอร์เน็ตเพื่อดึงข้อมูลจากรหัสแชร์');
+          return;
+        }
+        if (!window.cloudSync || !window.cloudSync.loadPreset) {
+          showToast('ระบบคลาวด์ยังไม่พร้อม กรุณาลองใหม่อีกครั้ง');
+          return;
+        }
+
+        const btn = document.getElementById('btn-import-preset');
+        const oldText = btn ? btn.textContent : 'นำเข้า';
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = '⏳...';
+        }
+
+        try {
+          const remoteCourses = await window.cloudSync.loadPreset(shortCode);
+          if (!Array.isArray(remoteCourses) || remoteCourses.length === 0) {
+            showToast(`ไม่พบข้อมูลสำหรับรหัส "${shortCode}" กรุณาตรวจสอบตัวเลขอีกครั้ง`);
+            return;
+          }
+
+          const imported = remoteCourses.map((c, idx) => {
+            const fallback = PASTEL_THEMES[idx % PASTEL_THEMES.length];
+            return {
+              id: 'c-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).slice(2, 5),
+              code: String(c.code || 'COURSE'),
+              name: String(c.name || 'ไม่ระบุวิชา'),
+              dow: Number(c.dow ?? 1),
+              time: String(c.time || ''),
+              room: String(c.room || 'ห้อง N/A'),
+              info: String(c.info || ''),
+              bg: c.bg || fallback.bg,
+              fg: c.fg || fallback.fg,
+              dot: c.dot || fallback.dot
+            };
+          });
+
+          const uniqueImportedCount = new Set(imported.map(c => `${c.code}::${c.name}`)).size;
+          openConfirmModal(
+            `นำเข้าชุดวิชา (${shortCode})`,
+            `พบชุดวิชาทั้งหมด ${uniqueImportedCount} รายวิชา (${imported.length} คาบ) ต้องการแทนที่รายวิชาปัจจุบันของคุณใช่หรือไม่?`,
+            () => {
+              courses = imported;
+              if (inputEl) inputEl.value = '';
+              saveData();
+              syncSubjectDropdown();
+              renderAll();
+              showToast(`โหลดชุดวิชา ${shortCode} สำเร็จ (${uniqueImportedCount} รายวิชา)!`);
+            }
+          );
+        } catch (err) {
+          console.error('Load course preset error:', err);
+          showToast('ดึงข้อมูลชุดวิชาไม่สำเร็จ: ' + (err.message || 'ตรวจสอบอินเทอร์เน็ตหรือ Rules'));
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = oldText;
+          }
+        }
+        return;
+      }
+
+      // 2. รองรับรหัสยาวแบบเดิม (HW2569:...) เผื่อไว้ด้วย
       try {
         const clean = raw.startsWith('HW2569:') ? raw.slice(7) : raw;
         const arr = JSON.parse(decodeUnicodeBase64(clean));
@@ -2546,14 +2744,259 @@
         const uniqueImportedCount = new Set(imported.map(c => `${c.code}::${c.name}`)).size;
         openConfirmModal('นำเข้าชุดวิชาจากเพื่อน', `พบชุดวิชาทั้งหมด ${uniqueImportedCount} รายวิชา (${imported.length} คาบ) ต้องการแทนที่รายวิชาปัจจุบันของคุณใช่หรือไม่?`, () => {
           courses = imported;
-          document.getElementById('preset-code-input').value = '';
+          if (inputEl) inputEl.value = '';
           saveData();
           syncSubjectDropdown();
           renderAll();
           showToast(`โหลดชุดวิชาสำเร็จ ${uniqueImportedCount} รายวิชา!`);
         });
       } catch {
-        showToast('รหัสชุดวิชาไม่ถูกต้อง กรุณาคัดลอกมาให้ครบถ้วน');
+        showToast('รูปแบบรหัสไม่ถูกต้อง (ต้องขึ้นต้นด้วย cld ตามด้วยตัวเลข 5 หลัก เช่น cld12345)');
+      }
+    }
+
+    // =========================================================================
+    // 7.5 Homework Share / Import (HW + 5 digits, Non-Overdue Only)
+    // =========================================================================
+    let _pendingHwImportState = null;
+
+    function getExportableHomeworkItems() {
+      const combined = [];
+      const seenKeys = new Set();
+
+      const addIfNotPastDue = (item) => {
+        if (!item || !item.subject || !item.task) return;
+        const dueStr = String(item.due || '').trim();
+        if (dueStr) {
+          const diff = calcDaysDiff(dueStr);
+          if (diff === null || diff < 0) return; // เฉพาะงานที่ยังไม่ถึงกำหนดส่ง (วันนี้ อนาคต หรือไม่กำหนดวัน)
+        }
+        const subjClean = String(item.subject).trim();
+        const taskClean = String(item.task).trim();
+        const dedupKey = `${dueStr}::${subjClean}::${taskClean}`;
+        if (seenKeys.has(dedupKey)) return;
+        seenKeys.add(dedupKey);
+        combined.push({
+          due: dueStr,
+          subject: subjClean,
+          task: taskClean,
+          category: item.category || 'homework'
+        });
+      };
+
+      // รวมทั้งงานที่ยังไม่ส่ง (activeItems) และงานที่ส่งแล้ว (historyItems)
+      activeItems.forEach(addIfNotPastDue);
+      historyItems.forEach(addIfNotPastDue);
+
+      combined.sort((a, b) => {
+        if (!a.due && !b.due) return 0;
+        if (!a.due) return 1;
+        if (!b.due) return -1;
+        return a.due.localeCompare(b.due);
+      });
+
+      return combined;
+    }
+
+    async function copyHomeworkPresetCode() {
+      const exportable = getExportableHomeworkItems();
+      if (exportable.length === 0) {
+        showToast('ไม่มีรายการการบ้านที่ยังไม่ถึงกำหนดส่งสำหรับสร้างรหัสแชร์');
+        return;
+      }
+      if (!navigator.onLine) {
+        showToast('กรุณาเชื่อมต่ออินเทอร์เน็ตก่อนสร้างรหัสแชร์การบ้าน');
+        return;
+      }
+      if (!window.cloudSync || !window.cloudSync.saveHwPreset) {
+        showToast('ระบบคลาวด์ยังไม่พร้อม กรุณารอสักครู่แล้วลองใหม่');
+        return;
+      }
+
+      const btn = document.getElementById('btn-copy-hw-preset');
+      const oldText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ กำลังสร้างรหัสการบ้าน...';
+      }
+
+      try {
+        const snapshotHash = JSON.stringify(exportable.map(it => [it.due, it.subject, it.task, it.category]));
+        let shortCode = '';
+        try {
+          const cached = JSON.parse(localStorage.getItem('hw_last_hw_preset_cache') || 'null');
+          if (cached && cached.hash === snapshotHash && /^HW\d{5}$/.test(cached.code)) {
+            shortCode = cached.code;
+          }
+        } catch (e) {}
+
+        if (!shortCode) {
+          for (let attempt = 0; attempt < 8; attempt++) {
+            const candidate = generateShortHomeworkCode();
+            const exists = await window.cloudSync.checkHwPresetExists(candidate);
+            if (!exists) {
+              shortCode = candidate;
+              break;
+            }
+          }
+          if (!shortCode) shortCode = generateShortHomeworkCode();
+        }
+
+        await window.cloudSync.saveHwPreset(shortCode, exportable);
+        try {
+          localStorage.setItem('hw_last_hw_preset_cache', JSON.stringify({ hash: snapshotHash, code: shortCode }));
+        } catch (e) {}
+
+        copyTextToClipboardUniversal(
+          shortCode,
+          `คัดลอกรหัสการบ้าน "${shortCode}" (${exportable.length} รายการ) แล้ว! ส่งให้เพื่อนได้เลย`
+        );
+      } catch (err) {
+        console.error('Save homework preset error:', err);
+        showToast('สร้างรหัสการบ้านไม่สำเร็จ: ' + (err.message || 'ตรวจสอบอินเทอร์เน็ตหรือ Firebase Rules'));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = oldText;
+        }
+      }
+    }
+
+    function closeHwImportModal() {
+      const modal = document.getElementById('hw-import-modal');
+      if (modal) modal.classList.add('hidden');
+      _pendingHwImportState = null;
+    }
+
+    function confirmHwImportMode(mode) {
+      if (!_pendingHwImportState) return;
+      const { shortCode, allNormalized, newOnly } = _pendingHwImportState;
+      const inputEl = document.getElementById('hw-preset-code-input');
+
+      if (mode === 'merge') {
+        if (newOnly.length === 0) {
+          showToast(`รายการการบ้านทั้งหมดในรหัส ${shortCode} มีอยู่ในเครื่องของคุณครบแล้ว`);
+          closeHwImportModal();
+          return;
+        }
+        activeItems.push(...newOnly);
+        if (inputEl) inputEl.value = '';
+        closeHwImportModal();
+        saveData();
+        syncSubjectDropdown();
+        renderAll();
+        showToast(`เพิ่มการบ้านใหม่จากรหัส ${shortCode} จำนวน ${newOnly.length} รายการเรียบร้อย!`);
+      } else if (mode === 'replace') {
+        activeItems = allNormalized;
+        if (inputEl) inputEl.value = '';
+        closeHwImportModal();
+        saveData();
+        syncSubjectDropdown();
+        renderAll();
+        showToast(`นำเข้าการบ้านจากรหัส ${shortCode} จำนวน ${allNormalized.length} รายการเรียบร้อย!`);
+      }
+    }
+
+    async function importHomeworkPresetCode() {
+      const inputEl = document.getElementById('hw-preset-code-input');
+      const raw = inputEl ? inputEl.value.trim() : '';
+      if (!raw) {
+        showToast('กรุณาวางรหัสการบ้านจากเพื่อนก่อน');
+        return;
+      }
+
+      if (!/^hw\d{5}$/i.test(raw)) {
+        showToast('รูปแบบรหัสไม่ถูกต้อง (ต้องขึ้นต้นด้วย HW ตามด้วยตัวเลข 5 หลัก เช่น HW12345)');
+        return;
+      }
+
+      const shortCode = 'HW' + raw.slice(2);
+      if (!navigator.onLine) {
+        showToast('กรุณาเชื่อมต่ออินเทอร์เน็ตเพื่อดึงข้อมูลการบ้าน');
+        return;
+      }
+      if (!window.cloudSync || !window.cloudSync.loadHwPreset) {
+        showToast('ระบบคลาวด์ยังไม่พร้อม กรุณาลองใหม่อีกครั้ง');
+        return;
+      }
+
+      const btn = document.getElementById('btn-import-hw-preset');
+      const oldText = btn ? btn.textContent : 'นำเข้า';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳...';
+      }
+
+      try {
+        const remoteItems = await window.cloudSync.loadHwPreset(shortCode);
+        if (!Array.isArray(remoteItems) || remoteItems.length === 0) {
+          showToast(`ไม่พบข้อมูลการบ้านสำหรับรหัส "${shortCode}" กรุณาตรวจสอบตัวเลขอีกครั้ง`);
+          return;
+        }
+
+        const existingKeys = new Set();
+        activeItems.forEach(it => existingKeys.add(`${String(it.due || '').trim()}::${String(it.subject || '').trim()}::${String(it.task || '').trim()}`));
+        historyItems.forEach(it => existingKeys.add(`${String(it.due || '').trim()}::${String(it.subject || '').trim()}::${String(it.task || '').trim()}`));
+
+        const allNormalized = remoteItems
+          .filter(it => it && it.subject && it.task)
+          .map((it, idx) => ({
+            id: 'hw-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).slice(2, 5),
+            due: String(it.due || '').trim(),
+            subject: String(it.subject || '').trim(),
+            task: String(it.task || '').trim(),
+            category: it.category || 'homework'
+          }));
+
+        if (allNormalized.length === 0) {
+          showToast(`ไม่พบรายการการบ้านที่ใช้งานได้ในรหัส "${shortCode}"`);
+          return;
+        }
+
+        const newOnly = allNormalized.filter(it => {
+          const k = `${it.due}::${it.subject}::${it.task}`;
+          return !existingKeys.has(k);
+        });
+
+        _pendingHwImportState = { shortCode, allNormalized, newOnly };
+
+        document.getElementById('hw-import-modal-title').textContent = `📥 นำเข้าการบ้าน (${shortCode})`;
+        document.getElementById('hw-import-modal-desc').textContent =
+          `พบการบ้านที่ยังไม่ถึงกำหนดส่งทั้งหมด ${allNormalized.length} รายการ (เป็นงานใหม่ที่ยังไม่มีในเครื่องคุณ ${newOnly.length} รายการ)`;
+
+        const previewEl = document.getElementById('hw-import-preview-list');
+        previewEl.innerHTML = allNormalized.map(it => {
+          const catObj = getCategoryObj(it.category);
+          const isNew = !existingKeys.has(`${it.due}::${it.subject}::${it.task}`);
+          return `
+            <div class="rounded-xl border border-cardBorder bg-pageBg/70 p-2.5 text-xs space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-[#14213D] truncate">${catObj.icon} ${escapeHTML(it.subject)}</span>
+                <span class="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-bold ${isNew ? 'bg-[#DCFCE7] text-[#166534]' : 'bg-slate-200 text-muted'}">
+                  ${isNew ? 'ใหม่' : 'มีแล้ว'} · ${formatThaiShort(it.due)}
+                </span>
+              </div>
+              <div class="text-muted line-clamp-2">${escapeHTML(it.task)}</div>
+            </div>
+          `;
+        }).join('');
+
+        const mergeBtn = document.getElementById('btn-hw-import-merge');
+        mergeBtn.textContent = `+ เพิ่มเฉพาะงานใหม่ (${newOnly.length} รายการ)`;
+        mergeBtn.disabled = newOnly.length === 0;
+
+        const replaceBtn = document.getElementById('btn-hw-import-replace');
+        replaceBtn.textContent = `แทนที่งานค้างทั้งหมด (${allNormalized.length} รายการ)`;
+
+        document.getElementById('hw-import-modal').classList.remove('hidden');
+      } catch (err) {
+        console.error('Load homework preset error:', err);
+        showToast('ดึงข้อมูลการบ้านไม่สำเร็จ: ' + (err.message || 'ตรวจสอบอินเทอร์เน็ตหรือ Rules'));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = oldText;
+        }
       }
     }
 
@@ -2760,6 +3203,10 @@
       document.getElementById('badge-courses-desktop').textContent = uniqueCourses.length;
       document.getElementById('badge-list-mobile').textContent = activeItems.length;
       document.getElementById('badge-history-inline').textContent = historyItems.length;
+      const eligibleHwEl = document.getElementById('hw-share-eligible-count');
+      if (eligibleHwEl) {
+        eligibleHwEl.textContent = `พร้อมส่งออก ${getExportableHomeworkItems().length} รายการ`;
+      }
 
       // Apply Subject Filter to Tasks View
       const visibleItems = selectedSubjectFilter === 'ALL'
@@ -3911,7 +4358,49 @@
         push: pushToCloud,
         switchSyncId: switchSyncId,
         getSyncId: () => syncId,
-        copySyncId: () => copyTextToClipboardUniversal(syncId, `คัดลอกรหัสซิงก์ "${syncId}" แล้ว! นำไปวางในเครื่องอื่นได้เลย`)
+        copySyncId: () => copyTextToClipboardUniversal(syncId, `คัดลอกรหัสซิงก์ "${syncId}" แล้ว! นำไปวางในเครื่องอื่นได้เลย`),
+        checkPresetExists: async (code) => {
+          if (!ensureFirebaseReady()) throw new Error("Firebase ยังไม่พร้อม");
+          const snap = await db.ref(`presets/${code}`).once("value");
+          return snap.exists();
+        },
+        savePreset: async (code, coursesData) => {
+          if (!ensureFirebaseReady()) throw new Error("Firebase ยังไม่พร้อม");
+          await db.ref(`presets/${code}`).set({
+            courses: coursesData,
+            createdAt: Date.now()
+          });
+        },
+        loadPreset: async (code) => {
+          if (!ensureFirebaseReady()) throw new Error("Firebase ยังไม่พร้อม");
+          let snap = await db.ref(`presets/${code}`).once("value");
+          if (!snap.exists()) {
+            snap = await db.ref(`presets/${code.toUpperCase()}`).once("value");
+          }
+          if (!snap.exists() || !snap.val()) return null;
+          return snap.val().courses || null;
+        },
+        checkHwPresetExists: async (code) => {
+          if (!ensureFirebaseReady()) throw new Error("Firebase ยังไม่พร้อม");
+          const snap = await db.ref(`hw_presets/${code}`).once("value");
+          return snap.exists();
+        },
+        saveHwPreset: async (code, hwItemsData) => {
+          if (!ensureFirebaseReady()) throw new Error("Firebase ยังไม่พร้อม");
+          await db.ref(`hw_presets/${code}`).set({
+            items: hwItemsData,
+            createdAt: Date.now()
+          });
+        },
+        loadHwPreset: async (code) => {
+          if (!ensureFirebaseReady()) throw new Error("Firebase ยังไม่พร้อม");
+          let snap = await db.ref(`hw_presets/${code}`).once("value");
+          if (!snap.exists()) {
+            snap = await db.ref(`hw_presets/${code.toLowerCase()}`).once("value");
+          }
+          if (!snap.exists() || !snap.val()) return null;
+          return snap.val().items || null;
+        }
       };
     })();
 
