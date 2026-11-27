@@ -301,6 +301,10 @@
             <span>📅 ตารางเรียน</span>
             <span id="badge-courses-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/85 text-[#14213D]">0</span>
           </button>
+          <button data-tab="grades" onclick="switchTab('grades')" class="tab-btn-desktop px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
+            <span>🎓 คำนวณเกรด</span>
+            <span id="badge-gpa-desktop" class="px-2 py-0.5 text-xs rounded-full bg-white/85 text-[#14213D]">0.00</span>
+          </button>
           <button data-tab="sync" onclick="switchTab('sync')" class="tab-btn-desktop px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shrink-0">
             <span>☁️ ซิงก์ข้อมูล</span>
           </button>
@@ -696,6 +700,195 @@
       </section>
 
       <!-- ========================================================= -->
+      <!-- VIEW 2.5: 🎓 คำนวณเกรด (Grade & GPA Simulator)            -->
+      <!-- ========================================================= -->
+      <section id="view-grades" class="tab-view hidden space-y-5">
+        <!-- Header & GPA Overview -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg sm:text-xl font-bold text-[#14213D]">🎓 คำนวณเกรด & วางแผนคะแนน</h2>
+            <p class="text-xs sm:text-sm text-muted">แยกคะแนนที่ได้จริงกับคาดการณ์ คำนวณคะแนนขั้นต่ำที่ต้องทำเพิ่ม และคาดการณ์ GPA รวม</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <button type="button" onclick="syncCoursesIntoGrades(true)" class="px-3 py-2 rounded-xl border border-cardBorder bg-white hover:bg-pageBg text-[#14213D] text-xs font-bold shadow-2xs transition active:scale-95">
+              🔄 ดึงวิชาจากตารางเรียน
+            </button>
+            <button type="button" onclick="openAddCustomGradeSubjectModal()" class="px-3.5 py-2 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs font-bold shadow-xs transition active:scale-95">
+              + เพิ่มวิชาคำนวณเอง
+            </button>
+          </div>
+        </div>
+
+        <!-- GPA Summary Banner -->
+        <div class="bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="rounded-xl p-3.5 border border-black/10" style="background: var(--theme-soft);">
+              <div class="text-xs font-bold text-muted">GPA คาดการณ์รวม</div>
+              <div id="gpa-overall-value" class="text-2xl sm:text-3xl font-bold text-[#14213D] mt-0.5">0.00</div>
+              <div id="gpa-overall-sub" class="text-[11px] font-semibold text-muted mt-0.5">คำนวณจาก 0 วิชา</div>
+            </div>
+            <div class="rounded-xl p-3.5 bg-pageBg border border-cardBorder">
+              <div class="text-xs font-bold text-muted">หน่วยกิตรวม (นับเกรด)</div>
+              <div id="gpa-total-credits" class="text-2xl sm:text-3xl font-bold text-[#14213D] mt-0.5">0</div>
+              <div class="text-[11px] font-semibold text-muted mt-0.5">หน่วยกิต</div>
+            </div>
+            <div class="rounded-xl p-3.5 bg-[#DCFCE7]/60 dark:bg-emerald-950/30 border border-emerald-500/25">
+              <div class="text-xs font-bold text-emerald-900 dark:text-emerald-300">คะแนนในมือ (วิชานี้)</div>
+              <div id="grade-subj-actual-card" class="text-2xl sm:text-3xl font-bold text-emerald-800 dark:text-emerald-300 mt-0.5">0</div>
+              <div id="grade-subj-actual-sub" class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 mt-0.5">จากส่วนที่สอบ/ส่งแล้ว</div>
+            </div>
+            <div class="rounded-xl p-3.5 bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-400/30">
+              <div class="text-xs font-bold text-indigo-900 dark:text-indigo-300">รวมคาดการณ์ (วิชานี้)</div>
+              <div class="flex items-baseline gap-2 mt-0.5">
+                <span id="grade-subj-total-card" class="text-2xl sm:text-3xl font-bold text-indigo-900 dark:text-indigo-200">0</span>
+                <span id="grade-subj-letter-badge" class="px-2.5 py-0.5 rounded-lg text-sm font-bold bg-indigo-600 text-white">-</span>
+              </div>
+              <div id="grade-subj-total-sub" class="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 mt-0.5">เต็ม 100 คะแนน</div>
+            </div>
+          </div>
+
+          <!-- Subject Selector Pills -->
+          <div class="pt-2 border-t border-cardBorder space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-muted">เลือกรายวิชาที่ต้องการคำนวณ:</span>
+              <button type="button" onclick="toggleAllSubjectsGpaDrawer()" class="text-xs font-bold text-teal-700 dark:text-teal-400 hover:underline flex items-center gap-1">
+                <span>📊 สรุปเกรด & หน่วยกิตทุกวิชา</span>
+                <span id="gpa-drawer-arrow">▼</span>
+              </button>
+            </div>
+            <div id="grade-subject-pills" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Collapsible All-Subjects GPA Summary Table -->
+          <div id="all-subjects-gpa-drawer" class="hidden pt-2 border-t border-cardBorder">
+            <div id="all-subjects-gpa-list" class="divide-y divide-cardBorder"></div>
+          </div>
+        </div>
+
+        <!-- Empty State if No Subject -->
+        <div id="grades-empty-state" class="hidden bg-white rounded-[14px] border border-cardBorder p-10 text-center space-y-3">
+          <div class="text-4xl">🎓</div>
+          <h3 class="text-lg font-bold text-[#14213D]">ยังไม่มีรายวิชาสำหรับคำนวณเกรด</h3>
+          <p class="text-xs sm:text-sm text-muted">สามารถกดเพิ่มวิชาเอง หรือเพิ่มวิชาในแท็บ <button type="button" onclick="switchTab('schedule')" class="text-teal-700 dark:text-teal-400 font-bold underline">ตารางเรียน</button> แล้วระบบจะดึงมาให้อัตโนมัติ</p>
+          <div>
+            <button type="button" onclick="openAddCustomGradeSubjectModal()" class="px-5 py-2.5 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95">
+              + เพิ่มวิชาคำนวณเอง
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Subject Calculator Workspace -->
+        <div id="grade-calculator-workspace" class="space-y-5">
+          <!-- Subject Header Bar + Credits + Scale Button -->
+          <div class="bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-cardBorder pb-3.5">
+              <div class="space-y-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span id="active-grade-subj-code" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-200 text-[#14213D]">CODE</span>
+                  <h3 id="active-grade-subj-name" class="text-base sm:text-lg font-bold text-[#14213D] truncate">ชื่อวิชา</h3>
+                  <span id="active-grade-custom-tag" class="hidden px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200">เพิ่มเอง</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 pt-1">
+                  <label class="inline-flex items-center gap-1.5 text-xs font-bold text-muted">
+                    <span>หน่วยกิต:</span>
+                    <input type="number" id="inp-grade-credits" min="0" max="12" step="0.5" value="3" onchange="updateActiveGradeCredits(this.value)" class="w-16 h-8 px-2 rounded-lg bg-pageBg border border-cardBorder text-center font-bold text-[#14213D] text-xs focus:outline-none focus:ring-2 focus:ring-navy" />
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 text-xs font-bold text-muted cursor-pointer select-none">
+                    <input type="checkbox" id="chk-grade-include-gpa" onchange="toggleActiveGradeIncludeGpa(this.checked)" class="w-4 h-4 accent-[#0F766E] rounded cursor-pointer" />
+                    <span>นำวิชานี้ไปคิด GPA รวม</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <button type="button" onclick="openGradeScaleModal()" class="theme-btn-primary px-3.5 py-2 rounded-xl text-xs font-bold border border-black/10 shadow-2xs transition active:scale-95 flex items-center gap-1.5">
+                  <span>⚖️ เกณฑ์ตัดเกรด</span>
+                  <span id="btn-scale-summary-tag" class="px-1.5 py-0.2 rounded bg-white/80 text-[#14213D] text-[10px]">A≥80</span>
+                </button>
+                <button type="button" id="btn-delete-custom-grade-subj" onclick="deleteActiveCustomGradeSubject()" class="hidden px-3 py-2 rounded-xl border border-[#8B1230]/40 bg-[#FBE4E8]/70 hover:bg-[#FBE4E8] text-[#8B1230] text-xs font-bold transition">
+                  🗑️ ลบวิชานี้
+                </button>
+              </div>
+            </div>
+
+            <!-- Real-time 100-point Weight Progress Bar + Presets -->
+            <div class="space-y-2.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs sm:text-sm font-bold text-[#14213D]">สัดส่วนคะแนนรวม:</span>
+                  <span id="weight-sum-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#DCFCE7] text-[#166534]">100 / 100 คะแนน</span>
+                </div>
+                <button type="button" id="btn-fill-remaining-weight" onclick="addRemainingWeightItem()" class="hidden px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-2xs transition active:scale-95">
+                  + เพิ่มส่วนที่เหลือให้ครบ 100
+                </button>
+              </div>
+
+              <div class="w-full h-2.5 rounded-full bg-pageBg overflow-hidden border border-cardBorder">
+                <div id="weight-progress-bar" class="h-full bg-teal-600 transition-all duration-200" style="width: 100%;"></div>
+              </div>
+
+              <!-- Quick Preset Buttons -->
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <span class="text-[11px] font-bold text-muted mr-1">แบ่งสัดส่วนสำเร็จรูป:</span>
+                <button type="button" onclick="applyWeightPreset('40-30-30')" class="px-2.5 py-1 rounded-lg bg-pageBg hover:bg-slate-200 border border-cardBorder text-[11px] font-bold text-[#14213D] transition">
+                  เก็บ 40 / กลางภาค 30 / ปลายภาค 30
+                </button>
+                <button type="button" onclick="applyWeightPreset('50-20-30')" class="px-2.5 py-1 rounded-lg bg-pageBg hover:bg-slate-200 border border-cardBorder text-[11px] font-bold text-[#14213D] transition">
+                  เก็บ 50 / กลางภาค 20 / ปลายภาค 30
+                </button>
+                <button type="button" onclick="applyWeightPreset('60-40')" class="px-2.5 py-1 rounded-lg bg-pageBg hover:bg-slate-200 border border-cardBorder text-[11px] font-bold text-[#14213D] transition">
+                  เก็บ 60 / สอบ 40
+                </button>
+              </div>
+            </div>
+
+            <!-- Score Breakdown Rows -->
+            <div class="space-y-2.5 pt-1">
+              <div class="hidden sm:grid sm:grid-cols-12 gap-2 px-3 text-[11px] font-bold text-muted">
+                <div class="col-span-4">ชื่อหมวดคะแนน (แก้ไขได้)</div>
+                <div class="col-span-2 text-center">คะแนนที่ได้</div>
+                <div class="col-span-2 text-center">คะแนนเต็ม</div>
+                <div class="col-span-3 text-center">สถานะคะแนน</div>
+                <div class="col-span-1 text-right">ลบ</div>
+              </div>
+
+              <div id="grade-components-list" class="space-y-2.5">
+                <!-- Populated by JS -->
+              </div>
+
+              <div class="pt-1 flex flex-wrap items-center justify-between gap-2">
+                <button type="button" onclick="addGradeComponentRow()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-dashed border-teal-600/50 bg-teal-50/60 dark:bg-teal-950/30 hover:bg-teal-100 text-teal-800 dark:text-teal-300 text-xs font-bold transition active:scale-95">
+                  <span>+ เพิ่มหมวดคะแนนใหม่</span>
+                </button>
+                <div class="text-[11px] text-muted">
+                  * กดสลับปุ่ม <strong>✅ ได้จริง</strong> / <strong>🔮 คาดการณ์</strong> เพื่อคำนวณคะแนนขั้นต่ำที่ต้องทำเพิ่ม
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Target Grade Breakdown Card (Minimum needed from remaining Predicted items) -->
+          <div class="bg-white rounded-[14px] border border-cardBorder p-4 sm:p-5 shadow-xs space-y-3.5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-cardBorder pb-3">
+              <div>
+                <h3 class="text-base font-bold text-[#14213D]">🎯 เป้าหมายเกรด & คะแนนที่ต้องทำเพิ่ม</h3>
+                <p id="target-grade-subtitle" class="text-xs text-muted">คำนวณจากคะแนน "✅ ได้จริง" รวมกับส่วนที่เหลือ "🔮 คาดการณ์"</p>
+              </div>
+              <div id="target-remaining-pool-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-200 self-start sm:self-auto">
+                เหลือให้เก็บอีก 0 คะแนน
+              </div>
+            </div>
+
+            <div id="target-grades-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+              <!-- Populated by JS (A, B+, B, C+, C, D+, D) -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
       <!-- VIEW 3: ซิงก์ข้อมูล (Sync ID + JSON + Advanced Settings)   -->
       <!-- ========================================================= -->
       <section id="view-sync" class="tab-view hidden space-y-5">
@@ -930,6 +1123,20 @@
                 </button>
               </div>
             </div>
+
+            <!-- Report Issue to Admin Card -->
+            <div class="bg-white rounded-[14px] border border-cardBorder p-5 shadow-xs space-y-3">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="text-base font-bold text-[#14213D]">💬 พบปัญหาการใช้งาน / แจ้ง Admin</h3>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 shrink-0">คัดลอกข้อมูลอัตโนมัติ</span>
+              </div>
+              <p class="text-xs text-muted leading-relaxed">
+                หากแอปค้าง ซิงก์ไม่เข้า หรือแสดงผลผิดพลาด กดปุ่มด้านล่างเพื่อให้ระบบคัดลอกรหัส Sync ID และข้อมูลเครื่อง แล้วกดวางส่งในแชต Admin ได้ทันที
+              </p>
+              <button type="button" onclick="openReportAdminModal()" class="w-full py-2.5 px-4 rounded-xl border border-blue-600/30 bg-blue-50/80 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-800 dark:text-blue-300 text-xs sm:text-sm font-bold transition active:scale-95">
+                🛠️ คัดลอกข้อมูลปัญหา & ทักแชต Admin
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -942,23 +1149,27 @@
       <span>เพิ่มงาน</span>
     </button>
 
-    <!-- Mobile Sticky Bottom Navigation Bar (4 Tabs - Same Names as Desktop) -->
-    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-cardBorder z-30 px-2 pt-1.5 safe-bottom-nav shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
-      <div class="grid grid-cols-4 gap-1">
-        <button data-tab="list" onclick="switchTab('list')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[11px] font-bold transition relative">
+    <!-- Mobile Sticky Bottom Navigation Bar (5 Tabs - Same Names as Desktop) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-cardBorder z-30 px-1.5 pt-1.5 safe-bottom-nav shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
+      <div class="grid grid-cols-5 gap-0.5">
+        <button data-tab="list" onclick="switchTab('list')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition relative">
           <span class="text-base leading-tight">📋</span>
           <span class="mt-0.5">รายการงาน</span>
-          <span id="badge-list-mobile" class="absolute top-0.5 right-3 px-1.5 py-0.2 text-[9px] rounded-full bg-[#8B1230] text-white font-bold">0</span>
+          <span id="badge-list-mobile" class="absolute top-0.5 right-2 px-1.5 py-0.2 text-[9px] rounded-full bg-[#8B1230] text-white font-bold">0</span>
         </button>
-        <button data-tab="schedule" onclick="switchTab('schedule')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[11px] font-bold transition">
+        <button data-tab="schedule" onclick="switchTab('schedule')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
           <span class="text-base leading-tight">📅</span>
           <span class="mt-0.5">ตารางเรียน</span>
         </button>
-        <button data-tab="sync" onclick="switchTab('sync')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[11px] font-bold transition">
+        <button data-tab="grades" onclick="switchTab('grades')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
+          <span class="text-base leading-tight">🎓</span>
+          <span class="mt-0.5">คำนวณเกรด</span>
+        </button>
+        <button data-tab="sync" onclick="switchTab('sync')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
           <span class="text-base leading-tight">☁️</span>
           <span class="mt-0.5">ซิงก์ข้อมูล</span>
         </button>
-        <button data-tab="settings" onclick="switchTab('settings')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[11px] font-bold transition">
+        <button data-tab="settings" onclick="switchTab('settings')" class="tab-btn-mobile flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition">
           <span class="text-base leading-tight">⚙️</span>
           <span class="mt-0.5">ตั้งค่า</span>
         </button>
@@ -1000,6 +1211,9 @@
       <div class="flex flex-col sm:flex-row items-center justify-end gap-2 pt-2 border-t border-cardBorder">
         <button type="button" onclick="closeCloudErrorModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] text-xs sm:text-sm font-bold">
           ใช้งานแบบออฟไลน์ไปก่อน
+        </button>
+        <button type="button" onclick="closeCloudErrorModal(); openReportAdminModal();" class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-blue-300 bg-blue-50 text-blue-800 text-xs sm:text-sm font-bold">
+          💬 แจ้ง Admin
         </button>
         <button type="button" onclick="retryCloudConnection()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95">
           🔄 ลองใหม่
@@ -1227,6 +1441,139 @@
     </div>
   </div>
 
+  <!-- ========================================================= -->
+  <!-- MODAL: Report Issue to Admin (Auto Clipboard Copy)        -->
+  <!-- ========================================================= -->
+  <div id="report-admin-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" onclick="if(event.target===this) closeReportAdminModal()">
+    <div class="bg-white rounded-2xl border border-cardBorder max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-cardBorder pb-3">
+        <h3 class="text-base sm:text-lg font-bold text-[#14213D]">🛠️ แจ้งปัญหาให้ Admin</h3>
+        <button type="button" onclick="closeReportAdminModal()" class="w-8 h-8 rounded-lg bg-pageBg text-muted hover:text-[#14213D] font-bold">✕</button>
+      </div>
+
+      <div class="rounded-xl bg-[#DCFCE7] border border-teal-600/30 p-3 text-xs font-bold text-[#166534]">
+        ✓ ระบบคัดลอกข้อมูลเครื่องและ Sync ID ลงคลิปบอร์ดให้แล้ว! เมื่อเข้าแชตให้กด "วาง (Paste)" ส่งได้เลย
+      </div>
+
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-muted">ข้อมูลที่คัดลอกให้:</span>
+          <button type="button" onclick="recopyAdminReport()" class="text-xs font-bold text-teal-700 dark:text-teal-400 hover:underline">📋 คัดลอกซ้ำ</button>
+        </div>
+        <textarea id="admin-report-preview" rows="7" readonly class="w-full p-2.5 rounded-xl bg-pageBg border border-cardBorder text-[11px] font-mono text-[#14213D] focus:outline-none"></textarea>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 pt-1">
+        <a id="btn-open-admin-chat" href="#" target="_blank" rel="noopener noreferrer" class="flex-1 py-2.5 px-4 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold text-center shadow-xs transition active:scale-95">
+          💬 เปิดแชตติดต่อ Admin
+        </a>
+        <button type="button" onclick="closeReportAdminModal()" class="px-4 py-2.5 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] text-xs sm:text-sm font-bold">
+          ปิด
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL: Grade Scale Editor (⚖️ เกณฑ์ตัดเกรด)              -->
+  <!-- ========================================================= -->
+  <div id="grade-scale-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" onclick="if(event.target===this) closeGradeScaleModal()">
+    <div class="bg-white rounded-2xl border border-cardBorder max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-cardBorder pb-3">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-[#14213D]">⚖️ เกณฑ์ตัดเกรดของวิชานี้</h3>
+          <p id="scale-modal-subj-label" class="text-xs text-muted mt-0.5">ปรับคะแนนขั้นต่ำของแต่ละเกรด (A ถึง D)</p>
+        </div>
+        <button type="button" onclick="closeGradeScaleModal()" class="w-8 h-8 rounded-lg bg-pageBg text-muted hover:text-[#14213D] font-bold">✕</button>
+      </div>
+
+      <!-- Quick Scale Presets -->
+      <div class="space-y-1.5">
+        <div class="text-xs font-bold text-muted">เลือกเกณฑ์มาตรฐานสำเร็จรูป:</div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="applyGradeScalePreset('standard')" class="p-2.5 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-left transition">
+            <div class="text-xs font-bold text-[#14213D]">เกณฑ์มาตรฐาน (อิงเกณฑ์)</div>
+            <div class="text-[11px] text-muted">80 / 75 / 70 / 65 / 60 / 55 / 50</div>
+          </button>
+          <button type="button" onclick="applyGradeScalePreset('lenient')" class="p-2.5 rounded-xl border border-cardBorder bg-pageBg hover:bg-slate-200 text-left transition">
+            <div class="text-xs font-bold text-[#14213D]">เกณฑ์ช่วย (ลดลง 5 คะแนน)</div>
+            <div class="text-[11px] text-muted">75 / 70 / 65 / 60 / 55 / 50 / 45</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Individual Grade Threshold Inputs -->
+      <div class="grid grid-cols-2 gap-2.5 pt-1">
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pageBg border border-cardBorder">
+          <span class="font-bold text-sm text-emerald-700 dark:text-emerald-400">เกรด A (4.0) ≥</span>
+          <input type="number" id="scale-inp-A" step="0.5" min="0" max="100" class="w-20 h-9 px-2 rounded-lg bg-white border border-cardBorder text-center font-bold text-sm text-[#14213D]" />
+        </div>
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pageBg border border-cardBorder">
+          <span class="font-bold text-sm text-teal-700 dark:text-teal-400">เกรด B+ (3.5) ≥</span>
+          <input type="number" id="scale-inp-Bp" step="0.5" min="0" max="100" class="w-20 h-9 px-2 rounded-lg bg-white border border-cardBorder text-center font-bold text-sm text-[#14213D]" />
+        </div>
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pageBg border border-cardBorder">
+          <span class="font-bold text-sm text-blue-700 dark:text-blue-400">เกรด B (3.0) ≥</span>
+          <input type="number" id="scale-inp-B" step="0.5" min="0" max="100" class="w-20 h-9 px-2 rounded-lg bg-white border border-cardBorder text-center font-bold text-sm text-[#14213D]" />
+        </div>
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pageBg border border-cardBorder">
+          <span class="font-bold text-sm text-indigo-700 dark:text-indigo-400">เกรด C+ (2.5) ≥</span>
+          <input type="number" id="scale-inp-Cp" step="0.5" min="0" max="100" class="w-20 h-9 px-2 rounded-lg bg-white border border-cardBorder text-center font-bold text-sm text-[#14213D]" />
+        </div>
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pageBg border border-cardBorder">
+          <span class="font-bold text-sm text-amber-700 dark:text-amber-400">เกรด C (2.0) ≥</span>
+          <input type="number" id="scale-inp-C" step="0.5" min="0" max="100" class="w-20 h-9 px-2 rounded-lg bg-white border border-cardBorder text-center font-bold text-sm text-[#14213D]" />
+        </div>
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-pageBg border border-cardBorder">
+          <span class="font-bold text-sm text-orange-700 dark:text-orange-400">เกรด D+ (1.5) ≥</span>
+          <input type="number" id="scale-inp-Dp" step="0.5" min="0" max="100" class="w-20 h-9 px-2 rounded-lg bg-white border border-cardBorder text-center font-bold text-sm text-[#14213D]" />
+        </div>
+        <div class="col-span-2 flex items-center justify-between p-2.5 rounded-xl bg-pageBg border border-cardBorder">
+          <span class="font-bold text-sm text-rose-700 dark:text-rose-400">เกรด D (1.0) ≥ (ต่ำกว่านี้ติด F)</span>
+          <input type="number" id="scale-inp-D" step="0.5" min="0" max="100" class="w-20 h-9 px-2 rounded-lg bg-white border border-cardBorder text-center font-bold text-sm text-[#14213D]" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-cardBorder">
+        <button type="button" onclick="closeGradeScaleModal()" class="px-4 py-2.5 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] text-xs sm:text-sm font-bold">ยกเลิก</button>
+        <button type="button" onclick="saveGradeScaleFromModal()" class="px-5 py-2.5 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95">
+          บันทึกเกณฑ์ตัดเกรด
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL: Add Custom Subject to Grade Calculator             -->
+  <!-- ========================================================= -->
+  <div id="custom-grade-subj-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" onclick="if(event.target===this) closeAddCustomGradeSubjectModal()">
+    <div class="bg-white rounded-2xl border border-cardBorder max-w-sm w-full p-5 sm:p-6 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-cardBorder pb-3">
+        <h3 class="text-base sm:text-lg font-bold text-[#14213D]">➕ เพิ่มวิชาคำนวณเกรดเอง</h3>
+        <button type="button" onclick="closeAddCustomGradeSubjectModal()" class="w-8 h-8 rounded-lg bg-pageBg text-muted hover:text-[#14213D] font-bold">✕</button>
+      </div>
+
+      <form onsubmit="handleAddCustomGradeSubject(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-muted mb-1">รหัสวิชา (ไม่บังคับ)</label>
+          <input type="text" id="custom-grade-code" placeholder="เช่น 04313205" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-sm font-semibold text-[#14213D]" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-muted mb-1">ชื่อวิชา *</label>
+          <input type="text" id="custom-grade-name" required placeholder="กรอกชื่อวิชาที่ต้องการคำนวณ" class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-sm font-semibold text-[#14213D]" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-muted mb-1">หน่วยกิต</label>
+          <input type="number" id="custom-grade-credits" min="0" max="12" step="0.5" value="3" required class="w-full h-10 px-3 rounded-xl bg-pageBg border border-cardBorder text-sm font-bold text-[#14213D]" />
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-cardBorder">
+          <button type="button" onclick="closeAddCustomGradeSubjectModal()" class="px-4 py-2 rounded-xl border border-cardBorder bg-pageBg text-[#14213D] text-xs sm:text-sm font-bold">ยกเลิก</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-[#0F766E] hover:bg-teal-800 text-white text-xs sm:text-sm font-bold shadow-xs">เพิ่มรายวิชา</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Custom Toast Notification -->
   <div id="toast-box" class="hidden fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#14213D] text-white text-xs sm:text-sm font-semibold shadow-lg border border-slate-600 transition-all text-center max-w-[90vw]">
     แจ้งเตือน
@@ -1306,6 +1653,8 @@
     let courses = [];
     let activeItems = [];
     let historyItems = [];
+    let gradePlans = [];
+    let activeGradePlanId = null;
     let editingTaskId = null;
     let editingCourseId = null;
     let currentTab = 'list';
@@ -1321,6 +1670,72 @@
     // Undo state
     let lastUndoSnapshot = null;
     let undoTimerId = null;
+
+    // =========================================================================
+    // 5.1 ระบบแจ้งปัญหา Admin (คัดลอกข้อมูลเครื่อง & Sync ID อัตโนมัติ)
+    // =========================================================================
+    const ADMIN_CHAT_URL = 'https://line.me/ti/p/yUi_747A-y'; // เปลี่ยนเป็นลิงก์ LINE หรือ Messenger ของคุณ (เช่น https://m.me/ชื่อผู้ใช้)
+    const RECENT_APP_ERRORS = [];
+
+    window.addEventListener('error', (e) => {
+      const msg = `${e.message || 'Error'} (บรรทัด ${e.lineno || '?'})`;
+      RECENT_APP_ERRORS.push(msg);
+      if (RECENT_APP_ERRORS.length > 3) RECENT_APP_ERRORS.shift();
+    });
+
+    window.addEventListener('unhandledrejection', (e) => {
+      const reason = e.reason && e.reason.message ? e.reason.message : String(e.reason || 'Promise Error');
+      RECENT_APP_ERRORS.push(reason);
+      if (RECENT_APP_ERRORS.length > 3) RECENT_APP_ERRORS.shift();
+    });
+
+    function buildAdminDiagnosticReport() {
+      const syncId = (window.cloudSync && window.cloudSync.getSyncId()) || localStorage.getItem('hw_firebase_sync_id') || 'ไม่มี';
+      const cloudStatus = document.getElementById('profile-cloud-badge')?.textContent?.trim() || 'ไม่ทราบสถานะ';
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      const ua = navigator.userAgent || '';
+
+      let deviceGuess = 'PC / Notebook';
+      if (/iPhone|iPad|iPod/i.test(ua)) deviceGuess = 'iOS (iPhone/iPad)';
+      else if (/Android/i.test(ua)) deviceGuess = 'Android';
+
+      const errorText = RECENT_APP_ERRORS.length > 0
+        ? RECENT_APP_ERRORS.join(' | ')
+        : 'ไม่มี Error ในหน้าเว็บ';
+
+      return [
+        '🛠️ [แจ้งปัญหาแอป Homework List]',
+        `• Sync ID: ${syncId}`,
+        `• สถานะคลาวด์: ${cloudStatus} (${navigator.onLine ? 'Online' : 'Offline'})`,
+        `• ข้อมูลในเครื่อง: ${getUniqueCoursesByName().length} วิชา (${courses.length} คาบ), งานค้าง ${activeItems.length}, ประวัติ ${historyItems.length}`,
+        `• อุปกรณ์: ${deviceGuess} | จอ ${window.innerWidth}x${window.innerHeight} | โหมด: ${isStandalone ? 'แอป (PWA)' : 'เบราว์เซอร์'}`,
+        `• แท็บที่เปิด: ${currentTab}`,
+        `• Error ล่าสุด: ${errorText}`,
+        '-----------------------------',
+        'พิมพ์อาการที่พบเพิ่มเติมด้านล่างนี้ได้เลย:'
+      ].join('\n');
+    }
+
+    function openReportAdminModal() {
+      const reportText = buildAdminDiagnosticReport();
+      const previewEl = document.getElementById('admin-report-preview');
+      const chatLinkEl = document.getElementById('btn-open-admin-chat');
+
+      if (previewEl) previewEl.value = reportText;
+      if (chatLinkEl) chatLinkEl.href = ADMIN_CHAT_URL;
+
+      copyTextToClipboardUniversal(reportText, '📋 คัดลอกข้อมูลเครื่องและ Sync ID ลงคลิปบอร์ดแล้ว!');
+      document.getElementById('report-admin-modal').classList.remove('hidden');
+    }
+
+    function closeReportAdminModal() {
+      document.getElementById('report-admin-modal').classList.add('hidden');
+    }
+
+    function recopyAdminReport() {
+      const text = document.getElementById('admin-report-preview')?.value || buildAdminDiagnosticReport();
+      copyTextToClipboardUniversal(text, '📋 คัดลอกข้อมูลอีกครั้งเรียบร้อยแล้ว!');
+    }
 
     function safeSetStorage(key, value) {
       try {
@@ -1919,6 +2334,9 @@
       try { courses = JSON.parse(localStorage.getItem(getUserDataKey('courses')) || '[]'); } catch { courses = []; }
       try { activeItems = JSON.parse(localStorage.getItem(getUserDataKey('active')) || '[]'); } catch { activeItems = []; }
       try { historyItems = JSON.parse(localStorage.getItem(getUserDataKey('history')) || '[]'); } catch { historyItems = []; }
+      try { gradePlans = JSON.parse(localStorage.getItem(getUserDataKey('gradePlans')) || '[]'); } catch { gradePlans = []; }
+      if (!Array.isArray(gradePlans)) gradePlans = [];
+      syncCoursesIntoGrades(false);
       saveData(true);
     }
 
@@ -1926,6 +2344,7 @@
       safeSetStorage(getUserDataKey('courses'), JSON.stringify(courses));
       safeSetStorage(getUserDataKey('active'), JSON.stringify(activeItems));
       safeSetStorage(getUserDataKey('history'), JSON.stringify(historyItems));
+      safeSetStorage(getUserDataKey('gradePlans'), JSON.stringify(gradePlans));
       if (!skipCloudPush) {
         markLocalDataChanged();
         if (window.cloudSync) {
@@ -3265,6 +3684,8 @@
       document.getElementById('badge-list-desktop').textContent = activeItems.length;
       document.getElementById('badge-courses-desktop').textContent = uniqueCourses.length;
       document.getElementById('badge-list-mobile').textContent = activeItems.length;
+      syncCoursesIntoGrades(false);
+      renderGradesTab();
       document.getElementById('badge-history-inline').textContent = historyItems.length;
       const eligibleHwEl = document.getElementById('hw-share-eligible-count');
       if (eligibleHwEl) {
@@ -3903,12 +4324,13 @@
     function buildFullBackupPayload() {
       return {
         app: 'HomeworkListPWA',
-        version: 4,
+        version: 5,
         exportedAt: new Date().toISOString(),
         profile: currentUser || getDefaultProfile(),
         courses: courses,
         active: activeItems,
         history: historyItems,
+        gradePlans: gradePlans,
         notifPrefs: notifPrefs
       };
     }
@@ -3931,6 +4353,10 @@
       courses = Array.isArray(parsed.courses) ? parsed.courses : [];
       activeItems = Array.isArray(parsed.active) ? parsed.active : [];
       historyItems = Array.isArray(parsed.history) ? parsed.history : [];
+      if (Array.isArray(parsed.gradePlans)) {
+        gradePlans = parsed.gradePlans;
+      }
+      syncCoursesIntoGrades(false);
       saveData(true);
 
       if (parsed.notifPrefs) {
@@ -4552,6 +4978,633 @@
         }
       };
     })();
+
+    // =========================================================================
+    // 11.5 Grade & GPA Calculator Engine (คำนวณเกรด & วางแผนคะแนน)
+    // =========================================================================
+    const GRADE_LEVELS = [
+      { key: 'A',  label: 'A',  point: 4.0, defaultMin: 80, colorClass: 'text-emerald-700 dark:text-emerald-300', badgeBg: 'bg-emerald-600 text-white' },
+      { key: 'Bp', label: 'B+', point: 3.5, defaultMin: 75, colorClass: 'text-teal-700 dark:text-teal-300',       badgeBg: 'bg-teal-600 text-white' },
+      { key: 'B',  label: 'B',  point: 3.0, defaultMin: 70, colorClass: 'text-blue-700 dark:text-blue-300',       badgeBg: 'bg-blue-600 text-white' },
+      { key: 'Cp', label: 'C+', point: 2.5, defaultMin: 65, colorClass: 'text-indigo-700 dark:text-indigo-300',   badgeBg: 'bg-indigo-600 text-white' },
+      { key: 'C',  label: 'C',  point: 2.0, defaultMin: 60, colorClass: 'text-amber-700 dark:text-amber-300',     badgeBg: 'bg-amber-600 text-white' },
+      { key: 'Dp', label: 'D+', point: 1.5, defaultMin: 55, colorClass: 'text-orange-700 dark:text-orange-300',   badgeBg: 'bg-orange-600 text-white' },
+      { key: 'D',  label: 'D',  point: 1.0, defaultMin: 50, colorClass: 'text-rose-700 dark:text-rose-300',       badgeBg: 'bg-rose-600 text-white' }
+    ];
+
+    function getDefaultGradeScale() {
+      return { A: 80, Bp: 75, B: 70, Cp: 65, C: 60, Dp: 55, D: 50 };
+    }
+
+    function getDefaultGradeComponents() {
+      return [
+        { id: 'gc-' + Date.now() + '-1', name: 'คะแนนเก็บ / การบ้าน / แล็บ', max: 40, score: 35, isActual: true },
+        { id: 'gc-' + Date.now() + '-2', name: 'สอบกลางภาค (Midterm)', max: 30, score: 22, isActual: true },
+        { id: 'gc-' + Date.now() + '-3', name: 'สอบปลายภาค (Final)', max: 30, score: 24, isActual: false }
+      ];
+    }
+
+    function syncCoursesIntoGrades(showNotification = false) {
+      const uniqueCourses = getUniqueCoursesByName();
+      let addedCount = 0;
+
+      uniqueCourses.forEach((c, idx) => {
+        const key = `${c.code}::${c.name}`;
+        let existing = gradePlans.find(p => p.sourceKey === key || (!p.isCustom && p.name === c.name && p.code === c.code));
+        if (!existing) {
+          const fallback = PASTEL_THEMES[idx % PASTEL_THEMES.length];
+          gradePlans.push({
+            id: 'gp-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).slice(2, 5),
+            sourceKey: key,
+            code: c.code || 'COURSE',
+            name: c.name,
+            credits: 3,
+            includeInGpa: true,
+            isCustom: false,
+            bg: c.bg || fallback.bg,
+            fg: c.fg || fallback.fg,
+            dot: c.dot || fallback.dot,
+            scale: getDefaultGradeScale(),
+            components: getDefaultGradeComponents()
+          });
+          addedCount++;
+        } else {
+          existing.code = c.code || existing.code;
+          existing.bg = c.bg || existing.bg;
+          existing.fg = c.fg || existing.fg;
+          existing.dot = c.dot || existing.dot;
+        }
+      });
+
+      if (gradePlans.length > 0 && (!activeGradePlanId || !gradePlans.some(p => p.id === activeGradePlanId))) {
+        activeGradePlanId = gradePlans[0].id;
+      }
+
+      if (addedCount > 0) {
+        saveData(!showNotification);
+      }
+      if (showNotification) {
+        renderGradesTab();
+        showToast(addedCount > 0
+          ? `ดึงรายวิชาใหม่จากตารางเรียนเพิ่ม ${addedCount} วิชาเรียบร้อย`
+          : 'รายวิชาทั้งหมดตรงกับตารางเรียนล่าสุดแล้ว');
+      }
+    }
+
+    function evaluatePlanGrade(plan) {
+      const scale = { ...getDefaultGradeScale(), ...(plan.scale || {}) };
+      const comps = Array.isArray(plan.components) ? plan.components : [];
+
+      let totalWeight = 0;
+      let actualEarned = 0;
+      let actualMax = 0;
+      let predictedEarned = 0;
+      let remainingMax = 0;
+
+      comps.forEach(item => {
+        const maxVal = Math.max(0, Number(item.max) || 0);
+        const rawScore = Number(item.score) || 0;
+        const clampedScore = Math.max(0, Math.min(maxVal, rawScore));
+        totalWeight += maxVal;
+        if (item.isActual) {
+          actualEarned += clampedScore;
+          actualMax += maxVal;
+        } else {
+          predictedEarned += clampedScore;
+          remainingMax += maxVal;
+        }
+      });
+
+      const projectedTotal = Math.round((actualEarned + predictedEarned) * 100) / 100;
+      actualEarned = Math.round(actualEarned * 100) / 100;
+      actualMax = Math.round(actualMax * 100) / 100;
+      remainingMax = Math.round(remainingMax * 100) / 100;
+      totalWeight = Math.round(totalWeight * 100) / 100;
+
+      let letter = 'F';
+      let point = 0.0;
+      let badgeBg = 'bg-rose-600 text-white';
+
+      for (const lvl of GRADE_LEVELS) {
+        if (projectedTotal >= (Number(scale[lvl.key]) || lvl.defaultMin)) {
+          letter = lvl.label;
+          point = lvl.point;
+          badgeBg = lvl.badgeBg;
+          break;
+        }
+      }
+
+      return {
+        totalWeight,
+        actualEarned,
+        actualMax,
+        predictedEarned,
+        remainingMax,
+        projectedTotal,
+        letter,
+        point,
+        badgeBg,
+        scale
+      };
+    }
+
+    function calculateOverallGPA() {
+      let totalCredits = 0;
+      let totalQualityPoints = 0;
+      let countedSubjects = 0;
+
+      gradePlans.forEach(plan => {
+        if (plan.includeInGpa === false) return;
+        const cr = Math.max(0, Number(plan.credits) || 0);
+        if (cr <= 0) return;
+        const res = evaluatePlanGrade(plan);
+        totalCredits += cr;
+        totalQualityPoints += cr * res.point;
+        countedSubjects++;
+      });
+
+      const gpa = totalCredits > 0 ? (totalQualityPoints / totalCredits) : 0;
+      return {
+        gpa: gpa.toFixed(2),
+        totalCredits,
+        countedSubjects
+      };
+    }
+
+    function selectGradePlan(planId) {
+      activeGradePlanId = planId;
+      renderGradesTab();
+    }
+
+    function toggleAllSubjectsGpaDrawer() {
+      const drawer = document.getElementById('all-subjects-gpa-drawer');
+      const arrow = document.getElementById('gpa-drawer-arrow');
+      if (!drawer) return;
+      const isHidden = drawer.classList.contains('hidden');
+      drawer.classList.toggle('hidden', !isHidden);
+      if (arrow) arrow.textContent = isHidden ? '▲' : '▼';
+    }
+
+    function renderGradesTab() {
+      const gpaInfo = calculateOverallGPA();
+      const desktopBadge = document.getElementById('badge-gpa-desktop');
+      if (desktopBadge) desktopBadge.textContent = gpaInfo.gpa;
+
+      const gpaValEl = document.getElementById('gpa-overall-value');
+      const gpaSubEl = document.getElementById('gpa-overall-sub');
+      const gpaCrEl = document.getElementById('gpa-total-credits');
+      if (gpaValEl) gpaValEl.textContent = gpaInfo.gpa;
+      if (gpaSubEl) gpaSubEl.textContent = `คำนวณจาก ${gpaInfo.countedSubjects} วิชา`;
+      if (gpaCrEl) gpaCrEl.textContent = String(gpaInfo.totalCredits);
+
+      const pillsEl = document.getElementById('grade-subject-pills');
+      if (pillsEl) {
+        if (gradePlans.length === 0) {
+          pillsEl.innerHTML = `<span class="text-xs text-muted">ยังไม่มีรายวิชา</span>`;
+        } else {
+          pillsEl.innerHTML = gradePlans.map(p => {
+            const isSelected = p.id === activeGradePlanId;
+            const evalRes = evaluatePlanGrade(p);
+            const bg = p.bg || '#E3E6EC';
+            const fg = p.fg || '#14213D';
+            const dot = p.dot || '#475569';
+            return `
+              <button type="button" onclick="selectGradePlan('${escapeHTML(p.id)}')" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 ${isSelected ? 'ring-2 ring-[#14213D] dark:ring-white shadow-2xs' : 'opacity-85 hover:opacity-100'}" style="background:${bg}; color:${fg}; border-color:${dot}45;">
+                <span class="w-2 h-2 rounded-full shrink-0" style="background:${dot};"></span>
+                <span class="max-w-[140px] truncate">${escapeHTML(p.name)}</span>
+                <span class="px-1.5 py-0.2 rounded-md text-[11px] bg-white/90 text-[#14213D] font-bold">${evalRes.letter}</span>
+              </button>
+            `;
+          }).join('');
+        }
+      }
+
+      const allGpaListEl = document.getElementById('all-subjects-gpa-list');
+      if (allGpaListEl) {
+        if (gradePlans.length === 0) {
+          allGpaListEl.innerHTML = `<div class="py-4 text-center text-xs text-muted">ยังไม่มีรายวิชา</div>`;
+        } else {
+          allGpaListEl.innerHTML = gradePlans.map(p => {
+            const ev = evaluatePlanGrade(p);
+            const excluded = p.includeInGpa === false;
+            return `
+              <div onclick="selectGradePlan('${escapeHTML(p.id)}')" class="py-2.5 px-2 flex items-center justify-between gap-2 hover:bg-pageBg/60 rounded-lg cursor-pointer ${excluded ? 'opacity-55' : ''}">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold" style="background:${p.bg || '#E3E6EC'}; color:${p.fg || '#14213D'};">${escapeHTML(p.code)}</span>
+                    <span class="text-xs sm:text-sm font-bold text-[#14213D] truncate">${escapeHTML(p.name)}</span>
+                    ${excluded ? '<span class="text-[10px] font-bold text-muted">(ไม่นับ GPA)</span>' : ''}
+                  </div>
+                  <div class="text-[11px] text-muted mt-0.5">ได้จริง ${ev.actualEarned} · คาดการณ์รวม ${ev.projectedTotal} / ${ev.totalWeight} คะแนน</div>
+                </div>
+                <div class="flex items-center gap-2.5 shrink-0">
+                  <span class="text-xs font-bold text-muted">${Number(p.credits) || 0} นก.</span>
+                  <span class="w-9 text-center py-0.5 rounded-lg text-xs font-bold ${ev.badgeBg}">${ev.letter}</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      const emptyEl = document.getElementById('grades-empty-state');
+      const workspaceEl = document.getElementById('grade-calculator-workspace');
+      const activePlan = gradePlans.find(p => p.id === activeGradePlanId);
+
+      if (!activePlan) {
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        if (workspaceEl) workspaceEl.classList.add('hidden');
+        document.getElementById('grade-subj-actual-card').textContent = '0';
+        document.getElementById('grade-subj-total-card').textContent = '0';
+        document.getElementById('grade-subj-letter-badge').textContent = '-';
+        return;
+      }
+
+      if (emptyEl) emptyEl.classList.add('hidden');
+      if (workspaceEl) workspaceEl.classList.remove('hidden');
+
+      const ev = evaluatePlanGrade(activePlan);
+
+      document.getElementById('grade-subj-actual-card').textContent = `${ev.actualEarned}`;
+      document.getElementById('grade-subj-actual-sub').textContent = `จากเต็ม ${ev.actualMax} คะแนนที่ออกแล้ว`;
+      document.getElementById('grade-subj-total-card').textContent = `${ev.projectedTotal}`;
+      const letterBadge = document.getElementById('grade-subj-letter-badge');
+      letterBadge.textContent = ev.letter;
+      letterBadge.className = `px-2.5 py-0.5 rounded-lg text-sm font-bold ${ev.badgeBg}`;
+      document.getElementById('grade-subj-total-sub').textContent = `จากสัดส่วนรวม ${ev.totalWeight} คะแนน`;
+
+      const codeEl = document.getElementById('active-grade-subj-code');
+      codeEl.textContent = activePlan.code || 'COURSE';
+      codeEl.style.background = activePlan.bg || '#E3E6EC';
+      codeEl.style.color = activePlan.fg || '#14213D';
+      document.getElementById('active-grade-subj-name').textContent = activePlan.name;
+
+      const customTag = document.getElementById('active-grade-custom-tag');
+      const delCustomBtn = document.getElementById('btn-delete-custom-grade-subj');
+      if (activePlan.isCustom) {
+        customTag.classList.remove('hidden');
+        delCustomBtn.classList.remove('hidden');
+      } else {
+        customTag.classList.add('hidden');
+        delCustomBtn.classList.add('hidden');
+      }
+
+      document.getElementById('inp-grade-credits').value = activePlan.credits ?? 3;
+      document.getElementById('chk-grade-include-gpa').checked = activePlan.includeInGpa !== false;
+      document.getElementById('btn-scale-summary-tag').textContent = `A≥${ev.scale.A}`;
+
+      const weightBadge = document.getElementById('weight-sum-badge');
+      const weightBar = document.getElementById('weight-progress-bar');
+      const fillBtn = document.getElementById('btn-fill-remaining-weight');
+
+      weightBadge.textContent = `${ev.totalWeight} / 100 คะแนน`;
+      const pct = Math.min(100, Math.max(0, ev.totalWeight));
+      weightBar.style.width = `${pct}%`;
+
+      if (ev.totalWeight === 100) {
+        weightBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#DCFCE7] text-[#166534]';
+        weightBar.className = 'h-full bg-teal-600 transition-all duration-200';
+        fillBtn.classList.add('hidden');
+      } else if (ev.totalWeight < 100) {
+        const diff = Math.round((100 - ev.totalWeight) * 100) / 100;
+        weightBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#92400E]';
+        weightBar.className = 'h-full bg-amber-500 transition-all duration-200';
+        fillBtn.textContent = `+ เพิ่มส่วนที่เหลือให้ครบ 100 (+${diff})`;
+        fillBtn.classList.remove('hidden');
+      } else {
+        const over = Math.round((ev.totalWeight - 100) * 100) / 100;
+        weightBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FBE4E8] text-[#8B1230]';
+        weightBar.className = 'h-full bg-rose-600 transition-all duration-200';
+        fillBtn.classList.add('hidden');
+        weightBadge.textContent = `${ev.totalWeight} / 100 คะแนน (เกิน ${over})`;
+      }
+
+      const compListEl = document.getElementById('grade-components-list');
+      if (!activePlan.components || activePlan.components.length === 0) {
+        compListEl.innerHTML = `<div class="p-6 text-center text-xs text-muted bg-pageBg/50 rounded-xl border border-dashed border-cardBorder">ยังไม่มีหมวดคะแนน กดปุ่ม "+ เพิ่มหมวดคะแนนใหม่" หรือเลือกปุ่มแบ่งสัดส่วนสำเร็จรูปด้านบน</div>`;
+      } else {
+        compListEl.innerHTML = activePlan.components.map((comp) => {
+          const isActual = Boolean(comp.isActual);
+          const rowBorder = isActual
+            ? 'border-emerald-500/35 bg-emerald-50/35 dark:bg-emerald-950/20'
+            : 'border-indigo-400/35 bg-indigo-50/35 dark:bg-indigo-950/20';
+          const statusBtn = isActual
+            ? `<button type="button" onclick="toggleGradeComponentStatus('${escapeHTML(comp.id)}')" class="w-full h-9 px-2.5 rounded-xl bg-[#DCFCE7] hover:bg-emerald-200 text-[#166534] border border-emerald-500/35 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1">
+                <span>✅ ได้จริง</span>
+              </button>`
+            : `<button type="button" onclick="toggleGradeComponentStatus('${escapeHTML(comp.id)}')" class="w-full h-9 px-2.5 rounded-xl bg-indigo-100 hover:bg-indigo-200 text-indigo-800 dark:bg-indigo-900/70 dark:text-indigo-200 border border-indigo-400/40 text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1">
+                <span>🔮 คาดการณ์</span>
+              </button>`;
+
+          return `
+            <div class="rounded-xl border ${rowBorder} p-2.5 sm:p-3 grid grid-cols-12 gap-2 items-center">
+              <div class="col-span-12 sm:col-span-4">
+                <input type="text" value="${escapeHTML(comp.name)}" onchange="updateGradeComponentField('${escapeHTML(comp.id)}', 'name', this.value)" placeholder="ชื่อหมวดคะแนน" class="w-full h-9 px-2.5 rounded-lg bg-white border border-cardBorder text-xs sm:text-sm font-bold text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
+              </div>
+              <div class="col-span-4 sm:col-span-2">
+                <label class="block sm:hidden text-[10px] font-bold text-muted mb-0.5">ได้คะแนน</label>
+                <input type="number" step="0.1" min="0" max="${Number(comp.max) || 100}" value="${comp.score}" oninput="updateGradeComponentField('${escapeHTML(comp.id)}', 'score', this.value, false)" onchange="updateGradeComponentField('${escapeHTML(comp.id)}', 'score', this.value, true)" class="w-full h-9 px-2 rounded-lg bg-white border border-cardBorder text-center text-xs sm:text-sm font-bold text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
+              </div>
+              <div class="col-span-3 sm:col-span-2">
+                <label class="block sm:hidden text-[10px] font-bold text-muted mb-0.5">เต็ม</label>
+                <input type="number" step="0.5" min="0" max="100" value="${comp.max}" oninput="updateGradeComponentField('${escapeHTML(comp.id)}', 'max', this.value, false)" onchange="updateGradeComponentField('${escapeHTML(comp.id)}', 'max', this.value, true)" class="w-full h-9 px-2 rounded-lg bg-white border border-cardBorder text-center text-xs sm:text-sm font-bold text-muted focus:outline-none focus:ring-2 focus:ring-navy" />
+              </div>
+              <div class="col-span-4 sm:col-span-3">
+                <label class="block sm:hidden text-[10px] font-bold text-muted mb-0.5">สถานะ</label>
+                ${statusBtn}
+              </div>
+              <div class="col-span-1 flex justify-end self-end sm:self-center">
+                <button type="button" onclick="deleteGradeComponentRow('${escapeHTML(comp.id)}')" title="ลบหมวดคะแนนนี้" class="w-8 h-9 rounded-lg bg-white hover:bg-[#FBE4E8] border border-cardBorder text-[#8B1230] text-xs font-bold transition">
+                  ✕
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const remBadge = document.getElementById('target-remaining-pool-badge');
+      remBadge.textContent = `เหลือให้เก็บอีก ${ev.remainingMax} คะแนน (จากช่องคาดการณ์)`;
+
+      const targetGrid = document.getElementById('target-grades-grid');
+      targetGrid.innerHTML = GRADE_LEVELS.map(lvl => {
+        const minReq = Number(ev.scale[lvl.key]) || lvl.defaultMin;
+        const neededFromRemaining = Math.round((minReq - ev.actualEarned) * 100) / 100;
+        const isCurrentTarget = ev.letter === lvl.label;
+
+        let statusHtml = '';
+        let cardStyle = 'bg-pageBg/70 border-cardBorder';
+
+        if (neededFromRemaining <= 0) {
+          statusHtml = `<div class="text-xs font-bold text-emerald-700 dark:text-emerald-400">✓ ถึงเกณฑ์แล้ว</div><div class="text-[10px] text-muted">มีในมือ ${ev.actualEarned}</div>`;
+          cardStyle = 'bg-[#DCFCE7]/55 dark:bg-emerald-950/30 border-emerald-500/40';
+        } else if (neededFromRemaining <= ev.remainingMax) {
+          const pctNeeded = ev.remainingMax > 0 ? Math.round((neededFromRemaining / ev.remainingMax) * 100) : 0;
+          statusHtml = `<div class="text-xs font-bold text-[#14213D]">อีก ${neededFromRemaining} คะแนน</div><div class="text-[10px] font-semibold text-teal-700 dark:text-teal-400">(${pctNeeded}% ของที่เหลือ)</div>`;
+          if (isCurrentTarget) {
+            cardStyle = 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 ring-1 ring-indigo-500';
+          }
+        } else {
+          const shortBy = Math.round((neededFromRemaining - ev.remainingMax) * 100) / 100;
+          statusHtml = `<div class="text-xs font-bold text-[#8B1230] dark:text-rose-400">ต้องทำ ${neededFromRemaining}</div><div class="text-[10px] font-semibold text-rose-600 dark:text-rose-400">เกินที่เหลือ (${shortBy})</div>`;
+          cardStyle = 'bg-[#FFF1F2]/60 dark:bg-rose-950/20 border-rose-300/60 opacity-80';
+        }
+
+        return `
+          <div class="rounded-xl border ${cardStyle} p-3 text-center space-y-1">
+            <div class="flex items-center justify-center gap-1.5">
+              <span class="text-base font-bold ${lvl.colorClass}">${lvl.label}</span>
+              <span class="text-[10px] font-bold text-muted">(≥${minReq})</span>
+            </div>
+            ${statusHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateGradeComponentField(compId, field, rawVal, shouldRerender = true) {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan) return;
+      const comp = plan.components.find(c => c.id === compId);
+      if (!comp) return;
+
+      if (field === 'name') {
+        comp.name = String(rawVal || '').trim() || 'หมวดคะแนน';
+      } else if (field === 'max') {
+        const newMax = Math.max(0, Math.min(100, Number(rawVal) || 0));
+        comp.max = newMax;
+        if ((Number(comp.score) || 0) > newMax) {
+          comp.score = newMax;
+        }
+      } else if (field === 'score') {
+        const maxAllowed = Math.max(0, Number(comp.max) || 0);
+        comp.score = Math.max(0, Math.min(maxAllowed, Number(rawVal) || 0));
+      }
+
+      saveData();
+      if (shouldRerender) {
+        renderGradesTab();
+      } else {
+        const ev = evaluatePlanGrade(plan);
+        const gpaInfo = calculateOverallGPA();
+        document.getElementById('grade-subj-actual-card').textContent = `${ev.actualEarned}`;
+        document.getElementById('grade-subj-actual-sub').textContent = `จากเต็ม ${ev.actualMax} คะแนนที่ออกแล้ว`;
+        document.getElementById('grade-subj-total-card').textContent = `${ev.projectedTotal}`;
+        const letterBadge = document.getElementById('grade-subj-letter-badge');
+        letterBadge.textContent = ev.letter;
+        letterBadge.className = `px-2.5 py-0.5 rounded-lg text-sm font-bold ${ev.badgeBg}`;
+        document.getElementById('grade-subj-total-sub').textContent = `จากสัดส่วนรวม ${ev.totalWeight} คะแนน`;
+        document.getElementById('gpa-overall-value').textContent = gpaInfo.gpa;
+        const desktopBadge = document.getElementById('badge-gpa-desktop');
+        if (desktopBadge) desktopBadge.textContent = gpaInfo.gpa;
+      }
+    }
+
+    function toggleGradeComponentStatus(compId) {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan) return;
+      const comp = plan.components.find(c => c.id === compId);
+      if (!comp) return;
+      comp.isActual = !comp.isActual;
+      saveData();
+      renderGradesTab();
+    }
+
+    function addGradeComponentRow() {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan) return;
+      const ev = evaluatePlanGrade(plan);
+      const suggestedMax = ev.totalWeight < 100 ? Math.round((100 - ev.totalWeight) * 100) / 100 : 10;
+      plan.components.push({
+        id: 'gc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+        name: 'หมวดคะแนนใหม่',
+        max: suggestedMax,
+        score: 0,
+        isActual: false
+      });
+      saveData();
+      renderGradesTab();
+    }
+
+    function addRemainingWeightItem() {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan) return;
+      const ev = evaluatePlanGrade(plan);
+      if (ev.totalWeight >= 100) return;
+      const diff = Math.round((100 - ev.totalWeight) * 100) / 100;
+      plan.components.push({
+        id: 'gc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+        name: 'คะแนนส่วนที่เหลือ',
+        max: diff,
+        score: Math.round(diff * 0.8 * 10) / 10,
+        isActual: false
+      });
+      saveData();
+      renderGradesTab();
+      showToast(`เพิ่มหมวดคะแนน +${diff} ให้ครบ 100 คะแนนแล้ว`);
+    }
+
+    function deleteGradeComponentRow(compId) {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan) return;
+      plan.components = plan.components.filter(c => c.id !== compId);
+      saveData();
+      renderGradesTab();
+    }
+
+    function applyWeightPreset(presetKey) {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan) return;
+      const ts = Date.now();
+      if (presetKey === '40-30-30') {
+        plan.components = [
+          { id: `gc-${ts}-1`, name: 'คะแนนเก็บ / การบ้าน / แล็บ', max: 40, score: 35, isActual: true },
+          { id: `gc-${ts}-2`, name: 'สอบกลางภาค (Midterm)', max: 30, score: 22, isActual: true },
+          { id: `gc-${ts}-3`, name: 'สอบปลายภาค (Final)', max: 30, score: 24, isActual: false }
+        ];
+      } else if (presetKey === '50-20-30') {
+        plan.components = [
+          { id: `gc-${ts}-1`, name: 'คะแนนเก็บ / การบ้าน / โปรเจกต์', max: 50, score: 42, isActual: true },
+          { id: `gc-${ts}-2`, name: 'สอบกลางภาค (Midterm)', max: 20, score: 15, isActual: true },
+          { id: `gc-${ts}-3`, name: 'สอบปลายภาค (Final)', max: 30, score: 24, isActual: false }
+        ];
+      } else if (presetKey === '60-40') {
+        plan.components = [
+          { id: `gc-${ts}-1`, name: 'คะแนนเก็บตลอดเทอม', max: 60, score: 50, isActual: true },
+          { id: `gc-${ts}-2`, name: 'สอบปลายภาค / สอบประมวลผล', max: 40, score: 30, isActual: false }
+        ];
+      }
+      saveData();
+      renderGradesTab();
+      showToast('แบ่งสัดส่วนคะแนนสำเร็จรูปแล้ว สามารถแก้ตัวเลขต่อได้เลย');
+    }
+
+    function updateActiveGradeCredits(val) {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan) return;
+      plan.credits = Math.max(0, Math.min(12, Number(val) || 0));
+      saveData();
+      renderGradesTab();
+    }
+
+    function toggleActiveGradeIncludeGpa(checked) {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan) return;
+      plan.includeInGpa = Boolean(checked);
+      saveData();
+      renderGradesTab();
+    }
+
+    function openGradeScaleModal() {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan) return;
+      const scale = { ...getDefaultGradeScale(), ...(plan.scale || {}) };
+      document.getElementById('scale-modal-subj-label').textContent = `[${plan.code}] ${plan.name}`;
+      document.getElementById('scale-inp-A').value = scale.A;
+      document.getElementById('scale-inp-Bp').value = scale.Bp;
+      document.getElementById('scale-inp-B').value = scale.B;
+      document.getElementById('scale-inp-Cp').value = scale.Cp;
+      document.getElementById('scale-inp-C').value = scale.C;
+      document.getElementById('scale-inp-Dp').value = scale.Dp;
+      document.getElementById('scale-inp-D').value = scale.D;
+      document.getElementById('grade-scale-modal').classList.remove('hidden');
+    }
+
+    function closeGradeScaleModal() {
+      document.getElementById('grade-scale-modal').classList.add('hidden');
+    }
+
+    function applyGradeScalePreset(type) {
+      if (type === 'standard') {
+        document.getElementById('scale-inp-A').value = 80;
+        document.getElementById('scale-inp-Bp').value = 75;
+        document.getElementById('scale-inp-B').value = 70;
+        document.getElementById('scale-inp-Cp').value = 65;
+        document.getElementById('scale-inp-C').value = 60;
+        document.getElementById('scale-inp-Dp').value = 55;
+        document.getElementById('scale-inp-D').value = 50;
+      } else if (type === 'lenient') {
+        document.getElementById('scale-inp-A').value = 75;
+        document.getElementById('scale-inp-Bp').value = 70;
+        document.getElementById('scale-inp-B').value = 65;
+        document.getElementById('scale-inp-Cp').value = 60;
+        document.getElementById('scale-inp-C').value = 55;
+        document.getElementById('scale-inp-Dp').value = 50;
+        document.getElementById('scale-inp-D').value = 45;
+      }
+    }
+
+    function saveGradeScaleFromModal() {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan) return;
+      plan.scale = {
+        A:  Number(document.getElementById('scale-inp-A').value) || 80,
+        Bp: Number(document.getElementById('scale-inp-Bp').value) || 75,
+        B:  Number(document.getElementById('scale-inp-B').value) || 70,
+        Cp: Number(document.getElementById('scale-inp-Cp').value) || 65,
+        C:  Number(document.getElementById('scale-inp-C').value) || 60,
+        Dp: Number(document.getElementById('scale-inp-Dp').value) || 55,
+        D:  Number(document.getElementById('scale-inp-D').value) || 50
+      };
+      saveData();
+      closeGradeScaleModal();
+      renderGradesTab();
+      showToast('บันทึกเกณฑ์ตัดเกรดของวิชานี้เรียบร้อยแล้ว');
+    }
+
+    function openAddCustomGradeSubjectModal() {
+      document.getElementById('custom-grade-code').value = '';
+      document.getElementById('custom-grade-name').value = '';
+      document.getElementById('custom-grade-credits').value = '3';
+      document.getElementById('custom-grade-subj-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('custom-grade-name').focus(), 50);
+    }
+
+    function closeAddCustomGradeSubjectModal() {
+      document.getElementById('custom-grade-subj-modal').classList.add('hidden');
+    }
+
+    function handleAddCustomGradeSubject(e) {
+      e.preventDefault();
+      const code = document.getElementById('custom-grade-code').value.trim() || 'ELECTIVE';
+      const name = document.getElementById('custom-grade-name').value.trim();
+      const credits = Math.max(0, Math.min(12, Number(document.getElementById('custom-grade-credits').value) || 3));
+      if (!name) return;
+
+      const theme = PASTEL_THEMES[gradePlans.length % PASTEL_THEMES.length];
+      const newPlan = {
+        id: 'gp-custom-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+        sourceKey: '',
+        code,
+        name,
+        credits,
+        includeInGpa: true,
+        isCustom: true,
+        bg: theme.bg,
+        fg: theme.fg,
+        dot: theme.dot,
+        scale: getDefaultGradeScale(),
+        components: getDefaultGradeComponents()
+      };
+      gradePlans.push(newPlan);
+      activeGradePlanId = newPlan.id;
+      saveData();
+      closeAddCustomGradeSubjectModal();
+      renderGradesTab();
+      showToast(`เพิ่มวิชา "${name}" เข้าสู่ระบบคำนวณเกรดแล้ว`);
+    }
+
+    function deleteActiveCustomGradeSubject() {
+      const plan = gradePlans.find(p => p.id === activeGradePlanId);
+      if (!plan || !plan.isCustom) return;
+      openConfirmModal('ลบวิชาคำนวณเกรด', `ต้องการลบวิชา "${plan.name}" ออกจากรายการคำนวณเกรดใช่หรือไม่?`, () => {
+        gradePlans = gradePlans.filter(p => p.id !== plan.id);
+        activeGradePlanId = gradePlans.length > 0 ? gradePlans[0].id : null;
+        saveData();
+        renderGradesTab();
+        showToast('ลบรายวิชาคำนวณเกรดเรียบร้อยแล้ว');
+      });
+    }
 
     // =========================================================================
     // 12. Boot Application
