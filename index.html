@@ -596,7 +596,7 @@
             <div class="bg-pageBg rounded-xl border border-cardBorder p-3.5 space-y-2">
               <label for="inp-custom-sync-id" class="block text-xs font-bold text-muted">เชื่อมต่อรหัสจากเครื่องอื่น / ตั้งรหัสเอง (อย่างน้อย 6 ตัว):</label>
               <div class="flex items-center gap-2">
-                <input type="text" id="inp-custom-sync-id" placeholder="เช่น champ-2569" class="flex-1 min-w-0 h-9 px-3 rounded-lg bg-white border border-cardBorder font-mono text-xs sm:text-sm text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
+                <input type="text" id="inp-custom-sync-id" onkeydown="if(event.key==='Enter'){event.preventDefault();applyCustomSyncId();}" placeholder="เช่น champ-2569" class="flex-1 min-w-0 h-9 px-3 rounded-lg bg-white border border-cardBorder font-mono text-xs sm:text-sm text-[#14213D] focus:outline-none focus:ring-2 focus:ring-navy" />
                 <button type="button" onclick="applyCustomSyncId()" class="theme-btn-primary shrink-0 px-4 py-2 rounded-lg text-xs font-bold border border-black/10 transition active:scale-95">
                   เชื่อมต่อ
                 </button>
@@ -1002,9 +1002,12 @@
     const THAI_DOW = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
     const THAI_MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
-    const STORAGE_PROFILE    = 'hwlist_local_profile_v1';
-    const STORAGE_NOTIF_PREF = 'hwlist_notif_prefs_v1';
-    const STORAGE_LAST_DAY   = 'hwlist_last_day_v1';
+    const STORAGE_PROFILE       = 'hwlist_local_profile_v1';
+    const STORAGE_NOTIF_PREF    = 'hwlist_notif_prefs_v1';
+    const STORAGE_LAST_DAY      = 'hwlist_last_day_v1';
+    const STORAGE_LAST_SCHED_ID = 'hwlist_last_sched_notif_v1';
+    const LS_LOCAL_CHANGE_TS    = 'hw_last_local_change_ts';
+    const LS_LAST_SYNCED_TS     = 'hw_last_synced_ts';
 
     let currentUser = null;
     let courses = [];
@@ -1028,6 +1031,20 @@
         showToast('ไม่สามารถบันทึกข้อมูลลงเครื่องได้ (พื้นที่เต็มหรือโหมดไม่ระบุตัวตน)');
         return false;
       }
+    }
+
+    function markLocalDataChanged() {
+      try {
+        localStorage.setItem(LS_LOCAL_CHANGE_TS, String(Date.now()));
+      } catch (e) {}
+    }
+
+    function markDataSynced(ts) {
+      try {
+        const val = String(ts || Date.now());
+        localStorage.setItem(LS_LAST_SYNCED_TS, val);
+        localStorage.setItem(LS_LOCAL_CHANGE_TS, val);
+      } catch (e) {}
     }
 
     function getUserDataKey(suffix) {
@@ -1086,10 +1103,13 @@
       };
     }
 
-    function persistCurrentUser() {
+    function persistCurrentUser(skipCloudPush = false) {
       if (!currentUser) return;
       safeSetStorage(STORAGE_PROFILE, JSON.stringify(currentUser));
-      if (window.cloudSync) window.cloudSync.push();
+      if (!skipCloudPush) {
+        markLocalDataChanged();
+        if (window.cloudSync) window.cloudSync.push();
+      }
     }
 
     function migrateLegacyUserDataIfNeeded() {
@@ -1106,7 +1126,7 @@
             morningTime: oldSession.morningTime || '08:00',
             nightTime: oldSession.nightTime || '21:00'
           };
-          persistCurrentUser();
+          persistCurrentUser(true);
         }
       } catch {}
 
@@ -1210,12 +1230,33 @@
           }
         });
 
-        const link = document.createElement('a');
-        link.download = 'ตารางเรียน.jpg';
-        link.href = canvas.toDataURL('image/jpeg', 0.95);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        await new Promise((resolve, reject) => {
+          if (typeof canvas.toBlob === 'function') {
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error('toBlob failed'));
+                return;
+              }
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.download = 'ตารางเรียน.jpg';
+              link.href = url;
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              setTimeout(() => URL.revokeObjectURL(url), 5000);
+              resolve();
+            }, 'image/jpeg', 0.95);
+          } else {
+            const link = document.createElement('a');
+            link.download = 'ตารางเรียน.jpg';
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            resolve();
+          }
+        });
         showToast('ดาวน์โหลดรูปตารางเรียน (.JPG) เรียบร้อยแล้ว');
       } catch (err) {
         console.error('Export schedule JPG error:', err);
@@ -1258,7 +1299,7 @@
         ctz: 'Asia/Bangkok'
       });
 
-      const url = 'https:/' + '/calendar.google.com/calendar/render?' + params.toString();
+      const url = 'https://calendar.google.com/calendar/render?' + params.toString();
       window.open(url, '_blank', 'noopener,noreferrer');
     }
 
@@ -1438,6 +1479,19 @@
       return toYMD(next);
     }
 
+    function getNextClassYMDForSubject(subjectName) {
+      const slots = courses.filter(x => x.name === subjectName);
+      if (slots.length === 0) return toYMD(getTodayDate());
+      let bestYMD = null;
+      for (const s of slots) {
+        const candidate = getNextClassYMD(s.dow);
+        if (!bestYMD || candidate < bestYMD) {
+          bestYMD = candidate;
+        }
+      }
+      return bestYMD;
+    }
+
     function escapeHTML(str) {
       return String(str || '')
         .replace(/&/g, '&amp;')
@@ -1499,8 +1553,11 @@
       safeSetStorage(getUserDataKey('courses'), JSON.stringify(courses));
       safeSetStorage(getUserDataKey('active'), JSON.stringify(activeItems));
       safeSetStorage(getUserDataKey('history'), JSON.stringify(historyItems));
-      if (!skipCloudPush && window.cloudSync) {
-        window.cloudSync.push();
+      if (!skipCloudPush) {
+        markLocalDataChanged();
+        if (window.cloudSync) {
+          window.cloudSync.push();
+        }
       }
     }
 
@@ -1585,13 +1642,14 @@
       const selEl = document.getElementById('inp-subject');
       const subjName = selEl.value;
       const hintBox = document.getElementById('form-course-hint');
-      const c = courses.find(x => x.name === subjName);
+      const matchingSlots = courses.filter(x => x.name === subjName);
+      const c = matchingSlots[0];
       if (c) {
         selEl.style.backgroundColor = c.bg;
         selEl.style.color = c.fg;
         selEl.style.borderColor = c.dot;
-        const dayStr = THAI_DOW[c.dow];
-        const detailParts = [`${dayStr} ${c.time}`, c.room, c.info].filter(Boolean).join(' | ');
+        const scheduleSummary = matchingSlots.map(s => `${THAI_DOW[s.dow]} ${s.time}`).join(', ');
+        const detailParts = [scheduleSummary, c.room, c.info].filter(Boolean).join(' | ');
         hintBox.innerHTML = `
           <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold text-xs" style="background:${c.bg}; color:${c.fg};">
             <span class="w-2 h-2 rounded-full" style="background:${c.dot};"></span>
@@ -1601,7 +1659,7 @@
         `;
         const noDueEl = document.getElementById('inp-no-due');
         if (!editingTaskId && !(noDueEl && noDueEl.checked)) {
-          document.getElementById('inp-due').value = getNextClassYMD(c.dow);
+          document.getElementById('inp-due').value = getNextClassYMDForSubject(subjName);
         }
       } else {
         selEl.style.backgroundColor = '';
@@ -1626,8 +1684,7 @@
         dueEl.disabled = false;
         dueEl.required = true;
         const subjName = document.getElementById('inp-subject').value;
-        const c = courses.find(x => x.name === subjName);
-        dueEl.value = c ? getNextClassYMD(c.dow) : toYMD(getTodayDate());
+        dueEl.value = getNextClassYMDForSubject(subjName);
       }
     }
 
@@ -1833,7 +1890,7 @@
       const code = document.getElementById('c-inp-code').value.trim();
       const name = document.getElementById('c-inp-name').value.trim();
       const dow = Number(document.getElementById('c-inp-dow').value);
-      const time = document.getElementById('c-inp-time').value.trim().replace(/\./g, ':').replace(/\s*-\s*/g, '–');
+      const time = document.getElementById('c-inp-time').value.trim().replace(/\./g, ':').replace(/\s*[-–—]\s*/g, '–');
       const room = document.getElementById('c-inp-room').value.trim() || 'ห้อง N/A';
       const info = document.getElementById('c-inp-info').value.trim();
       const themeIdx = Number(document.getElementById('c-inp-theme').value) || 0;
@@ -1970,7 +2027,7 @@
           code = parts[0] || 'COURSE';
           name = parts[1] || 'ไม่ระบุชื่อวิชา';
           dow = parts[2] ? detectThaiDow(parts[2]) : 1;
-          time = (parts[3] || '').replace(/\./g, ':').replace(/\s*-\s*/g, '–');
+          time = (parts[3] || '').replace(/\./g, ':').replace(/\s*[-–—]\s*/g, '–');
           const extra = parts.slice(4).join(' | ').trim();
           room = extra || 'ห้อง N/A';
           info = (extra && extra !== 'ห้อง N/A') ? extra : '';
@@ -1979,8 +2036,8 @@
           if (!codeMatch) continue;
           code = codeMatch[1];
           let rest = line.replace(code, '').trim();
-          const timeMatch = rest.match(/(\d{1,2}[:.]\d{2}\s*[-–]\s*\d{1,2}[:.]\d{2})/);
-          time = timeMatch ? timeMatch[1].replace(/\./g, ':').replace(/\s*-\s*/g, '–') : '';
+          const timeMatch = rest.match(/(\d{1,2}[:.]\d{2}\s*[-–—]\s*\d{1,2}[:.]\d{2})/);
+          time = timeMatch ? timeMatch[1].replace(/\./g, ':').replace(/\s*[-–—]\s*/g, '–') : '';
           if (timeMatch) rest = rest.replace(timeMatch[0], ' ');
           const dayMatch = rest.match(/(วัน)?(อาทิตย์|จันทร์|อังคาร|พฤหัสบดี|พฤหัส|พุธ|ศุกร์|เสาร์)/);
           dow = dayMatch ? detectThaiDow(dayMatch[0]) : 1;
@@ -2092,7 +2149,7 @@
     // =========================================================================
     function parseHourRange(timeStr) {
       if (!timeStr) return null;
-      const m = timeStr.match(/(\d{1,2})[:.](\d{2})\s*[-–]\s*(\d{1,2})[:.](\d{2})/);
+      const m = timeStr.match(/(\d{1,2})[:.](\d{2})\s*[-–—]\s*(\d{1,2})[:.](\d{2})/);
       if (!m) return null;
       const startH = parseInt(m[1], 10);
       const endH = parseInt(m[3], 10) + (parseInt(m[4], 10) > 0 ? 1 : 0);
@@ -2145,24 +2202,26 @@
 
         let h = START_HOUR;
         while (h < END_HOUR) {
-          const block = dayCourses.find(c => c.range.startH === h);
-          if (block) {
-            const clampedEnd = Math.min(END_HOUR, block.range.endH);
-            const span = Math.max(1, clampedEnd - h);
-            const roomLabel = block.room || 'ห้อง N/A';
-            const cleanName = String(block.name || '')
-              .replace(/\s*\([^)]*[\u0E00-\u0E7F][^)]*\)/g, '')
-              .replace(/[\u0E00-\u0E7F]+/g, '')
-              .replace(/\s{2,}/g, ' ')
-              .trim() || block.name;
-            html += `
-              <td colspan="${span}" class="p-1.5 align-middle ${rowBg}">
+          const blocks = dayCourses.filter(c => Math.max(START_HOUR, c.range.startH) === h);
+          if (blocks.length > 0) {
+            const maxEnd = Math.min(END_HOUR, Math.max(...blocks.map(b => b.range.endH)));
+            const span = Math.max(1, maxEnd - h);
+            const cardsHTML = blocks.map(block => {
+              const roomLabel = block.room || 'ห้อง N/A';
+              const strippedThai = String(block.name || '')
+                .replace(/\s*\([^)]*[\u0E00-\u0E7F][^)]*\)/g, '')
+                .replace(/[\u0E00-\u0E7F]+/g, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+              const cleanName = /[a-zA-Z]{2,}/.test(strippedThai) ? strippedThai : (block.name || '');
+              return `
                 <div class="rounded-xl px-3 py-2.5 min-h-[64px] flex flex-col justify-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]" style="background:${block.bg}; color:${block.fg};">
                   <div class="font-bold text-xs leading-snug break-words">${escapeHTML(cleanName)}</div>
                   <div class="text-[11px] opacity-85 mt-0.5 leading-tight break-words">${escapeHTML(roomLabel)}</div>
                 </div>
-              </td>
-            `;
+              `;
+            }).join('<div class="h-1.5"></div>');
+            html += `<td colspan="${span}" class="p-1.5 align-middle ${rowBg}">${cardsHTML}</td>`;
             h += span;
           } else {
             html += `<td class="p-1 ${rowBg}"></td>`;
@@ -2663,6 +2722,9 @@
       } catch {
         notifPrefs = { autoPopup: true, sound: true };
       }
+      try {
+        lastScheduledNotifKey = localStorage.getItem(STORAGE_LAST_SCHED_ID) || '';
+      } catch {}
       updateNotifStatusUI();
     }
 
@@ -2670,6 +2732,7 @@
       notifPrefs.autoPopup = document.getElementById('chk-notif-auto').checked;
       notifPrefs.sound = document.getElementById('chk-notif-sound').checked;
       safeSetStorage(STORAGE_NOTIF_PREF, JSON.stringify(notifPrefs));
+      markLocalDataChanged();
       if (window.cloudSync) window.cloudSync.push();
       updateNotifStatusUI();
       showToast('บันทึกการตั้งค่าแจ้งเตือนแล้ว');
@@ -2962,6 +3025,7 @@
         const schedKey = `${currentYMD}_${hhmm}`;
         if ((hhmm === currentUser.morningTime || hhmm === currentUser.nightTime) && lastScheduledNotifKey !== schedKey) {
           lastScheduledNotifKey = schedKey;
+          safeSetStorage(STORAGE_LAST_SCHED_ID, schedKey);
           triggerUrgentAlert(false, false);
         }
       }
@@ -3012,8 +3076,11 @@
       syncSubjectDropdown();
       renderAll();
 
-      if (!skipCloudPush && window.cloudSync) {
-        window.cloudSync.push();
+      if (!skipCloudPush) {
+        markLocalDataChanged();
+        if (window.cloudSync) {
+          window.cloudSync.push();
+        }
       }
     }
 
@@ -3143,6 +3210,7 @@
               syncProfileUI();
               syncSubjectDropdown();
               renderAll();
+              markLocalDataChanged();
               if (window.cloudSync) window.cloudSync.push();
             }
             showToast('กู้คืนและย้ายข้อมูลเข้าเครื่องนี้สำเร็จเรียบร้อย!');
@@ -3162,7 +3230,7 @@
       const firebaseConfig = {
         apiKey: "AIzaSyAZWRzAYC6urDjUkuM2nEdoLlOInZFGzpQ",
         authDomain: "homework-list-sync.firebaseapp.com",
-        databaseURL: "https:/" + "/homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app",
+        databaseURL: "[https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app](https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app)",
         projectId: "homework-list-sync",
         storageBucket: "homework-list-sync.firebasestorage.app",
         messagingSenderId: "413595618223",
@@ -3252,26 +3320,16 @@
           return false;
         }
         try {
-          const cleanDbUrl = String(firebaseConfig.databaseURL || "")
-            .trim()
-            .replace(/^\[([^\]]+)\]\([^)]+\)$/, "$1")
-            .replace(/^<(.+)>$/, "$1")
-            .trim();
-          firebaseConfig.databaseURL = cleanDbUrl;
+          const cleanDbUrl = String(firebaseConfig.databaseURL || "").trim();
           if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
           }
           db = firebase.app().database(cleanDbUrl);
 
-          // Monitor real-time connection state
           db.ref(".info/connected").on("value", (snap) => {
-            if (snap.val() === true) {
-              if (hasPendingOfflinePush) {
-                hasPendingOfflinePush = false;
-                pushToCloud();
-              } else {
-                updateCloudBadge("synced");
-              }
+            if (snap.val() === true && hasPendingOfflinePush) {
+              hasPendingOfflinePush = false;
+              pushToCloud();
             }
           });
 
@@ -3304,6 +3362,7 @@
             updatedBy: clientInstanceId
           });
           hasPendingOfflinePush = false;
+          markDataSynced(lastLocalPushTs);
           updateCloudBadge("synced");
         } catch (err) {
           console.error("Firebase push error:", err);
@@ -3335,6 +3394,7 @@
           isApplyingRemote = true;
           try {
             applyStructuredBackupObject(record.payload, true);
+            markDataSynced(record.updatedAt || Date.now());
           } finally {
             setTimeout(() => { isApplyingRemote = false; }, 150);
           }
@@ -3361,14 +3421,25 @@
 
         try {
           const snap = await db.ref(`users/${syncId}`).once("value");
+          const localChangeTs = Number(localStorage.getItem(LS_LOCAL_CHANGE_TS) || 0);
+          const lastSyncedTs = Number(localStorage.getItem(LS_LAST_SYNCED_TS) || 0);
+          const hasUnsyncedLocalEdits = localChangeTs > lastSyncedTs && (courses.length > 0 || activeItems.length > 0 || historyItems.length > 0);
+
           if (snap.exists() && snap.val() && snap.val().payload) {
-            isApplyingRemote = true;
-            try {
-              applyStructuredBackupObject(snap.val().payload, true);
-            } finally {
-              setTimeout(() => { isApplyingRemote = false; }, 150);
+            const remoteData = snap.val();
+            const remoteUpdatedAt = Number(remoteData.updatedAt || 0);
+            if (hasUnsyncedLocalEdits && localChangeTs > remoteUpdatedAt) {
+              await pushToCloud();
+            } else {
+              isApplyingRemote = true;
+              try {
+                applyStructuredBackupObject(remoteData.payload, true);
+                markDataSynced(remoteUpdatedAt || Date.now());
+              } finally {
+                setTimeout(() => { isApplyingRemote = false; }, 150);
+              }
+              updateCloudBadge("synced");
             }
-            updateCloudBadge("synced");
           } else {
             await pushToCloud();
           }
@@ -3412,6 +3483,7 @@
             isApplyingRemote = true;
             try {
               applyStructuredBackupObject(snap.val().payload, true);
+              markDataSynced(snap.val().updatedAt || Date.now());
             } finally {
               setTimeout(() => { isApplyingRemote = false; }, 150);
             }

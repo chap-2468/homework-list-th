@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homework-list-cache-v8';
+const CACHE_NAME = 'homework-list-cache-v9';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,11 +8,11 @@ const ASSETS_TO_CACHE = [
 ];
 
 const EXTERNAL_CACHE_ORIGINS = [
-  'https:/' + '/cdn.tailwindcss.com',
-  'https:/' + '/cdnjs.cloudflare.com',
-  'https:/' + '/fonts.googleapis.com',
-  'https:/' + '/fonts.gstatic.com',
-  'https:/' + '/[www.gstatic.com](https://www.gstatic.com)'
+  '[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)',
+  '[https://cdnjs.cloudflare.com](https://cdnjs.cloudflare.com)',
+  '[https://fonts.googleapis.com](https://fonts.googleapis.com)',
+  '[https://fonts.gstatic.com](https://fonts.gstatic.com)',
+  '[https://www.gstatic.com](https://www.gstatic.com)'
 ];
 
 self.addEventListener('install', (event) => {
@@ -124,7 +124,8 @@ self.addEventListener('message', (event) => {
 // Focus or Open App when Notification is tapped
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || './index.html';
+  const relPath = (event.notification.data && event.notification.data.url) || './index.html';
+  const targetUrl = new URL(relPath, self.registration.scope).href;
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
