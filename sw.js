@@ -8,11 +8,11 @@ const ASSETS_TO_CACHE = [
 ];
 
 const EXTERNAL_CACHE_ORIGINS = [
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com',
-  'https://fonts.googleapis.com',
-  'https://fonts.gstatic.com',
-  'https://www.gstatic.com'
+  'https:/' + '/cdn.tailwindcss.com',
+  'https:/' + '/cdnjs.cloudflare.com',
+  'https:/' + '/fonts.googleapis.com',
+  'https:/' + '/fonts.gstatic.com',
+  'https:/' + '/[www.gstatic.com](https://www.gstatic.com)'
 ];
 
 self.addEventListener('install', (event) => {

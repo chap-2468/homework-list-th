@@ -1258,7 +1258,7 @@
         ctz: 'Asia/Bangkok'
       });
 
-      const url = `https://calendar.google.com/calendar/render?${params.toString()}`;
+      const url = 'https:/' + '/calendar.google.com/calendar/render?' + params.toString();
       window.open(url, '_blank', 'noopener,noreferrer');
     }
 
@@ -3162,7 +3162,7 @@
       const firebaseConfig = {
         apiKey: "AIzaSyAZWRzAYC6urDjUkuM2nEdoLlOInZFGzpQ",
         authDomain: "homework-list-sync.firebaseapp.com",
-        databaseURL: "[https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app](https://homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app)",
+        databaseURL: "https:/" + "/homework-list-sync-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "homework-list-sync",
         storageBucket: "homework-list-sync.firebasestorage.app",
         messagingSenderId: "413595618223",
@@ -3252,10 +3252,16 @@
           return false;
         }
         try {
+          const cleanDbUrl = String(firebaseConfig.databaseURL || "")
+            .trim()
+            .replace(/^\[([^\]]+)\]\([^)]+\)$/, "$1")
+            .replace(/^<(.+)>$/, "$1")
+            .trim();
+          firebaseConfig.databaseURL = cleanDbUrl;
           if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
           }
-          db = firebase.database();
+          db = firebase.app().database(cleanDbUrl);
 
           // Monitor real-time connection state
           db.ref(".info/connected").on("value", (snap) => {
